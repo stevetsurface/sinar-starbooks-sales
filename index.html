@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wonder Bookstore &amp; Sinar Starbooks · Dashboard</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root {
+    --font-anthropic-sans: 'Figtree SSB', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-anthropic-serif: 'Fraunces SSB', Georgia, serif;
+    --cds-dur-slow: .3s;
+  }
+  html, body { margin: 0; background: #FBFAFC; }
+  #dash-root { max-width: 1320px; margin: 0 auto; padding: 16px 24px 40px; box-sizing: border-box; }
+  @media (max-width: 600px) { #dash-root { padding: 12px 16px 32px; } }
+  .dash-skeleton { position: relative; color: transparent !important; }
+  .dash-skeleton::after { content: ""; position: absolute; left: 0; top: 50%; width: 60%; height: .8em; transform: translateY(-50%); border-radius: 6px; background: #EFE9F4; animation: ssbPulse 1.2s ease-in-out infinite; }
+  .ss-chart.dash-skeleton::after { top: 0; left: 0; width: 100%; height: 100%; transform: none; border-radius: 12px; }
+  @keyframes ssbPulse { 50% { opacity: .5; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+/* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
+(function () {
+  const DATASETS = ["cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const store = {}; const calcs = {}; const cbs = [];
+  let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
+  try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
+  const fire = () => cbs.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+  DATASETS.forEach((id) => {
+    store[id] = { status: 'loading', data: [], columns: [], meta: [] };
+    fetch('data/' + id + '.csv?v=' + Date.now()).then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then((t) => { const rows = d3.csvParse(t); store[id] = { status: 'ok', data: rows, columns: rows.columns, meta: [] }; fire(); })
+      .catch((e) => { store[id] = { status: 'error', data: [], columns: [], meta: [], message: String(e) }; fire(); });
+  });
+  const calcCache = {};
+  window.dash = {
+    colors: ['#F2B33D', '#5B2A86', '#2E5F8A', '#5FB98A', '#A77BBE', '#E07A5F', '#6FA3D0', '#2A1640'],
+    data(id) {
+      if (store[id]) return store[id];
+      const c = calcs[id];
+      if (!c) return { status: 'missing', data: [], meta: [] };
+      const ins = c.inputs.map((i) => window.dash.data(i));
+      const bad = ins.find((d) => d.status !== 'ok');
+      if (bad) return { status: bad.status, data: [], meta: [] };
+      const key = ins.map((d) => d.data);
+      if (calcCache[id] && calcCache[id].key.every((k, i) => k === key[i])) return calcCache[id].val;
+      let val; try { val = { status: 'ok', data: c.fn(...ins.map((d) => d.data)), meta: [] }; } catch (e) { console.error(e); val = { status: 'error', data: [], meta: [] }; }
+      calcCache[id] = { key, val }; return val;
+    },
+    onData(fn) { cbs.push(fn); fn(); },
+    calc(id, def) { calcs[id] = def; },
+    loader() {},
+    params() { return params; },
+    setParams(o) { params = Object.assign({}, params, o); try { localStorage.setItem('ssb-dash-params', JSON.stringify(params)); } catch (e) {} fire(); },
+    resetParams() { params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: params.lang }; fire(); },
+    setLink(name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} },
+    refresh() {},
+  };
+  window.addEventListener('resize', () => { clearTimeout(window.__ssbR); window.__ssbR = setTimeout(fire, 150); });
+  // Excel download without the claude.ai runtime
+  window.claude = { use: async (name) => name === 'downloads' ? { save: async ({ filename, data }) => { const b = data instanceof Blob ? data : new Blob([data]); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); return { status: 'saved' }; } } : null };
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+
+<style>
+
+  #ss-root {
+    --ssb-purple: #5B2A86; --ssb-purple-2: #6B2F9A; --ssb-deep: #2A1640; --ssb-gold: #F2B33D; --ssb-gold-soft: #FDF3DC;
+    --ssb-lilac: #F4F0F8; --ssb-lilac-2: #F1EBF6; --ssb-line: #ECE6F1; --ssb-line-2: #D9CCE6; --ssb-ink: #1E1A24; --ssb-ink-2: #4A4252; --ssb-muted: #6E6478;
+    --ssb-c1: #F2B33D; --ssb-c2: #5B2A86; --ssb-c3: #2E5F8A;
+    --color-fg: #1E1A24; --color-fg-muted: #6E6478; --color-bg: #FBFAFC; --color-panel: #FFFFFF; --color-border-line: #ECE6F1;
+    --color-ok: #1F7A4D; --color-bad: #C0392B; --color-warn: #A86A00;
+    --cds-chart-grid: #F1EBF6; --cds-chart-axis: #D9CCE6; --cds-chart-muted: #C9BBD8;
+    --cds-surface-popover: #FFFFFF; --cds-border: #D9CCE6; --cds-text-secondary: #6E6478; --cds-shadow-popover: 0 12px 30px rgba(42,22,64,.14);
+    --ssb-sans: 'Figtree SSB', Figtree, var(--font-anthropic-sans), system-ui, sans-serif;
+    --ssb-serif: 'Fraunces SSB', Fraunces, Georgia, var(--font-anthropic-serif), serif;
+    font-family: var(--ssb-sans); color: var(--ssb-ink); font-variant-numeric: tabular-nums;
+    display: flex; flex-direction: column; gap: 16px; padding-block: 4px 24px;
+  }
+  #ss-root[data-lang="id"] .en, #ss-root[data-lang="en"] .id { display: none !important; }
+  .ss-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; background: var(--ssb-purple); color: #fff; border-radius: 20px; padding: 14px 18px; }
+  .ss-logos { display: flex; align-items: center; gap: 12px; flex: none; }
+  .ss-logos .ss-wb { height: 34px; width: auto; display: block; }
+  .ss-logos .ss-sep { width: 1px; height: 32px; background: rgba(255,255,255,.35); }
+  .ss-logos .ss-sb { background: #fff; border-radius: 10px; padding: 3px 6px; line-height: 0; }
+  .ss-logos .ss-sb img { height: 32px; width: auto; display: block; }
+  .ss-titles { flex: 1 1 220px; min-width: 0; }
+  .ss-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ssb-gold); }
+  .ss-top h1 { margin: 2px 0 0; font-family: var(--ssb-serif); font-weight: 700; font-size: 22px; line-height: 1.15; color: #fff; }
+  .ss-topright { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ss-top .ss-seg { background: rgba(255,255,255,.12); }
+  .ss-top .ss-seg button { color: #EADCF6; }
+  .ss-top .ss-seg button[aria-pressed="true"] { background: #fff; color: var(--ssb-purple); }
+  .ss-filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; }
+  .ss-insight { background: var(--ssb-lilac); border: 1px solid var(--ssb-line); border-left: 4px solid var(--ssb-gold); border-radius: 16px; padding: 14px 18px; }
+  .ss-insight-lab { font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: var(--ssb-purple); }
+  .ss-take { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--ssb-ink-2); }
+  .ss-take b { color: var(--ssb-deep); font-weight: 800; }
+  .ss { display: flex; flex-direction: column; gap: 16px; }
+  .ss b { font-weight: 700; }
+  .ss-seg { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; background: var(--ssb-lilac-2); padding: 3px; border-radius: 999px; }
+  .ss-seg button { font: inherit; font-size: 13px; font-weight: 700; height: 30px; padding: 0 13px; border-radius: 999px; border: 0; background: transparent; color: var(--ssb-ink-2); cursor: pointer; }
+  .ss-seg button[aria-pressed="true"] { background: var(--ssb-purple); color: #fff; }
+  .ss-ctl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; color: var(--ssb-ink-2); background: #fff; border: 1px solid var(--ssb-line); border-radius: 16px; padding: 8px 12px; }
+  .ss-ctl label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
+  .ss-ctl select, .ss-ctl input { font: inherit; font-size: 13px; font-weight: 600; color: var(--ssb-ink); background: var(--ssb-lilac); border: 1px solid transparent; border-radius: 10px; height: 32px; padding: 0 10px; }
+  .ss-ctl .ss-range { color: var(--ssb-muted); }
+  .ss-upd { font-size: 12px; color: var(--ssb-muted); display: inline-flex; align-items: center; gap: .4rem; }
+  .ss-upd::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
+  .ss-ctl .ss-upd { margin-left: auto; }
+  .ss-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr)); gap: 12px; }
+  .ss-tile, .ss-card, .ss-status { background: #fff; border: 1px solid var(--ssb-line); border-radius: 16px; padding: 16px 18px; min-width: 0; box-shadow: 0 1px 2px rgba(42,22,64,.04); }
+  .ss-tile { border-top: 3px solid var(--ssb-gold); }
+  .ss-lab { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ssb-purple); }
+  .ss-big { display: block; font-family: var(--ssb-serif); font-weight: 700; font-size: 28px; line-height: 1.1; color: var(--ssb-deep); margin: 6px 0 4px; }
+  .ss-sub { font-size: 12px; color: var(--ssb-muted); line-height: 1.5; }
+  .ss-up { color: var(--color-ok); font-weight: 700; } .ss-down { color: var(--color-bad); font-weight: 700; }
+  .ss-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 12px; }
+  .ss-card-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: center; }
+  .ss-card h2 { font-family: var(--ssb-serif); font-weight: 700; font-size: 18px; color: var(--ssb-deep); margin: 0; }
+  .ss-note { font-size: 12px; line-height: 1.5; color: var(--ssb-muted); margin: 4px 0 12px; }
+  .ss-chart { position: relative; min-height: 230px; }
+  .ss-chart.ss-h { min-height: 120px; }
+  .ss-chart svg { display: block; overflow: visible; }
+  .ss-tick { font-size: 11px; fill: var(--ssb-muted); font-family: var(--ssb-sans); }
+  .ss-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; font-weight: 600; color: var(--ssb-ink-2); margin-bottom: 6px; }
+  .ss-legend i, .ss-tip i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; margin-right: .35rem; }
+  .ss-tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--ssb-line-2); border-radius: 12px; box-shadow: var(--cds-shadow-popover); padding: 8px 12px; font-size: 12px; white-space: nowrap; z-index: 2; color: var(--ssb-ink); }
+  .ss-tip .ss-tip-h { color: var(--ssb-purple); font-weight: 700; margin-bottom: 2px; }
+  .ss-tablebox { max-height: 26rem; overflow: auto; }
+  .ss-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ss-table th { position: sticky; top: 0; background: #fff; text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--ssb-muted); padding: 7px 8px; border-bottom: 1px solid var(--ssb-line-2); vertical-align: bottom; }
+  .ss-table td { padding: 7px 8px; border-bottom: 1px solid var(--ssb-line); vertical-align: top; color: var(--ssb-ink); }
+  .ss-table tbody tr:hover td { background: var(--ssb-lilac); }
+  .ss-table .num { text-align: right; white-space: nowrap; }
+  .ss-table td.ss-name { max-width: 22rem; font-weight: 600; }
+  .ss-table td.ss-locs { color: var(--ssb-muted); max-width: 14rem; }
+  .ss-flag { color: var(--color-bad); font-weight: 800; }
+  .ss-warn { color: var(--color-warn); font-weight: 700; }
+  .ss-status { font-size: 14px; line-height: 1.6; background: var(--ssb-gold-soft); border-color: #F3DDA8; color: var(--ssb-deep); }
+  .ss-status p { margin: 0; }
+  .ss-section-h { font-family: var(--ssb-serif); font-weight: 700; font-size: 20px; color: var(--ssb-deep); margin: 8px 0 0; }
+  .ss-foot { font-size: 11.5px; line-height: 1.55; color: var(--ssb-muted); margin: 0; }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+
+  #ss-root [hidden] { display: none !important; }
+  .ss-top .ss-tabs { flex-wrap: wrap; }
+  .ss-filters .ss-ctl { flex: 1 1 520px; }
+  .ss-insights { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; line-height: 1.5; color: var(--ssb-ink-2); }
+  .ss-insights li b { color: var(--ssb-deep); }
+  .ss-insights li::marker { color: var(--ssb-gold); }
+  .ss-xl { font: inherit; font-size: 12px; font-weight: 700; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ssb-line-2); background: #fff; color: var(--ssb-purple); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .ss-xl:hover { background: var(--ssb-lilac); }
+  .ss-xl::before { content: ""; width: 10px; height: 12px; border-radius: 2px; background: #1F7A4D; box-shadow: inset 0 -3px 0 rgba(255,255,255,.35); }
+  .ss-card-tools { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ss-search { font: inherit; font-size: 12px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--ssb-line-2); background: #fff; min-width: 9rem; }
+  .ss-mini-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 10px; }
+  .ss-mini { background: var(--ssb-lilac); border-radius: 12px; padding: 10px 12px; }
+  .ss-mini .ss-lab { font-size: 10px; }
+  .ss-mini .ss-v { font-family: var(--ssb-serif); font-weight: 700; font-size: 20px; color: var(--ssb-deep); display: block; margin-top: 2px; }
+  .ss-mini .ss-sub { font-size: 11px; }
+  .ss-heat { overflow-x: auto; }
+  .ss-heat table { border-collapse: separate; border-spacing: 3px; font-size: 11px; }
+  .ss-heat td { width: 30px; height: 22px; border-radius: 5px; text-align: center; color: transparent; }
+  .ss-heat th { font-weight: 600; color: var(--ssb-muted); padding: 0 4px; text-align: right; }
+  .ss-heat thead th { text-align: center; }
+  .ss-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--ssb-lilac); color: var(--ssb-purple); white-space: nowrap; }
+  .ss-pill.bad { background: #FBE3E0; color: var(--color-bad); }
+  .ss-pill.warn { background: #FDF0D5; color: var(--color-warn); }
+  .ss-pill.ok { background: #DFF3E8; color: var(--color-ok); }
+  .ss-bar-cell { position: relative; }
+  .ss-bar-cell span.ss-b { position: absolute; left: 0; top: 4px; bottom: 4px; background: var(--ssb-lilac-2); border-radius: 4px; z-index: 0; }
+  .ss-bar-cell span.ss-t { position: relative; z-index: 1; }
+  .ss-toast { font-size: 12px; color: var(--ssb-muted); }
+  .ss-guide { font-size: 14px; line-height: 1.6; color: var(--ssb-ink-2); }
+  .ss-guide p { margin: 8px 0 0; }
+  .ss-guide ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+  .ss-guide b { color: var(--ssb-deep); }
+  .ss-help { font: inherit; font-size: 11px; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--ssb-line-2); background: #fff; color: var(--ssb-purple); cursor: pointer; padding: 0; margin-left: 6px; vertical-align: middle; }
+</style>
+
+<div id="ss-root" data-lang="id">
+  <header class="ss-top">
+    <div class="ss-logos"><img class="ss-wb" alt="Wonder Bookstore" src="data:image/png;base64,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"><span class="ss-sep"></span><span class="ss-sb"><img alt="Star Books and Gifts" src="data:image/png;base64,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"></span></div>
+    <div class="ss-titles">
+      <div class="ss-eyebrow">Jubelio · Wonder Bookstore &amp; Sinar Starbooks</div>
+      <h1 id="title"><span class="id">Dashboard Penjualan &amp; Stok</span><span class="en">Sales &amp; Stock Dashboard</span></h1>
+    </div>
+    <div class="ss-topright">
+      <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
+    </div>
+    <div class="ss-seg ss-tabs" role="tablist" aria-label="Halaman / Pages" style="flex-basis:100%">
+      <button data-tab="ringkasan"><span class="id">Ringkasan</span><span class="en">Overview</span></button>
+      <button data-tab="sales"><span class="id">Penjualan &amp; toko</span><span class="en">Sales &amp; stores</span></button>
+      <button data-tab="produk"><span class="id">Produk</span><span class="en">Titles</span></button>
+      <button data-tab="reseller">Reseller</button>
+      <button data-tab="stock"><span class="id">Stok</span><span class="en">Stock</span></button>
+      <button data-tab="finance"><span class="id">Keuangan</span><span class="en">Finance</span></button>
+      <button data-tab="panduan"><span class="id">Panduan</span><span class="en">Guide</span></button>
+    </div>
+  </header>
+
+  <div class="ss-filters" id="filters">
+    <div class="ss-seg ss-brands" role="group" aria-label="Merek / Brand">
+      <button data-brand="All"><span class="id">Semua merek</span><span class="en">All brands</span></button>
+      <button data-brand="Wonder Bookstore">Wonder Bookstore</button>
+      <button data-brand="Sinar Starbooks">Sinar Starbooks</button>
+      <button data-brand="Kikkerland">Kikkerland</button>
+    </div>
+    <div class="ss-seg ss-kind" role="group" aria-label="Kanal / Channel">
+      <button data-kind="all"><span class="id">Online + toko</span><span class="en">Online + stores</span></button>
+      <button data-kind="store"><span class="id">Toko (offline)</span><span class="en">Stores (offline)</span></button>
+      <button data-kind="online">Online</button>
+      <button class="ss-help" data-goto="guide-kind" title="Panduan / Guide">?</button>
+    </div>
+    <div class="ss-ctl" id="period-ctl">
+      <label><span class="id">Periode</span><span class="en">Period</span>
+        <select class="ss-preset" aria-label="Periode / Period">
+          <option value="today"></option><option value="yesterday"></option><option value="7d"></option><option value="30d"></option><option value="mtd"></option><option value="last_month"></option><option value="90d"></option><option value="ytd"></option><option value="all"></option><option value="custom"></option>
+        </select>
+      </label>
+      <label><span class="id">Dari</span><span class="en">From</span> <input type="date" class="ss-start" min="2025-10-01" max="2099-12-31" aria-label="Dari / From"></label>
+      <label><span class="id">Sampai</span><span class="en">To</span> <input type="date" class="ss-end" min="2025-10-01" max="2099-12-31" aria-label="Sampai / To"></label>
+      <span class="ss-range" id="range-text"></span>
+      <span class="ss-upd" data-source="snapshots" id="upd-ctl">—</span>
+    </div>
+  </div>
+
+  <div class="ss-insight" id="insight-box" data-source="sales_daily_detail">
+    <span class="ss-insight-lab">Insight</span>
+    <p class="ss-take" id="take"><span class="dash-skeleton">—</span></p>
+    <ul class="ss-insights" id="insights"></ul>
+  </div>
+
+  <!-- ================= RINGKASAN ================= -->
+  <section id="ringkasan" class="ss" hidden>
+    <div class="ss-card" id="card-glance">
+      <div class="ss-card-h"><h2><span class="id">Sekilas</span><span class="en">At a glance</span></h2><span class="ss-upd ss-upd-sales">—</span></div>
+      <p class="ss-note"><span class="id">Periode tetap, tidak ikut filter periode. Perubahan dibanding periode sebelumnya yang sebanding.</span><span class="en">Fixed periods, not affected by the period filter. Change vs the comparable period before.</span></p>
+      <div class="ss-tiles" id="glance-tiles" data-source="sales_daily_detail"></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-daily">
+        <h2><span class="id">Harian · 60 hari</span><span class="en">Daily · 60 days</span></h2>
+        <p class="ss-note"><span class="id">Hari ini belum lengkap (lebih terang).</span><span class="en">Today is partial (lighter).</span></p>
+        <div class="ss-legend ss-leg"></div>
+        <div class="ss-chart dash-skeleton" id="chart-daily" data-source="sales_daily_detail"></div>
+      </div>
+      <div class="ss-card" id="card-weekly">
+        <h2><span class="id">Mingguan · 17 minggu</span><span class="en">Weekly · 17 weeks</span></h2>
+        <p class="ss-note"><span class="id">Minggu mulai Senin; minggu ini belum lengkap.</span><span class="en">Weeks start Monday; this week is partial.</span></p>
+        <div class="ss-legend ss-leg"></div>
+        <div class="ss-chart dash-skeleton" id="chart-weekly" data-source="sales_daily_detail"></div>
+      </div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-monthly">
+        <h2><span class="id">Bulanan · sejak Okt 2025</span><span class="en">Monthly · since Oct 2025</span></h2>
+        <p class="ss-note"><span class="id">Bulan ini belum lengkap.</span><span class="en">This month is partial.</span></p>
+        <div class="ss-legend ss-leg"></div>
+        <div class="ss-chart dash-skeleton" id="chart-monthly" data-source="sales_daily_detail"></div>
+      </div>
+      <div class="ss-card" id="card-health">
+        <div class="ss-card-h"><h2><span class="id">Kesehatan bisnis</span><span class="en">Business health</span></h2><span class="ss-upd ss-upd-stock">—</span></div>
+        <p class="ss-note"><span class="id">Angka kunci dari semua tim, untuk periode terpilih dan stok saat ini.</span><span class="en">Key numbers from every team, for the selected period and current stock.</span></p>
+        <div class="ss-mini-tiles" id="health-tiles" data-source="sales_daily_detail stock_locations finance_daily resellers"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PENJUALAN ================= -->
+  <section id="sales" class="ss" hidden>
+    <div class="ss-tiles" id="kpi-tiles" data-source="sales_daily_detail">
+      <div class="ss-tile" id="t-rev"><div class="ss-lab"><span class="id">Pendapatan</span><span class="en">Revenue</span></div><span class="ss-big dash-skeleton">—</span><div class="ss-sub"></div></div>
+      <div class="ss-tile" id="t-ord"><div class="ss-lab"><span class="id">Pesanan</span><span class="en">Orders</span></div><span class="ss-big dash-skeleton">—</span><div class="ss-sub"></div></div>
+      <div class="ss-tile" id="t-aov"><div class="ss-lab"><span class="id">Rata-rata per pesanan</span><span class="en">Avg order</span></div><span class="ss-big dash-skeleton">—</span><div class="ss-sub"></div></div>
+      <div class="ss-tile" id="t-can"><div class="ss-lab"><span class="id">Batal &amp; retur</span><span class="en">Cancelled &amp; returned</span></div><span class="ss-big dash-skeleton">—</span><div class="ss-sub"></div></div>
+    </div>
+    <div class="ss-card" id="card-trend">
+      <div class="ss-card-h">
+        <h2><span class="id">Tren pendapatan</span><span class="en">Revenue trend</span></h2>
+        <span class="ss-card-tools"><div class="ss-seg ss-split" aria-label="Pisah / Split"><button data-split="brand"><span class="id">Per merek</span><span class="en">By brand</span></button><button data-split="kind"><span class="id">Toko vs online</span><span class="en">Store vs online</span></button></div>
+        <div class="ss-seg ss-gran" aria-label="Rincian / Granularity">
+          <button data-gran="day"><span class="id">Harian</span><span class="en">Daily</span></button>
+          <button data-gran="week"><span class="id">Mingguan</span><span class="en">Weekly</span></button>
+          <button data-gran="month"><span class="id">Bulanan</span><span class="en">Monthly</span></button>
+        </div></span>
+      </div>
+      <p class="ss-note" id="trend-note">—</p>
+      <div class="ss-legend ss-leg"></div>
+      <div class="ss-chart dash-skeleton" id="chart-trend" data-source="sales_daily_detail"></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-channels">
+        <div class="ss-card-h"><h2><span class="id">Per kanal</span><span class="en">By channel</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="channels">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Periode terpilih vs periode sebelumnya. Batal = porsi pesanan yang dibatalkan atau diretur.</span><span class="en">Selected period vs the period before. Cancel = share of orders cancelled or returned.</span></p>
+        <div class="ss-tablebox" data-source="sales_daily_detail"><table class="ss-table" id="tbl-channels"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-locations">
+        <div class="ss-card-h"><h2><span class="id">Per toko / lokasi</span><span class="en">By store</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="locations">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Kolom <b>Di toko</b> = penjualan kasir (POS) di toko itu. Kolom <b>Online</b> = pesanan marketplace yang dikirim dari stok lokasi itu (mis. saat promo 10.10, toko ikut memenuhi pesanan online). ONLINE = gudang online pusat.</span><span class="en"><b>In-store</b> = POS sales at that store. <b>Online</b> = marketplace orders shipped from that location's stock (e.g. during the 10.10 promo, stores helped fulfil online orders). ONLINE is the central online warehouse.</span></p>
+        <div class="ss-tablebox" data-source="sales_daily_detail"><table class="ss-table" id="tbl-locations"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-heat">
+        <div class="ss-card-h"><h2><span class="id">Jam ramai</span><span class="en">Busy hours</span></h2><div class="ss-seg ss-heatkind"><button data-kind="all"><span class="id">Semua</span><span class="en">All</span></button><button data-kind="store"><span class="id">Toko</span><span class="en">Stores</span></button><button data-kind="online">Online</button></div></div>
+        <p class="ss-note"><span class="id">Pendapatan per hari dan jam (WIB), 90 hari terakhir. Makin gelap makin ramai: pakai untuk jadwal staf dan jam promo.</span><span class="en">Revenue by weekday and hour (WIB), last 90 days. Darker = busier: use it for staff rosters and promo timing.</span></p>
+        <div class="ss-heat" id="heat" data-source="hour_dow"></div>
+      </div>
+      <div class="ss-card" id="card-customers">
+        <div class="ss-card-h"><h2><span class="id">Pelanggan kembali</span><span class="en">Repeat customers</span></h2><span class="ss-upd ss-upd-detail">—</span></div>
+        <p class="ss-note"><span class="id">90 hari terakhir. Pelanggan kembali = 2+ pesanan. Kasir toko tanpa data pelanggan tidak dihitung.</span><span class="en">Last 90 days. Repeat = 2+ orders. Store sales without a customer record are not counted.</span></p>
+        <div class="ss-tablebox" data-source="customers_90d"><table class="ss-table" id="tbl-customers"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <p class="ss-foot"><span class="id">Pendapatan = total pesanan di Jubelio (grand total; untuk Shopee sudah dipotong biaya layanan), tanpa pesanan batal/retur. Merek ditentukan dari toko penjual: Sinar Starbooks = toko marketplace Sinar Starbooks + Blibli + Lazada; Wonder Bookstore = toko Wonderstore + semua kasir toko (POS); Kikkerland = toko Kikkerland. Tanggal dalam WIB.</span><span class="en">Revenue is Jubelio's order grand total (for Shopee this is already net of the service fee), excluding cancelled and returned orders. Brand comes from the selling store: Sinar Starbooks = its marketplace shops + Blibli + Lazada; Wonder Bookstore = Wonderstore shops + all in-store POS; Kikkerland = the Kikkerland shops. Dates are WIB.</span></p>
+  </section>
+
+  <!-- ================= PRODUK ================= -->
+  <section id="produk" class="ss" hidden>
+    <div class="ss-tiles" id="prod-tiles" data-source="titles_daily items"></div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-groups">
+        <div class="ss-card-h"><h2><span class="id">Per kategori</span><span class="en">By category</span></h2><span class="ss-upd ss-upd-detail">—</span></div>
+        <p class="ss-note"><span class="id">Penjualan per barang (sebelum potongan marketplace) di periode terpilih. Kategori disimpulkan dari ISBN dan nama barang.</span><span class="en">Item-level sales (before marketplace deductions) in the selected period. Category is inferred from ISBN and item name.</span></p>
+        <div class="ss-chart ss-h dash-skeleton" id="chart-groups" data-source="titles_daily items"></div>
+      </div>
+      <div class="ss-card" id="card-rising">
+        <div class="ss-card-h"><h2><span class="id">Naik daun</span><span class="en">Rising titles</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="rising">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Kenaikan unit terbesar vs periode sebelumnya: pastikan stok aman.</span><span class="en">Biggest unit increase vs the period before: make sure stock keeps up.</span></p>
+        <div class="ss-tablebox" data-source="titles_daily items"><table class="ss-table" id="tbl-rising"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="ss-card" id="card-top">
+      <div class="ss-card-h"><h2><span class="id">Judul terlaris</span><span class="en">Best-selling titles</span></h2>
+        <span class="ss-card-tools"><div class="ss-seg ss-topsort"><button data-sort="revenue"><span class="id">Rupiah</span><span class="en">Revenue</span></button><button data-sort="qty"><span class="id">Unit</span><span class="en">Units</span></button></div><input class="ss-search" id="top-search" placeholder="Cari / Search"><button class="ss-xl" data-export="top">Excel</button></span></div>
+      <p class="ss-note" id="top-note">—</p>
+      <div class="ss-tablebox" data-source="titles_daily items"><table class="ss-table" id="tbl-top"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ================= RESELLER ================= -->
+  <section id="reseller" class="ss" hidden>
+    <div class="ss-status"><p class="id">Data reseller Sinar Star berasal dari <b>Reseller Recency Database</b> dan <b>Reseller Tracker</b> (bukan Jubelio), per 14–22 Okt 2026. Filter merek dan periode tidak berlaku di sini.</p><p class="en">Sinar Star reseller data comes from the <b>Reseller Recency Database</b> and <b>Reseller Tracker</b> files (not Jubelio), as of 14–22 Oct 2026. Brand and period filters don't apply here.</p></div>
+    <div class="ss-tiles" id="res-tiles" data-source="resellers reseller_tracker"></div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-plays">
+        <div class="ss-card-h"><h2><span class="id">Per strategi (play)</span><span class="en">By play</span></h2><span class="ss-upd" data-source="snapshots">14 Okt 2026</span></div>
+        <p class="ss-note"><span class="id">P1 jaga, P2 order kedua, P3 telepon sekarang, P4 hidupkan lagi, P5 menangkan kembali, P6 cuci gudang, P7 portal saja.</span><span class="en">P1 protect, P2 second order, P3 call now, P4 re-spark, P5 win back, P6 clearance offer, P7 portal only.</span></p>
+        <div class="ss-tablebox" data-source="resellers"><table class="ss-table" id="tbl-plays"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-pic">
+        <div class="ss-card-h"><h2><span class="id">Per PIC sales</span><span class="en">By sales PIC</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="pic">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Beban akun, nilai 2026 dan progres kontak per PIC.</span><span class="en">Account load, 2026 value and outreach progress per PIC.</span></p>
+        <div class="ss-tablebox" data-source="resellers reseller_tracker"><table class="ss-table" id="tbl-pic"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="ss-card" id="card-callnow">
+      <div class="ss-card-h"><h2><span class="id">Harus dihubungi minggu ini</span><span class="en">Call this week</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="callnow">Excel</button></span></div>
+      <p class="ss-note"><span class="id">Akun bernilai yang mulai diam: P3 (60–180 hari tanpa order, 5+ invoice) dan P1 yang sudah 45+ hari tidak order. Diurutkan menurut nilai 2026.</span><span class="en">Valuable accounts going quiet: P3 (60–180 days without an order, 5+ invoices) and P1 accounts with no order for 45+ days. Sorted by 2026 value.</span></p>
+      <div class="ss-tablebox" data-source="resellers"><table class="ss-table" id="tbl-callnow"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-segments">
+        <h2><span class="id">Per segmen</span><span class="en">By segment</span></h2>
+        <p class="ss-note"><span class="id">Jumlah akun dan penjualan 2025 vs 2026 YTD.</span><span class="en">Accounts and sales, 2025 vs 2026 YTD.</span></p>
+        <div class="ss-tablebox" data-source="resellers"><table class="ss-table" id="tbl-segments"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-topacc">
+        <div class="ss-card-h"><h2><span class="id">Akun teratas</span><span class="en">Top accounts</span></h2><span class="ss-card-tools"><input class="ss-search" id="acc-search" placeholder="Cari / Search"><button class="ss-xl" data-export="accounts">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Semua akun, diurutkan menurut total Jan 2025 – Okt 2026.</span><span class="en">All accounts, sorted by total Jan 2025 – Oct 2026.</span></p>
+        <div class="ss-tablebox" data-source="resellers"><table class="ss-table" id="tbl-accounts"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STOK ================= -->
+  <section id="stock" class="ss" hidden>
+    <div class="ss-status" id="stock-status"><span class="dash-skeleton">—</span></div>
+    <div class="ss-card" id="card-stockloc">
+      <div class="ss-card-h"><h2><span class="id">Situasi stok per lokasi</span><span class="en">Stock situation by location</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-stock">—</span><button class="ss-xl" data-export="stockloc">Excel</button></span></div>
+      <p class="ss-note"><span class="id">Nilai stok dihitung dengan harga jual (Jubelio tidak menyimpan harga pokok). Umur = hari sejak barang itu terakhir terjual di lokasi tersebut. Sell-through = terjual ÷ (terjual + stok).</span><span class="en">Stock value is at selling price (Jubelio holds no cost price). Age = days since the item last sold at that location. Sell-through = sold ÷ (sold + on hand).</span></p>
+      <div class="ss-tablebox" data-source="stock_locations"><table class="ss-table" id="tbl-stockloc"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-card" id="card-aging">
+      <h2><span class="id">Umur stok per lokasi (unit)</span><span class="en">Stock age by location (units)</span></h2>
+      <p class="ss-note"><span class="id">Hijau = laku dalam 30 hari; ungu tua = belum laku 180+ hari.</span><span class="en">Green = sold within 30 days; dark purple = unsold for 180+ days.</span></p>
+      <div class="ss-legend" id="legend-aging"></div>
+      <div class="ss-chart ss-h dash-skeleton" id="chart-aging" data-source="stock_locations"></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-runout">
+        <div class="ss-card-h"><h2><span class="id">Segera habis</span><span class="en">Running out soon</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="runout">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Terjual ≥1 per 10 hari, stok ≤21 hari (semua lokasi). Merah = ≤7 hari.</span><span class="en">Selling at least 1 every 10 days with 21 days of stock or less, all locations. Red = 7 days or less.</span></p>
+        <div class="ss-tablebox" data-source="stock_runout"><table class="ss-table" id="tbl-runout"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-oversold">
+        <div class="ss-card-h"><h2><span class="id">Terjual melebihi stok (oversold)</span><span class="en">Oversold</span><button class="ss-help" data-goto="guide-oversold" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="oversold">Excel</button></span></div>
+        <p class="ss-note"><span class="id"><b>Oversold</b> artinya barang sudah dipesan/terjual lebih banyak daripada stok fisik di lokasi itu, sehingga stok tersedia minus. Contoh: stok 4, dipesan 18 → tersedia −14. Pesanan belum bisa dikirim sampai barang datang atau ditransfer, jadi berisiko batal dan kena penalti marketplace. Penyebab umum: stok tidak sinkron antar marketplace, flash sale, atau penjualan pameran yang belum dicatat.</span><span class="en"><b>Oversold</b> means more units were ordered or sold than are physically on hand at that location, so available stock is negative. Example: 4 on hand, 18 reserved → −14. These orders can't ship until stock arrives or is transferred, so they risk cancellation and marketplace penalties. Common causes: stock not synced across marketplaces, flash sales, or exhibition sales not yet recorded.</span></p>
+        <div class="ss-tablebox" data-source="stock_oversold"><table class="ss-table" id="tbl-oversold"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="ss-card" id="card-transfers">
+      <div class="ss-card-h"><h2><span class="id">Usulan transfer antar toko</span><span class="en">Suggested transfers between stores</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="transfers">Excel</button></span></div>
+      <p class="ss-note"><span class="id">Barang yang tidak laku 90+ hari di satu lokasi tetapi laris dan menipis di lokasi lain. Jumlah = kekurangan di tujuan, maksimal stok di asal. Diurutkan menurut nilai jual.</span><span class="en">Items unsold for 90+ days at one location but selling and short at another. Qty = the shortfall at the destination, capped at the source stock. Sorted by sales value.</span></p>
+      <div class="ss-tablebox" data-source="stock_transfers"><table class="ss-table" id="tbl-transfers"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-lowsell">
+        <div class="ss-card-h"><h2><span class="id">Stok menipis, masih laku</span><span class="en">Low stock, still selling</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="lowsell">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Di bawah titik pesan ulang di lokasi itu, diurutkan menurut unit terjual.</span><span class="en">Below the reorder point at that location, ranked by units sold there.</span></p>
+        <div class="ss-tablebox" data-source="stock_low_selling"><table class="ss-table" id="tbl-lowsell"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-fast">
+        <div class="ss-card-h"><h2><span class="id">Paling laku</span><span class="en">Fast movers</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="fast">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Unit terjual terbanyak, semua lokasi (periode best-seller Jubelio). Merah = habis.</span><span class="en">Top sellers in units across all locations (Jubelio best-seller period). Red = none left.</span></p>
+        <div class="ss-tablebox" data-source="stock_best_sellers"><table class="ss-table" id="tbl-fast"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-deadtitles">
+        <div class="ss-card-h"><h2><span class="id">Stok mati per judul</span><span class="en">Dead stock by title</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="deadtitles">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Tidak terjual di lokasi mana pun 90+ hari, total semua lokasi (60 teratas).</span><span class="en">No sale at any location in 90+ days, totalled across locations (top 60).</span> <b><span data-source="stock_dead_titles_total" data-field="dead_titles" data-row="0">—</span></b> <span class="id">judul</span><span class="en">titles</span>, <b><span data-source="stock_dead_titles_total" data-field="dead_title_units" data-row="0">—</span></b> <span class="id">unit</span><span class="en">units</span>.</p>
+        <div class="ss-tablebox" data-source="stock_dead_titles"><table class="ss-table" id="tbl-deadtitles"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-deaditems">
+        <div class="ss-card-h"><h2><span class="id">Stok mati per toko &amp; barang</span><span class="en">Dead stock by store &amp; item</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="deaditems">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Tidak laku 90+ hari di toko ini (bisa jadi masih laku di toko lain): kandidat transfer, bundling atau diskon.</span><span class="en">No sale in 90+ days at this store (it may still sell elsewhere): candidates to transfer, bundle or discount.</span></p>
+        <div class="ss-tablebox" data-source="stock_dead_items"><table class="ss-table" id="tbl-dead"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <p class="ss-foot"><span class="id">Stok dipakai bersama semua merek, jadi filter merek dan periode tidak berlaku di sini. Bahan kafe, tas belanja dan bahan kemasan tidak dihitung. Data dari peringatan stok Jubelio.</span><span class="en">Stock is shared across brands, so the brand and period filters don't apply here. Café ingredients, shopping bags and packing materials are left out. From Jubelio's inventory alerts.</span></p>
+  </section>
+
+  <!-- ================= KEUANGAN ================= -->
+  <section id="finance" class="ss" hidden>
+    <div class="ss-tiles" id="fin-tiles" data-source="finance_daily"></div>
+    <div class="ss-card" id="card-waterfall">
+      <div class="ss-card-h"><h2><span class="id">Dari penjualan kotor ke uang diterima</span><span class="en">From gross sales to money received</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-detail">—</span><button class="ss-xl" data-export="fin">Excel</button></span></div>
+      <p class="ss-note" id="fin-note">—</p>
+      <div class="ss-tablebox" data-source="finance_daily"><table class="ss-table" id="tbl-fin"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-cancel">
+        <div class="ss-card-h"><h2><span class="id">Alasan batal &amp; retur</span><span class="en">Cancellation &amp; return reasons</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="cancel">Excel</button></span></div>
+        <p class="ss-note"><span class="id">90 hari terakhir. Nilai = penjualan kotor yang hilang.</span><span class="en">Last 90 days. Value = gross sales lost.</span></p>
+        <div class="ss-tablebox" data-source="cancel_reasons"><table class="ss-table" id="tbl-cancel"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-finch">
+        <h2><span class="id">Potongan per kanal</span><span class="en">Deductions by channel</span></h2>
+        <p class="ss-note"><span class="id">Diskon + biaya marketplace sebagai porsi penjualan kotor.</span><span class="en">Discounts + marketplace fees as a share of gross sales.</span></p>
+        <div class="ss-chart ss-h dash-skeleton" id="chart-fees" data-source="finance_daily"></div>
+      </div>
+    </div>
+    <p class="ss-foot"><span class="id">Rincian keuangan tersedia untuk 90 hari terakhir (data per pesanan dari Jubelio). Jubelio hanya mencatat biaya layanan untuk Shopee; biaya Tokopedia/TikTok belum tercatat sehingga uang diterima untuk kanal itu masih terlalu tinggi. Harga pokok (HPP) tidak diisi di Jubelio, jadi margin belum bisa dihitung di sini.</span><span class="en">Finance detail covers the last 90 days (order-level data from Jubelio). Jubelio only records the service fee for Shopee; Tokopedia/TikTok fees aren't recorded, so money received for those channels is overstated. Cost price (HPP) is empty in Jubelio, so margin can't be calculated here yet.</span></p>
+  </section>
+  <!-- ================= PANDUAN ================= -->
+  <section id="panduan" class="ss" hidden>
+    <div class="ss-grid">
+      <div class="ss-card" id="guide-oversold">
+        <h2><span class="id">Apa itu oversold?</span><span class="en">What does oversold mean?</span></h2>
+        <div class="ss-guide">
+          <p class="id"><b>Oversold</b> artinya barang sudah dipesan atau terjual lebih banyak daripada stok fisik yang ada di lokasi itu, sehingga stok <b>tersedia</b> menjadi minus.</p>
+          <p class="en"><b>Oversold</b> means more units have been ordered or sold than are physically on hand at that location, so <b>available</b> stock goes negative.</p>
+          <p class="id"><b>Contoh:</b> di PAMERAN ASHTA ada 4 Squishy Pao Mix di rak, tetapi 18 sudah dipesan. Tersedia = 4 − 18 = <b>−14</b>. Ke-14 pesanan itu belum bisa dikirim.</p>
+          <p class="en"><b>Example:</b> PAMERAN ASHTA has 4 Squishy Pao Mix on the shelf, but 18 are reserved by orders. Available = 4 − 18 = <b>−14</b>. Those 14 orders can't ship.</p>
+          <p class="id"><b>Kenapa penting:</b> kalau terlalu lama, marketplace membatalkan pesanan dan toko kena penalti (skor toko turun).</p>
+          <p class="en"><b>Why it matters:</b> if they wait too long, the marketplace cancels the orders and the shop is penalised (lower shop score).</p>
+          <p class="id"><b>Penyebab umum:</b> stok tidak sinkron antar Shopee/Tokopedia, flash sale atau promo tanggal kembar, dan penjualan pameran yang belum dicatat.</p>
+          <p class="en"><b>Common causes:</b> stock not syncing between Shopee and Tokopedia, flash sales or double-date promos, and exhibition sales not entered in time.</p>
+          <p class="id"><b>Yang harus dilakukan:</b> transfer stok dari toko lain, percepat penerimaan barang, atau hubungi pembeli sebelum dibatalkan. Lalu cek pengaturan sinkronisasi stok di Jubelio.</p>
+          <p class="en"><b>What to do:</b> transfer stock from another store, speed up receiving, or contact the buyer before the order is cancelled. Then check stock sync settings in Jubelio.</p>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-kind">
+        <h2><span class="id">Filter online vs toko (offline)</span><span class="en">Online vs store (offline) filter</span></h2>
+        <div class="ss-guide">
+          <p class="id">Tombol <b>Online + toko / Toko (offline) / Online</b> di bawah judul memisahkan penjualan berdasarkan <b>kanal</b>:</p>
+          <p class="en">The <b>Online + stores / Stores (offline) / Online</b> switch under the header splits sales by <b>channel</b>:</p>
+          <ul class="id"><li><b>Toko (offline)</b> = transaksi kasir (Jubelio POS) di toko fisik.</li><li><b>Online</b> = Shopee, Tokopedia, TikTok Shop, Lazada, Blibli.</li></ul>
+          <ul class="en"><li><b>Stores (offline)</b> = cashier (Jubelio POS) sales in the physical stores.</li><li><b>Online</b> = Shopee, Tokopedia, TikTok Shop, Lazada, Blibli.</li></ul>
+          <p class="id"><b>Penting:</b> pesanan online sering dikirim dari stok toko (mis. PIM atau ASHTA). Di tabel <i>Per toko</i>, pesanan itu masuk kolom <b>Online</b> toko tersebut, bukan <b>Di toko</b>. Contoh 10.10: penjualan kasir normal (Rp 48,7 jt), tetapi online melonjak dan sekitar Rp 56 jt pesanan online dikirim dari toko.</p>
+          <p class="en"><b>Important:</b> online orders are often shipped from store stock (e.g. PIM or ASHTA). In the <i>By store</i> table those orders count in that store's <b>Online</b> column, not <b>In-store</b>. On 10.10, cashier sales were normal (Rp 48.7jt) while online spiked, and about Rp 56jt of online orders shipped from stores.</p>
+          <p class="id">Di grafik <i>Tren pendapatan</i>, pilih <b>Toko vs online</b> untuk melihat keduanya bertumpuk per hari.</p>
+          <p class="en">In the <i>Revenue trend</i> chart, choose <b>Store vs online</b> to see both stacked per day.</p>
+          <p class="id">Filter ini berlaku di Ringkasan, Penjualan &amp; toko, dan Keuangan. Belum berlaku untuk data per judul (tab Produk).</p>
+          <p class="en">The filter applies to Overview, Sales &amp; stores and Finance. It doesn't apply to title-level data (Titles tab) yet.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ss-card" id="guide-terms">
+      <h2><span class="id">Arti istilah</span><span class="en">Glossary</span></h2>
+      <div class="ss-tablebox" style="max-height:none"><table class="ss-table"><thead><tr><th><span class="id">Istilah</span><span class="en">Term</span></th><th><span class="id">Artinya</span><span class="en">Meaning</span></th></tr></thead><tbody>
+        <tr><td class="ss-name"><span class="id">Pendapatan</span><span class="en">Revenue</span></td><td><span class="id">Total pesanan di Jubelio (grand total), tanpa pesanan batal/retur. Untuk Shopee sudah dipotong biaya layanan.</span><span class="en">Jubelio order grand total, excluding cancelled/returned orders. For Shopee it is already net of the service fee.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Penjualan kotor</span><span class="en">Gross sales</span></td><td><span class="id">Harga barang sebelum diskon dan biaya marketplace (tab Keuangan).</span><span class="en">Item value before discounts and marketplace fees (Finance tab).</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Uang diterima</span><span class="en">Money received</span></td><td><span class="id">Kotor − diskon − biaya marketplace. Biaya Tokopedia/TikTok belum tercatat di Jubelio.</span><span class="en">Gross − discounts − marketplace fees. Tokopedia/TikTok fees aren't recorded in Jubelio yet.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Batal &amp; retur</span><span class="en">Cancelled &amp; returned</span></td><td><span class="id">Porsi pesanan yang dibatalkan atau diretur dari semua pesanan.</span><span class="en">Share of all orders that were cancelled or returned.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Segera habis</span><span class="en">Running out soon</span></td><td><span class="id">Stok tersisa ÷ rata-rata terjual per hari ≤ 21 hari. Merah = ≤ 7 hari: segera pesan ulang.</span><span class="en">Stock left ÷ average daily sales ≤ 21 days. Red = ≤ 7 days: reorder now.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Stok menipis</span><span class="en">Low stock</span></td><td><span class="id">Stok di bawah titik pesan ulang (ROP) yang diatur di Jubelio.</span><span class="en">Stock below the reorder point (ROP) set in Jubelio.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Stok mati</span><span class="en">Dead stock</span></td><td><span class="id">Barang yang tidak terjual 90+ hari. "Per toko" = tidak laku di toko itu; "per judul" = tidak laku di lokasi mana pun.</span><span class="en">Items unsold for 90+ days. "By store" = unsold at that store; "by title" = unsold anywhere.</span></td></tr>
+        <tr><td class="ss-name">Sell-through</td><td><span class="id">Terjual ÷ (terjual + stok). Makin tinggi makin cepat stok berputar.</span><span class="en">Sold ÷ (sold + on hand). Higher = stock turns faster.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Nilai stok</span><span class="en">Stock value</span></td><td><span class="id">Unit × harga jual. Harga pokok (HPP) belum diisi di Jubelio, jadi margin belum bisa dihitung.</span><span class="en">Units × selling price. Cost price (HPP) is empty in Jubelio, so margin can't be calculated yet.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Usulan transfer</span><span class="en">Suggested transfer</span></td><td><span class="id">Barang mati di satu lokasi tetapi laris dan menipis di lokasi lain.</span><span class="en">Items dead at one location but selling and short at another.</span></td></tr>
+        <tr><td class="ss-name">P1–P7 (reseller)</td><td><span class="id">P1 jaga, P2 order kedua, P3 telepon sekarang, P4 hidupkan lagi, P5 menangkan kembali, P6 cuci gudang, P7 portal saja.</span><span class="en">P1 protect, P2 second order, P3 call now, P4 re-spark, P5 win back, P6 clearance offer, P7 portal only.</span></td></tr>
+        <tr><td class="ss-name"><span class="id">Merek</span><span class="en">Brand</span></td><td><span class="id">Dari toko penjual: Sinar Starbooks = toko marketplace Sinar Starbooks + Blibli + Lazada; Wonder Bookstore = toko Wonderstore + semua kasir toko; Kikkerland = toko Kikkerland.</span><span class="en">From the selling store: Sinar Starbooks = its marketplace shops + Blibli + Lazada; Wonder Bookstore = Wonderstore shops + all store cashiers; Kikkerland = the Kikkerland shops.</span></td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="guide-data">
+        <h2><span class="id">Sumber &amp; pembaruan data</span><span class="en">Data sources &amp; updates</span></h2>
+        <div class="ss-guide">
+          <ul class="id"><li>Penjualan &amp; stok: <b>Jubelio</b> akun Wonder Bookstore (termasuk toko marketplace Sinar Starbooks). Waktu pembaruan terlihat di setiap kartu (titik kuning).</li><li>Data per judul dan keuangan: 90 hari terakhir.</li><li>Reseller: file <b>Reseller Recency Database</b> &amp; <b>Reseller Tracker</b> Sinar Star, bukan Jubelio.</li><li>Rencana: data Jubelio ditarik otomatis setiap hari pukul 04.00 WIB ke repo GitHub, lalu dimuat ke dashboard.</li></ul>
+          <ul class="en"><li>Sales &amp; stock: the Wonder Bookstore <b>Jubelio</b> account (which includes the Sinar Starbooks marketplace shops). Each card shows when it was last updated (gold dot).</li><li>Title and finance detail: last 90 days.</li><li>Resellers: Sinar Star's <b>Reseller Recency Database</b> &amp; <b>Reseller Tracker</b> files, not Jubelio.</li><li>Planned: Jubelio data pulled automatically every day at 04:00 WIB into a GitHub repo, then loaded into the dashboard.</li></ul>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-how">
+        <h2><span class="id">Cara pakai</span><span class="en">How to use</span></h2>
+        <div class="ss-guide">
+          <ul class="id"><li><b>Periode</b>: pilih rentang atau tanggal sendiri; semua angka dibandingkan dengan periode sebelumnya.</li><li><b>Merek</b> dan <b>Online/toko</b>: menyaring Ringkasan, Penjualan dan Keuangan.</li><li><b>Excel</b>: tombol hijau di setiap daftar mengunduh file untuk staf (dengan filter kolom).</li><li><b>ID / EN</b>: ganti bahasa di kanan atas.</li></ul>
+          <ul class="en"><li><b>Period</b>: pick a range or your own dates; every number is compared with the period before.</li><li><b>Brand</b> and <b>Online/stores</b>: filter Overview, Sales and Finance.</li><li><b>Excel</b>: the green button on each list downloads a file for staff (with column filters).</li><li><b>ID / EN</b>: switch language at the top right.</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------------- language & formatting ----------------
+  const BRANDS = ['Wonder Bookstore', 'Sinar Starbooks', 'Kikkerland'];
+  const colorOf = (b) => ['var(--ssb-c1)', 'var(--ssb-c2)', 'var(--ssb-c3)'][BRANDS.indexOf(b)] ?? 'var(--ssb-c1)';
+  const lang = () => (dash.params().lang === 'en' ? 'en' : 'id');
+  const T = (id, en) => (lang() === 'en' ? en : id);
+  const LOC = () => (lang() === 'en' ? 'en-US' : 'id-ID');
+  const MON = { id: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] };
+  const MONL = { id: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+  const DOW = { id: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+  const DOWM = { id: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] };
+  const dec = (v, d) => new Intl.NumberFormat(LOC(), { maximumFractionDigits: d, minimumFractionDigits: 0 }).format(v);
+  const rp = (v) => {
+    if (v == null || isNaN(v)) return '—';
+    const a = Math.abs(v), en = lang() === 'en';
+    if (a >= 1e9) return 'Rp ' + dec(v / 1e9, 2) + (en ? 'B' : ' M');
+    if (a >= 1e6) return 'Rp ' + dec(v / 1e6, 1) + (en ? 'M' : ' jt');
+    if (a >= 1e3) return 'Rp ' + dec(v / 1e3, 0) + (en ? 'K' : ' rb');
+    return 'Rp ' + dec(Math.round(v), 0);
+  };
+  const rpTick = (v) => (v === 0 ? '0' : rp(v).replace('Rp ', ''));
+  const rpFull = (v) => 'Rp ' + dec(Math.round(v), 0);
+  const int = (v) => (v == null || v === '' || isNaN(+v) ? '—' : dec(Math.round(+v), 0));
+  const num = (v) => dec(+v, 2);
+  const pct = (v) => (v == null || !isFinite(v) ? '—' : (v > 0 ? '+' : '') + dec(v * 100, 1) + '%');
+  const pct0 = (v) => (v == null || !isFinite(v) ? '—' : dec(v * 100, 1) + '%');
+  const D = (s) => new Date(s + 'T00:00:00Z');
+  const iso = (t) => t.toISOString().slice(0, 10);
+  const add = (s, n) => { const t = D(s); t.setUTCDate(t.getUTCDate() + n); return iso(t); };
+  const days = (a, b) => Math.round((D(b) - D(a)) / 864e5) + 1;
+  const fd = (s) => { const t = D(s); return t.getUTCDate() + ' ' + MON[lang()][t.getUTCMonth()]; };
+  const fdy = (s) => fd(s) + ' ' + D(s).getUTCFullYear();
+  const fday = (s) => DOW[lang()][D(s).getUTCDay()] + ', ' + fd(s);
+  const fmon = (m) => MON[lang()][+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4);
+  const fmonL = (m) => MONL[lang()][+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4);
+  const fwib = (isoT) => { if (!isoT) return '—'; const t = new Date(Date.parse(isoT) + 7 * 3600e3); return t.getUTCDate() + ' ' + MON[lang()][t.getUTCMonth()] + ' ' + t.getUTCFullYear() + ', ' + String(t.getUTCHours()).padStart(2, '0') + '.' + String(t.getUTCMinutes()).padStart(2, '0') + ' WIB'; };
+  const weekOf = (s) => { const t = D(s); t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7)); return iso(t); };
+  const monthEnd = (m) => add(iso(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 1))), -1);
+  const GROUPS = { 'Buku umum': ['Buku umum', 'General books'], 'Komik & manga': ['Komik & manga', 'Comics & manga'], 'Buku anak': ['Buku anak', "Children's books"], 'Alat tulis & gift': ['Alat tulis & gift', 'Stationery & gifts'], 'Kafe': ['Kafe', 'Café'] };
+  const gname = (g) => T(...(GROUPS[g] || [g, g]));
+  window.ssState = window.ssState || { tab: 'ringkasan', heat: 'all', sort: 'revenue', q: '', aq: '', split: 'brand' };
+  const S = window.ssState;
+  const P = () => dash.params();
+  const brand = () => P().brand || 'All';
+  const kind = () => P().kind || 'all';
+  const kindOk = (c) => (c == null ? true : kind() === 'all' ? true : kind() === 'store' ? c === 'In-store POS' : c !== 'In-store POS');
+
+  // ---------------- DOM helpers ----------------
+  const $ = (s) => document.querySelector('#ss-root ' + s);
+  const $$ = (s) => [...document.querySelectorAll('#ss-root ' + s)];
+  const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; };
+  const skel = (x, on) => x && x.classList.toggle('dash-skeleton', on);
+  const failLine = (x) => { x.replaceChildren(); const d = el('div'); d.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:inherit;height:100%;color:var(--color-fg-muted);font-size:12px'; const dot = el('span'); dot.style.cssText = 'width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)'; d.append(dot, document.createTextNode(T('Gagal memuat', 'Failed to load'))); x.append(d); };
+  const chgEl = (cur, prev, lowerBetter) => { const s = el('span'); if (prev == null || !prev) { s.textContent = '—'; return s; } const v = cur / prev - 1; s.textContent = pct(v); if (Math.abs(v) > 0.0005) s.className = (lowerBetter ? v < 0 : v > 0) ? 'ss-up' : 'ss-down'; return s; };
+  const legend = (box, series, colorFn) => box.replaceChildren(...series.map((k) => { const s = el('span'); const i = el('i'); i.style.background = (colorFn || colorOf)(k); s.append(i, document.createTextNode(k)); return s; }));
+
+  // ---------------- data ----------------
+  const cache = {};
+  const ds = (id) => dash.data(id);
+  function rows(id, map) {
+    const d = ds(id);
+    if (d.status !== 'ok') return null;
+    const c = cache[id];
+    if (c && c.src === d.data) return c.rows;
+    const r = map ? d.data.map(map) : d.data;
+    cache[id] = { src: d.data, rows: r };
+    return r;
+  }
+  const salesRows = () => rows('sales_daily_detail', (r) => ({ d: String(r.date).slice(0, 10), b: r.brand, c: r.channel, l: r.location, o: +r.orders, v: +r.revenue, x: +r.canceled }));
+  const finRows = () => rows('finance_daily', (r) => ({ d: String(r.date).slice(0, 10), b: r.brand, c: r.channel, o: +r.orders, g: +r.gross, di: +r.discounts, f: +r.marketplace_fees, s: +r.shipping, n: +r.net, cx: +r.canceled_orders, cxv: +r.canceled_value }));
+  const titleRows = () => rows('titles_daily', (r) => ({ d: String(r.date).slice(0, 10), k: r.item_code, b: r.brand, q: +r.qty, v: +r.revenue }));
+  const itemMap = () => { const r = rows('items'); if (!r) return null; const c = cache.items; if (!c.map) c.map = Object.fromEntries(r.map((x) => [x.item_code, x])); return c.map; };
+  const bounds = (r) => { if (!r || !r.length) return null; let min = '9999', max = '0000'; for (const x of r) { if (x.d < min) min = x.d; if (x.d > max) max = x.d; } return { min, max }; };
+  let B = null; // sales bounds
+
+  // ---------------- period ----------------
+  const PRESETS = { today: ['Hari ini', 'Today'], yesterday: ['Kemarin', 'Yesterday'], '7d': ['7 hari terakhir', 'Last 7 days'], '30d': ['30 hari terakhir', 'Last 30 days'], mtd: ['Bulan ini', 'Month to date'], last_month: ['Bulan lalu', 'Last month'], '90d': ['90 hari terakhir', 'Last 90 days'], ytd: ['Tahun ini', 'Year to date'], all: ['Semua data', 'All data'], custom: ['Pilih tanggal', 'Custom dates'] };
+  function rangeFor(p, min, L, start, end) {
+    const Y = add(L, -1); const ms = (s) => s.slice(0, 8) + '01';
+    const prevMonth = (s) => { const t = D(ms(s)); t.setUTCMonth(t.getUTCMonth() - 1); return iso(t); };
+    let s, e, cs = null, ce = null, label = ['periode sebelumnya', 'prior period'];
+    const prior = () => { const n = days(s, e); ce = add(s, -1); cs = add(s, -n); };
+    if (p === 'today') { s = e = L; cs = ce = add(L, -7); label = ['hari yang sama minggu lalu', 'same day last week']; }
+    else if (p === 'yesterday') { s = e = Y; cs = ce = add(Y, -7); label = ['hari yang sama minggu lalu', 'same day last week']; }
+    else if (p === '7d') { s = add(Y, -6); e = Y; prior(); label = ['7 hari sebelumnya', 'prior 7 days']; }
+    else if (p === '30d') { s = add(Y, -29); e = Y; prior(); label = ['30 hari sebelumnya', 'prior 30 days']; }
+    else if (p === '90d') { s = add(Y, -89); e = Y; prior(); label = ['90 hari sebelumnya', 'prior 90 days']; }
+    else if (p === 'mtd') { e = ms(L) === L ? L : Y; s = ms(e); cs = prevMonth(s); ce = [add(cs, days(s, e) - 1), add(s, -1)].sort()[0]; label = ['tanggal yang sama bulan lalu', 'same days last month']; }
+    else if (p === 'last_month') { s = prevMonth(L); e = add(ms(L), -1); cs = prevMonth(s); ce = add(s, -1); label = ['bulan sebelumnya', 'the month before']; }
+    else if (p === 'ytd') { e = Y; s = e.slice(0, 4) + '-01-01'; prior(); }
+    else if (p === 'all') { s = min; e = L; }
+    else { s = start || add(Y, -29); e = end || Y; if (s > e) [s, e] = [e, s]; prior(); label = ['periode sebelumnya (sama panjang)', 'prior period of equal length']; }
+    if (s < min) s = min; if (e > L) e = L;
+    if (cs && cs < min) cs = ce = null;
+    return { s, e, cs, ce, label, p, partial: e === L };
+  }
+  const range = () => (B ? rangeFor(P().period || 'mtd', B.min, B.max, P().start, P().end) : null);
+  // clamp a range to a dataset's own window (for 90-day detail data)
+  function clampTo(R, b) {
+    if (!R || !b) return null;
+    const s = R.s < b.min ? b.min : R.s, e = R.e > b.max ? b.max : R.e;
+    let cs = R.cs, ce = R.ce;
+    if (cs && cs < b.min) { cs = ce = null; }
+    return { ...R, s, e, cs, ce, clamped: s !== R.s || e !== R.e };
+  }
+
+  // ---------------- charts ----------------
+  function bars(box, items, series, opts = {}) {
+    box.replaceChildren();
+    if (!items.length) return;
+    const W = Math.max(280, box.clientWidth || 600);
+    const fmt = opts.fmt || rp; const tipFmt = opts.tipFmt || fmt;
+    const color = (k) => (opts.color ? opts.color(k) : colorOf(k));
+    const total = (d) => series.reduce((s, k) => s + (d.values[k] || 0), 0);
+    const max = d3.max(items, total) || 1;
+    const stack = d3.stack().keys(series).value((d, k) => d.values[k] || 0)(items);
+    const svg = d3.select(box).append('svg').attr('width', '100%');
+    const tip = d3.select(box).append('div').attr('class', 'ss-tip').style('opacity', 0);
+    const measure = (texts) => { const g = svg.append('g'); let w = 0; texts.forEach((t) => { w = Math.max(w, g.append('text').attr('class', 'ss-tick').text(t).node().getComputedTextLength()); }); g.remove(); return w; };
+    const label = opts.label || ((k) => k);
+    const showTip = (ev, d) => {
+      tip.html('');
+      tip.append('div').attr('class', 'ss-tip-h').text(d.tipLabel || d.label);
+      series.filter((k) => d.values[k]).forEach((k) => { const row = tip.append('div'); if (series.length > 1) row.append('i').style('background', color(k)); row.append('span').text((series.length > 1 ? label(k) + ': ' : '') + tipFmt(d.values[k])); });
+      if (series.length > 1 && series.filter((k) => d.values[k]).length > 1 && !opts.noTotal) tip.append('div').text('Total: ' + tipFmt(total(d)));
+      if (d.extra) tip.append('div').style('color', 'var(--cds-text-secondary)').text(d.extra);
+      const [mx, my] = d3.pointer(ev, box); const tw = tip.node().offsetWidth;
+      tip.style('left', Math.min(Math.max(0, mx + 12), box.clientWidth - tw) + 'px').style('top', Math.max(0, my - 44) + 'px').style('opacity', 1);
+    };
+    if (!opts.horizontal) {
+      const H = opts.height || 220;
+      svg.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+      const y = d3.scaleLinear().domain([0, max]).range([H - 22, 8]).nice();
+      const ticks = y.ticks(4); const tf = opts.tickFmt || rpTick;
+      const ml = measure(ticks.map(tf)) + 10;
+      const x = d3.scaleBand().domain(items.map((d) => d.key)).range([ml, W - 2]).padding(0.25);
+      const g = svg.append('g');
+      g.selectAll('line.gl').data(ticks).join('line').attr('x1', ml).attr('x2', W - 2).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).style('stroke', 'var(--cds-chart-grid)');
+      g.selectAll('text.yt').data(ticks).join('text').attr('class', 'ss-tick').attr('x', ml - 6).attr('y', (t) => y(t)).attr('dy', '0.32em').attr('text-anchor', 'end').text(tf);
+      const bw = Math.min(30, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+      stack.forEach((layer) => g.append('g').selectAll('rect').data(layer).join('rect')
+        .attr('x', (d) => x(d.data.key) + off).attr('width', bw).attr('y', (d) => y(d[1])).attr('height', (d) => Math.max(0, y(d[0]) - y(d[1])))
+        .attr('rx', series.length === 1 ? 3 : 1).style('fill', color(layer.key)).attr('opacity', (d) => (d.data.dim ? 0.25 : d.data.partial ? 0.5 : 1)));
+      const lw = measure(items.map((d) => d.label)) + 10; const step = Math.max(1, Math.ceil(lw / x.step()));
+      g.selectAll('text.xt').data(items.filter((d, i) => (items.length - 1 - i) % step === 0)).join('text').attr('class', 'ss-tick').attr('x', (d) => x(d.key) + x.bandwidth() / 2).attr('y', H - 4).attr('text-anchor', 'middle').text((d) => d.label);
+      g.append('line').attr('x1', ml).attr('x2', W - 2).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--cds-chart-axis)');
+      g.selectAll('rect.hit').data(items).join('rect').attr('x', (d) => x(d.key) - (x.step() * x.paddingInner()) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - 22).attr('fill', 'transparent').on('mousemove', showTip).on('mouseleave', () => tip.style('opacity', 0));
+    } else {
+      const ml = measure(items.map((d) => d.label)) + 10;
+      const vr = measure(items.map((d) => (d.valueLabel != null ? d.valueLabel : fmt(total(d))))) + 10;
+      const rowH = 24, H = items.length * rowH + 4;
+      svg.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`); box.style.minHeight = H + 'px';
+      const x = d3.scaleLinear().domain([0, max]).range([ml, Math.max(ml + 20, W - vr)]);
+      const y = d3.scaleBand().domain(items.map((d) => d.key)).range([2, H - 2]).padding(0.3);
+      const g = svg.append('g');
+      g.selectAll('text.yl').data(items).join('text').attr('class', 'ss-tick').attr('x', ml - 6).attr('y', (d) => y(d.key) + y.bandwidth() / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text((d) => d.label);
+      stack.forEach((layer) => g.append('g').selectAll('rect').data(layer).join('rect').attr('y', (d) => y(d.data.key)).attr('height', y.bandwidth()).attr('x', (d) => x(d[0])).attr('width', (d) => Math.max(0, x(d[1]) - x(d[0]))).attr('rx', 3).style('fill', color(layer.key)));
+      g.selectAll('text.vl').data(items).join('text').attr('class', 'ss-tick').attr('x', (d) => x(total(d)) + 6).attr('y', (d) => y(d.key) + y.bandwidth() / 2).attr('dy', '0.32em').text((d) => (d.valueLabel != null ? d.valueLabel : fmt(total(d))));
+      g.selectAll('rect.hit').data(items).join('rect').attr('x', 0).attr('width', W).attr('y', (d) => y(d.key)).attr('height', y.bandwidth()).attr('fill', 'transparent').on('mousemove', showTip).on('mouseleave', () => tip.style('opacity', 0));
+    }
+  }
+  function chartState(box, id) { const d = ds(id); if (d.status === 'ok') { skel(box, false); return true; } if (d.status === 'error' || d.status === 'connect') { skel(box, false); failLine(box); } else { box.replaceChildren(); skel(box, true); } return false; }
+
+  // ---------------- tables + excel export ----------------
+  const EXPORTS = {};
+  // cols: [{h:[id,en], f:(r)=>value for display, x:(r)=>raw value for excel, num, cls, name}]
+  function table(id, cols, data, exportName) {
+    const t = $('#' + id); if (!t) return;
+    const thead = t.querySelector('thead'), tbody = t.querySelector('tbody');
+    thead.replaceChildren(el('tr')); cols.forEach((c) => { const th = el('th', c.num ? 'num' : '', T(...c.h)); thead.firstChild.append(th); });
+    tbody.replaceChildren(...data.map((r) => { const tr = el('tr'); cols.forEach((c) => { const td = el('td', [c.num ? 'num' : '', c.name ? 'ss-name' : '', c.muted ? 'ss-locs' : '', c.cls ? c.cls(r) || '' : ''].filter(Boolean).join(' ')); const v = c.f(r); if (v instanceof Node) td.append(v); else td.textContent = v ?? ''; tr.append(td); }); return tr; }));
+    if (!data.length) { const tr = el('tr'); const td = el('td', '', T('Tidak ada data untuk pilihan ini', 'No data for this selection')); td.colSpan = cols.length; td.style.color = 'var(--ssb-muted)'; tr.append(td); tbody.append(tr); }
+    if (exportName) EXPORTS[exportName] = { name: id, cols, data };
+  }
+  const xmlEsc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  const colName = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  function crc32(u8) { let c, crc = 0xffffffff; const tab = crc32.t || (crc32.t = Array.from({ length: 256 }, (_, n) => { c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; })); for (let i = 0; i < u8.length; i++) crc = tab[(crc ^ u8[i]) & 0xff] ^ (crc >>> 8); return (crc ^ 0xffffffff) >>> 0; }
+  function zip(files) { // store-only zip
+    const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+    for (const [name, text] of files) {
+      const data = enc.encode(text), nm = enc.encode(name), crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30)); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nm.length, true);
+      parts.push(new Uint8Array(h.buffer), nm, data);
+      const c = new DataView(new ArrayBuffer(46)); c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, nm.length, true); c.setUint32(42, offset, true);
+      central.push(new Uint8Array(c.buffer), nm); offset += 30 + nm.length + data.length;
+    }
+    const csize = central.reduce((s, a) => s + a.length, 0);
+    const e = new DataView(new ArrayBuffer(22)); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csize, true); e.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, new Uint8Array(e.buffer)]);
+  }
+  function xlsx(sheetName, header, data) {
+    const rowsXml = [header, ...data].map((r, ri) => '<row r="' + (ri + 1) + '">' + r.map((v, ci) => { const ref = colName(ci) + (ri + 1); const st = ri === 0 ? ' s="1"' : ''; if (typeof v === 'number' && isFinite(v)) return '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>'; return '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(v ?? '') + '</t></is></c>'; }).join('') + '</row>').join('');
+    const widths = header.map((h, i) => Math.min(60, Math.max(10, ...[h, ...data.slice(0, 200).map((r) => r[i])].map((v) => String(v ?? '').length + 2))));
+    const sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>' + rowsXml + '</sheetData><autoFilter ref="A1:' + colName(header.length - 1) + (data.length + 1) + '"/></worksheet>';
+    const sn = xmlEsc(sheetName.slice(0, 31).replace(/[\\/?*\[\]:]/g, ' '));
+    return zip([
+      ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+      ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+      ['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="' + sn + '" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' + sn + '\'!$A$1:$' + colName(header.length - 1) + '$' + (data.length + 1) + '</definedName></definedNames></workbook>'],
+      ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+      ['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF5B2A86"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/></cellXfs></styleSheet>'],
+      ['xl/worksheets/sheet1.xml', sheet],
+    ]);
+  }
+  const EXPORT_NAMES = { channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  let dl = null;
+  document.querySelector('#ss-root').addEventListener('click', async (ev) => {
+    const b = ev.target.closest('.ss-xl'); if (!b) return;
+    const key = b.dataset.export, ex = EXPORTS[key]; if (!ex) return;
+    if (!dl) dl = await claude.use('downloads');
+    const nm = T(...(EXPORT_NAMES[key] || [key, key]));
+    const header = ex.cols.map((c) => T(...c.h));
+    const data = ex.data.map((r) => ex.cols.map((c) => { const v = c.x ? c.x(r) : c.f(r); return v instanceof Node ? v.textContent : v; }));
+    const blob = xlsx(nm, header, data);
+    const stamp = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+    const file = nm.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + stamp + '.xlsx';
+    if (!dl) { b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); return; }
+    try { await dl.save({ filename: file, data: blob }); } catch (e) { if (e && e.code === 'unavailable') b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); }
+  });
+
+  // ---------------- controls ----------------
+  $$('.ss-brands button').forEach((b) => b.addEventListener('click', () => dash.setParams({ brand: b.dataset.brand })));
+  $$('.ss-lang button').forEach((b) => b.addEventListener('click', () => dash.setParams({ lang: b.dataset.lang })));
+  $$('.ss-kind button[data-kind]').forEach((b) => b.addEventListener('click', () => dash.setParams({ kind: b.dataset.kind })));
+  $$('.ss-gran button').forEach((b) => b.addEventListener('click', () => dash.setParams({ gran: b.dataset.gran })));
+  $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
+  $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
+  $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
+  $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
+  $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
+  const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
+  preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
+  const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
+  sIn.addEventListener('change', dateChange); eIn.addEventListener('change', dateChange);
+  sIn.addEventListener('blur', () => render()); eIn.addEventListener('blur', () => render());
+  const showTab = (t) => { S.tab = t; dash.setLink(t); render(); };
+  document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
+  $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // ---------------- shared aggregations ----------------
+  const ZERO = { v: 0, o: 0, x: 0, pos: 0, onl: 0, by: {} };
+  function sumBy(r, s, e, b, keyFn) {
+    const m = new Map();
+    for (const x of r) {
+      if (x.d < s || x.d > e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue;
+      const k = keyFn ? keyFn(x) : '_';
+      const a = m.get(k) || { v: 0, o: 0, x: 0, pos: 0, onl: 0, by: {} };
+      a.v += x.v; a.o += x.o; a.x += x.x; if (x.c === 'In-store POS') a.pos += x.v; else a.onl += x.v; a.by[x.b] = (a.by[x.b] || 0) + x.v;
+      m.set(k, a);
+    }
+    return m;
+  }
+  const one = (m) => m.get('_') || ZERO;
+  const cr = (a) => ((a.o + a.x) ? a.x / (a.o + a.x) : null);
+
+  // ---------------- header, notes, insights ----------------
+  function updNotes() {
+    const sn = rows('snapshots') || [];
+    const get = (src) => sn.find((r) => r.source === src) || {};
+    const s = get('sales'), k = get('stock'), dd = get('sales_detail_90d');
+    const txt = (r) => (r.updated_at ? T('Diperbarui ', 'Updated ') + fwib(r.updated_at) : '—');
+    $('#upd-ctl').textContent = txt(s) + (s.last_order_at ? T(' · pesanan terakhir ', ' · last order ') + fwib(s.last_order_at).split(', ')[1] : '');
+    $$('.ss-upd-sales').forEach((x) => { x.textContent = txt(s); x.setAttribute('data-source', 'snapshots'); });
+    $$('.ss-upd-stock').forEach((x) => { x.textContent = txt(k); x.setAttribute('data-source', 'snapshots'); });
+    $$('.ss-upd-detail').forEach((x) => { x.textContent = txt(dd.updated_at ? dd : s); x.setAttribute('data-source', 'snapshots'); });
+  }
+
+  function insights(b, R) {
+    const out = []; const E = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sr = salesRows(); if (!sr || !R) return out;
+    const cur = one(sumBy(sr, R.s, R.e, b)), prev = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
+    const movers = (keyFn) => {
+      const c = sumBy(sr, R.s, R.e, b, keyFn), p = R.cs ? sumBy(sr, R.cs, R.ce, b, keyFn) : new Map();
+      const ks = [...new Set([...c.keys(), ...p.keys()])].map((k) => ({ k, d: (c.get(k) || ZERO).v - (p.get(k) || ZERO).v, c: (c.get(k) || ZERO).v, p: (p.get(k) || ZERO).v }));
+      ks.sort((a, z) => z.d - a.d); return ks;
+    };
+    if (R.cs && prev && prev.v) {
+      const ch = movers((x) => x.c).filter((m) => m.p > 0), lo = movers((x) => x.l).filter((m) => m.p > 0);
+      const up = ch[0], dn = ch[ch.length - 1];
+      if (up && up.d > 0) out.push([`Kanal penyumbang kenaikan terbesar: <b>${E(up.k)}</b> (${up.d > 0 ? '+' : ''}${rp(up.d)}, ${pct(up.p ? up.c / up.p - 1 : null)}).`, `Biggest channel gain: <b>${E(up.k)}</b> (+${rp(up.d)}, ${pct(up.p ? up.c / up.p - 1 : null)}).`]);
+      if (dn && dn.d < 0) out.push([`Kanal yang paling turun: <b>${E(dn.k)}</b> (${rp(dn.d)}, ${pct(dn.p ? dn.c / dn.p - 1 : null)}).`, `Biggest channel drop: <b>${E(dn.k)}</b> (${rp(dn.d)}, ${pct(dn.p ? dn.c / dn.p - 1 : null)}).`]);
+      const lu = lo[0], ld = lo[lo.length - 1];
+      if (lu && lu.d > 0 && ld && ld.d < 0) out.push([`Toko terbaik vs sebelumnya: <b>${E(lu.k)}</b> (${pct(lu.p ? lu.c / lu.p - 1 : null)}); paling melemah: <b>${E(ld.k)}</b> (${pct(ld.p ? ld.c / ld.p - 1 : null)}).`, `Best store vs before: <b>${E(lu.k)}</b> (${pct(lu.p ? lu.c / lu.p - 1 : null)}); weakest: <b>${E(ld.k)}</b> (${pct(ld.p ? ld.c / ld.p - 1 : null)}).`]);
+      const c1 = cr(cur), c0 = cr(prev);
+      if (c1 != null && c0 != null && Math.abs(c1 - c0) >= 0.01) out.push([`Tingkat batal & retur ${c1 > c0 ? 'naik' : 'turun'} ke <b>${pct0(c1)}</b> (sebelumnya ${pct0(c0)}).`, `Cancellation & return rate ${c1 > c0 ? 'rose' : 'fell'} to <b>${pct0(c1)}</b> (was ${pct0(c0)}).`]);
+    }
+    const tr = titleRows(), im = itemMap();
+    if (tr && im) {
+      const tb = bounds(tr); const RR = clampTo(R, tb);
+      if (RR && RR.s <= RR.e) { const m = new Map(); for (const x of tr) { if (x.d < RR.s || x.d > RR.e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const it = im[x.k]; if (it && it.group === 'Kafe') continue; m.set(x.k, (m.get(x.k) || 0) + x.v); } const top = [...m.entries()].sort((a, z) => z[1] - a[1])[0]; if (top) out.push([`Judul terlaris periode ini: <b>${E((im[top[0]] || {}).item_name || top[0])}</b> (${rp(top[1])}).`, `Top title this period: <b>${E((im[top[0]] || {}).item_name || top[0])}</b> (${rp(top[1])}).`]); }
+    }
+    const ss = ds('stock_summary'); const sl = rows('stock_locations');
+    if (ss.status === 'ok' && sl) { const s = ss.data[0]; const dv = sl.reduce((a, r) => a + +r.dead_value, 0); out.push([`Stok: <b>${int(s.runout_7)}</b> barang laris habis dalam 7 hari, <b>${int(s.oversold)}</b> baris oversold, stok mati senilai <b>${rp(dv)}</b> (harga jual).`, `Stock: <b>${int(s.runout_7)}</b> selling items run out within 7 days, <b>${int(s.oversold)}</b> oversold lines, dead stock worth <b>${rp(dv)}</b> at selling price.`]); }
+    const rs = rows('resellers');
+    if (rs) { const call = rs.filter((r) => /^P3/.test(r.play) || (/^P1/.test(r.play) && +r.days_since_last >= 45)); const v = call.reduce((a, r) => a + +r.sales_2026_ytd, 0); out.push([`Reseller: <b>${call.length}</b> akun bernilai mulai diam (nilai 2026 ${rp(v)}), perlu dihubungi minggu ini.`, `Resellers: <b>${call.length}</b> valuable accounts going quiet (2026 value ${rp(v)}); call them this week.`]); }
+    const fr = finRows();
+    if (fr) { const fb = bounds(fr); const RR = clampTo(R, fb); if (RR && RR.s <= RR.e) { let g = 0, f = 0; for (const x of fr) { if (x.d < RR.s || x.d > RR.e || (b !== 'All' && x.b !== b) || !kindOk(x.c) || x.c !== 'Shopee') continue; g += x.g; f += x.f; } if (g) out.push([`Biaya layanan Shopee memakan <b>${pct0(f / g)}</b> dari penjualan kotor Shopee (${rp(f)}).`, `Shopee service fees take <b>${pct0(f / g)}</b> of Shopee gross sales (${rp(f)}).`]); } }
+    return out;
+  }
+
+  function renderHeader(b) {
+    const take = $('#take'), ul = $('#insights');
+    const sr = salesRows();
+    if (!sr) { if (ds('sales_daily_detail').status !== 'loading') take.textContent = '—'; return; }
+    const R = range();
+    const cur = one(sumBy(sr, R.s, R.e, b)), prev = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
+    const nm = (b === 'All' ? T('Semua merek', 'All brands') : b) + (kind() === 'store' ? T(' · toko (offline)', ' · stores (offline)') : kind() === 'online' ? ' · online' : '');
+    const per = R.s === R.e ? fdy(R.s) : fd(R.s) + ' – ' + fdy(R.e);
+    const ch = prev && prev.v ? cur.v / prev.v - 1 : null;
+    const c1 = el('b', ch == null ? '' : ch > 0 ? 'ss-up' : 'ss-down', pct(ch));
+    take.replaceChildren(document.createTextNode(`${nm}, ${per}: `), el('b', '', rp(cur.v)), document.createTextNode(T(` dari ${int(cur.o)} pesanan`, ` from ${int(cur.o)} orders`)), ...(ch == null ? [document.createTextNode('.')] : [document.createTextNode(', '), c1, document.createTextNode(` vs ${T(...R.label)}.`)]));
+    const items = insights(b, R);
+    ul.replaceChildren(...items.map(([i, e]) => { const li = el('li'); li.innerHTML = T(i, e); return li; }));
+  }
+
+  // ---------------- RINGKASAN ----------------
+  function seriesFor(b) { return b === 'All' ? BRANDS : [b]; }
+  function renderRingkasan(b) {
+    const sr = salesRows(); const series = seriesFor(b);
+    $$('#ringkasan .ss-leg').forEach((x) => legend(x, series));
+    const gt = $('#glance-tiles');
+    if (!sr) { gt.replaceChildren(); ['chart-daily', 'chart-weekly', 'chart-monthly'].forEach((id) => chartState($('#' + id), 'sales_daily_detail')); return; }
+    const L = B.max;
+    const defs = [['yesterday', T('Kemarin', 'Yesterday')], ['7d', T('7 hari terakhir', 'Last 7 days')], ['mtd', T('Bulan ini', 'Month to date')], ['last_month', T('Bulan lalu', 'Last month')]];
+    gt.replaceChildren(...defs.map(([p, lab]) => {
+      const R = rangeFor(p, B.min, L);
+      const c = one(sumBy(sr, R.s, R.e, b)), q = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
+      const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab + ' · ' + (R.s === R.e ? fd(R.s) : fd(R.s) + '–' + fd(R.e))), el('span', 'ss-big', rp(c.v)));
+      const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub); return t;
+    }));
+    // daily 60
+    const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
+    let box = $('#chart-daily'); skel(box, false);
+    bars(box, agg((d) => d, add(L, -59)).map((a) => ({ ...a, label: fd(a.key), tipLabel: fday(a.key) + (a.key === L ? T(' (belum lengkap)', ' (partial)') : ''), partial: a.key === L, extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+    box = $('#chart-weekly'); skel(box, false);
+    bars(box, agg(weekOf, weekOf(add(L, -16 * 7))).map((a) => ({ ...a, label: fd(a.key), tipLabel: T('Minggu ', 'Week ') + fd(a.key) + ' – ' + fd(add(a.key, 6)), partial: a.key === weekOf(L), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+    box = $('#chart-monthly'); skel(box, false);
+    bars(box, agg((d) => d.slice(0, 7), B.min).map((a) => ({ ...a, label: fmon(a.key), tipLabel: fmonL(a.key), partial: a.key === L.slice(0, 7), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+    // health
+    const R = range(); const ht = $('#health-tiles'); const tiles = [];
+    const mini = (lab, v, sub, cls) => { const d = el('div', 'ss-mini'); d.append(el('div', 'ss-lab', lab), el('span', 'ss-v' + (cls ? ' ' + cls : ''), v)); if (sub) d.append(el('div', 'ss-sub', sub)); return d; };
+    const cur = one(sumBy(sr, R.s, R.e, b)); const onlineShare = cur.v ? cur.onl / cur.v : null;
+    tiles.push(mini(T('Porsi online', 'Online share'), pct0(onlineShare), T('sisanya kasir toko', 'rest is in-store')));
+    tiles.push(mini(T('Batal & retur', 'Cancel & return'), pct0(cr(cur)), int(cur.x) + T(' pesanan', ' orders')));
+    const sl = rows('stock_locations');
+    if (sl) { const v = sl.reduce((a, r) => a + +r.retail_value, 0), dv = sl.reduce((a, r) => a + +r.dead_value, 0); tiles.push(mini(T('Nilai stok (harga jual)', 'Stock value (retail)'), rp(v), int(sl.reduce((a, r) => a + +r.units, 0)) + T(' unit', ' units'))); tiles.push(mini(T('Stok mati 90+ hari', 'Dead stock 90+ days'), pct0(v ? dv / v : null), rp(dv), dv / v > 0.2 ? 'ss-down' : '')); }
+    const cu = rows('customers_90d'); if (cu) { const f = cu.filter((r) => (b === 'All' || r.brand === b) && r.channel !== 'In-store POS'); const c = f.reduce((a, r) => a + +r.customers, 0), rc = f.reduce((a, r) => a + +r.repeat_customers, 0); tiles.push(mini(T('Pembeli online kembali', 'Repeat online buyers'), pct0(c ? rc / c : null), int(c) + T(' pembeli, 90 hari', ' buyers, 90 days'))); }
+    const fr = finRows(); if (fr) { const RR = clampTo(R, bounds(fr)); let g = 0, n = 0; if (RR && RR.s <= RR.e) for (const x of fr) { if (x.d < RR.s || x.d > RR.e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; g += x.g; n += x.n; } tiles.push(mini(T('Uang diterima / kotor', 'Received / gross'), pct0(g ? n / g : null), T('setelah diskon & biaya', 'after discounts & fees'))); }
+    const rs = rows('resellers'); if (rs) { const act = rs.filter((r) => r.recency === 'Under 60 days').length; tiles.push(mini(T('Reseller aktif (<60 hr)', 'Active resellers (<60d)'), int(act), T('dari ', 'of ') + int(rs.length) + T(' akun', ' accounts'))); }
+    ht.replaceChildren(...tiles);
+  }
+
+  // ---------------- PENJUALAN ----------------
+  function renderSales(b) {
+    const sr = salesRows(); const series = seriesFor(b);
+    const tiles = { rev: $('#t-rev'), ord: $('#t-ord'), aov: $('#t-aov'), can: $('#t-can') };
+    if (!sr) { Object.values(tiles).forEach((t) => { skel(t.querySelector('.ss-big'), true); t.querySelector('.ss-sub').textContent = ''; }); chartState($('#chart-trend'), 'sales_daily_detail'); return; }
+    const R = range(); const n = days(R.s, R.e);
+    const cur = one(sumBy(sr, R.s, R.e, b)), prev = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
+    const setTile = (t, big, cv, pv, lower, ptxt) => { const bg = t.querySelector('.ss-big'); skel(bg, false); bg.textContent = big; const sub = t.querySelector('.ss-sub'); if (pv == null) { sub.textContent = T('Tidak ada pembanding', 'No comparison'); return; } sub.replaceChildren(chgEl(cv, pv, lower), document.createTextNode(' vs ' + T(...R.label)), el('br'), document.createTextNode(ptxt)); };
+    const bf = T('Sebelumnya: ', 'Before: ');
+    setTile(tiles.rev, rp(cur.v), cur.v, prev && prev.v, false, prev ? bf + rp(prev.v) : '');
+    setTile(tiles.ord, int(cur.o), cur.o, prev && prev.o, false, prev ? bf + int(prev.o) : '');
+    setTile(tiles.aov, cur.o ? rp(cur.v / cur.o) : '—', cur.o ? cur.v / cur.o : null, prev && prev.o ? prev.v / prev.o : null, false, prev && prev.o ? bf + rp(prev.v / prev.o) : '');
+    const crc = cr(cur), crp = prev ? cr(prev) : null;
+    setTile(tiles.can, pct0(crc), crc, crp, true, prev ? bf + pct0(crp) : '');
+    // trend
+    const gran = P().gran || (n <= 45 ? 'day' : n <= 200 ? 'week' : 'month');
+    $$('.ss-gran button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.gran === gran)));
+    const keyOf = gran === 'day' ? (s) => s : gran === 'week' ? weekOf : (s) => s.slice(0, 7);
+    const startOf = (k) => (gran === 'month' ? k + '-01' : k), endOf = (k) => (gran === 'day' ? k : gran === 'week' ? add(k, 6) : monthEnd(k));
+    let ws = R.s; const bk = new Set(); for (let t = R.s; t <= R.e; t = add(t, 1)) bk.add(keyOf(t));
+    const minB = { day: 14, week: 8, month: 6 }[gran]; while (bk.size < minB && ws > B.min) { ws = add(ws, -1); bk.add(keyOf(ws)); }
+    const KIND = [T('Toko fisik (POS)', 'In-store (POS)'), 'Online']; const kindOf = (x) => (x.c === 'In-store POS' ? KIND[0] : KIND[1]); const sk = S.split === 'kind' ? kindOf : (x) => x.b;
+    $$('.ss-split button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.split === S.split)));
+    const m = new Map(); for (const x of sr) { if (x.d < ws || x.d > R.e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyOf(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; const s2 = sk(x); a.values[s2] = (a.values[s2] || 0) + x.v; a.o += x.o; m.set(k, a); }
+    const inSel = (k) => endOf(k) >= R.s && startOf(k) <= R.e;
+    const items = [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)).map((a) => { const partial = endOf(a.key) > B.max || (gran !== 'day' && (startOf(a.key) < R.s || endOf(a.key) > R.e) && inSel(a.key)) || (gran === 'day' && a.key === B.max); const lbl = gran === 'month' ? fmon(a.key) : fd(a.key); const tl = (gran === 'day' ? fday(a.key) : gran === 'week' ? T('Minggu ', 'Week ') + fd(a.key) + ' – ' + fd(endOf(a.key)) : fmonL(a.key)) + (partial ? T(' (belum lengkap)', ' (partial)') : ''); return { key: a.key, label: lbl, tipLabel: tl, values: a.values, dim: !inSel(a.key), partial, extra: int(a.o) + T(' pesanan', ' orders') }; });
+    $('#trend-note').textContent = T({ day: 'Per hari', week: 'Per minggu (mulai Senin)', month: 'Per bulan' }[gran] + '. Batang pudar = di luar periode terpilih; lebih terang = belum lengkap.', { day: 'Daily', week: 'Weekly, Monday start', month: 'Monthly' }[gran] + '. Faded bars are outside the selected period; lighter = partial.');
+    const tser = S.split === 'kind' ? KIND : series; const tcol = S.split === 'kind' ? (k) => (k === KIND[0] ? 'var(--ssb-c2)' : 'var(--ssb-c1)') : colorOf;
+    $$('#sales .ss-leg').forEach((x) => legend(x, tser, tcol));
+    const tb = $('#chart-trend'); skel(tb, false); bars(tb, items, tser, { tipFmt: rpFull, color: tcol });
+    // channel table
+    const total = cur.v || 1;
+    const cc = sumBy(sr, R.s, R.e, b, (x) => x.c), cp = R.cs ? sumBy(sr, R.cs, R.ce, b, (x) => x.c) : new Map();
+    const chans = [...new Set([...cc.keys(), ...cp.keys()])].map((k) => ({ k, c: cc.get(k) || ZERO, p: cp.get(k) || null })).filter((x) => x.c.v || (x.p && x.p.v)).sort((a, z) => z.c.v - a.c.v);
+    table('tbl-channels', [
+      { h: ['Kanal', 'Channel'], f: (r) => r.k },
+      { h: ['Pendapatan', 'Revenue'], num: 1, f: (r) => rp(r.c.v), x: (r) => Math.round(r.c.v) },
+      { h: ['Porsi', 'Share'], num: 1, f: (r) => pct0(r.c.v / total), x: (r) => +(r.c.v / total).toFixed(4) },
+      { h: ['Pesanan', 'Orders'], num: 1, f: (r) => int(r.c.o), x: (r) => r.c.o },
+      { h: ['Rata-rata', 'Avg order'], num: 1, f: (r) => (r.c.o ? rp(r.c.v / r.c.o) : '—'), x: (r) => (r.c.o ? Math.round(r.c.v / r.c.o) : '') },
+      { h: ['vs sebelumnya', 'vs prior'], num: 1, f: (r) => (R.cs ? chgEl(r.c.v, r.p ? r.p.v : 0) : '—'), x: (r) => (r.p && r.p.v ? +(r.c.v / r.p.v - 1).toFixed(4) : '') },
+      { h: ['Batal', 'Cancel'], num: 1, f: (r) => pct0(cr(r.c)), x: (r) => (cr(r.c) == null ? '' : +cr(r.c).toFixed(4)), cls: (r) => (cr(r.c) > 0.2 ? 'ss-flag' : '') },
+    ], chans, 'channels');
+    const lc = sumBy(sr, R.s, R.e, b, (x) => x.l), lp = R.cs ? sumBy(sr, R.cs, R.ce, b, (x) => x.l) : new Map();
+    const locs = [...new Set([...lc.keys(), ...lp.keys()])].map((k) => ({ k, c: lc.get(k) || ZERO, p: lp.get(k) || null })).filter((x) => x.c.v || (x.p && x.p.v)).sort((a, z) => z.c.v - a.c.v);
+    table('tbl-locations', [
+      { h: ['Lokasi', 'Location'], f: (r) => r.k },
+      { h: ['Pendapatan', 'Revenue'], num: 1, f: (r) => rp(r.c.v), x: (r) => Math.round(r.c.v) },
+      { h: ['Di toko', 'In-store'], num: 1, f: (r) => rp(r.c.pos), x: (r) => Math.round(r.c.pos) },
+      { h: ['Online', 'Online'], num: 1, f: (r) => rp(r.c.onl), x: (r) => Math.round(r.c.onl) },
+      { h: ['Pesanan', 'Orders'], num: 1, f: (r) => int(r.c.o), x: (r) => r.c.o },
+      { h: ['vs sebelumnya', 'vs prior'], num: 1, f: (r) => (R.cs ? chgEl(r.c.v, r.p ? r.p.v : 0) : '—'), x: (r) => (r.p && r.p.v ? +(r.c.v / r.p.v - 1).toFixed(4) : '') },
+    ], locs, 'locations');
+    // heatmap
+    $$('.ss-heatkind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === S.heat)));
+    const hd = rows('hour_dow'); const heat = $('#heat');
+    if (hd) {
+      const g = {}; let mx = 0, minH = 23, maxH = 0;
+      for (const r of hd) { if ((b !== 'All' && r.brand !== b) || ((kind() !== 'all' ? kind() : S.heat) !== 'all' && r.kind !== (kind() !== 'all' ? kind() : S.heat))) continue; const k = r.dow + '|' + r.hour; g[k] = (g[k] || 0) + +r.revenue; if (+r.revenue > 0) { minH = Math.min(minH, +r.hour); maxH = Math.max(maxH, +r.hour); } }
+      Object.values(g).forEach((v) => (mx = Math.max(mx, v)));
+      if (minH > maxH) { minH = 8; maxH = 22; }
+      const col = d3.interpolateRgb('#F4F0F8', '#5B2A86');
+      const tbl = el('table'); const th = el('thead'); const tr0 = el('tr'); tr0.append(el('th', '', '')); for (let h = minH; h <= maxH; h++) tr0.append(el('th', '', String(h).padStart(2, '0'))); th.append(tr0); tbl.append(th);
+      const tbd = el('tbody');
+      for (let d = 0; d < 7; d++) { const tr = el('tr'); tr.append(el('th', '', DOWM[lang()][d])); for (let h = minH; h <= maxH; h++) { const v = g[d + '|' + h] || 0; const td = el('td'); td.style.background = v ? col(Math.sqrt(v / mx)) : '#FBFAFC'; td.title = DOWM[lang()][d] + ' ' + String(h).padStart(2, '0') + ':00 · ' + rp(v); tr.append(td); } tbd.append(tr); }
+      tbl.append(tbd); heat.replaceChildren(tbl);
+    } else heat.replaceChildren();
+    // customers
+    const cu = rows('customers_90d');
+    if (cu) {
+      const f = cu.filter((r) => (b === 'All' || r.brand === b) && r.channel !== 'In-store POS' && +r.customers > 0).sort((a, z) => +z.revenue - +a.revenue);
+      table('tbl-customers', [
+        { h: ['Merek · kanal', 'Brand · channel'], f: (r) => r.brand + ' · ' + r.channel },
+        { h: ['Pembeli', 'Buyers'], num: 1, f: (r) => int(r.customers), x: (r) => +r.customers },
+        { h: ['Kembali', 'Repeat'], num: 1, f: (r) => pct0(+r.repeat_customers / +r.customers), x: (r) => +(+r.repeat_customers / +r.customers).toFixed(4) },
+        { h: ['Pendapatan dari pembeli kembali', 'Revenue from repeat buyers'], num: 1, f: (r) => pct0(+r.repeat_revenue / +r.revenue), x: (r) => +(+r.repeat_revenue / +r.revenue).toFixed(4) },
+      ], f);
+    }
+  }
+
+  // ---------------- PRODUK ----------------
+  function renderProduk(b) {
+    b = b || brand();
+    const tr = titleRows(), im = itemMap(); const pt = $('#prod-tiles');
+    if (!tr || !im) { pt.replaceChildren(); chartState($('#chart-groups'), 'titles_daily'); return; }
+    const tb = bounds(tr); const R = clampTo(range(), tb);
+    const note = R.clamped ? T(` Data per judul tersedia ${fd(tb.min)} – ${fdy(tb.max)}; periode dipotong ke rentang itu.`, ` Title data covers ${fd(tb.min)} – ${fdy(tb.max)}; the period is trimmed to that.`) : '';
+    const agg = (s, e) => { const m = new Map(); if (!s) return m; for (const x of tr) { if (x.d < s || x.d > e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const a = m.get(x.k) || { k: x.k, q: 0, v: 0 }; a.q += x.q; a.v += x.v; m.set(x.k, a); } return m; };
+    const cur = R.s <= R.e ? agg(R.s, R.e) : new Map(); const prv = R.cs ? agg(R.cs, R.ce) : new Map();
+    const list = [...cur.values()].filter((a) => (im[a.k] || {}).group !== 'Kafe').map((a) => ({ ...a, it: im[a.k] || { item_name: a.k, group: '' }, pq: (prv.get(a.k) || {}).q || 0 }));
+    const tv = list.reduce((s, a) => s + a.v, 0), tq = list.reduce((s, a) => s + a.q, 0);
+    const mk = (lab, v, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+    const sorted = list.slice().sort((a, z) => z.v - a.v); const top20 = sorted.slice(0, 20).reduce((s, a) => s + a.v, 0);
+    pt.replaceChildren(mk(T('Judul terjual', 'Titles sold'), int(list.length), T('judul berbeda', 'distinct titles')), mk(T('Unit terjual', 'Units sold'), int(tq), ''), mk(T('Penjualan barang', 'Item sales'), rp(tv), T('sebelum potongan marketplace', 'before marketplace deductions')), mk(T('Porsi 20 judul teratas', 'Top 20 titles share'), pct0(tv ? top20 / tv : null), T('konsentrasi penjualan', 'sales concentration')));
+    // groups
+    const gm = {}; list.forEach((a) => { const g = a.it.group || 'Alat tulis & gift'; gm[g] = gm[g] || { v: 0, q: 0 }; gm[g].v += a.v; gm[g].q += a.q; });
+    const gb = $('#chart-groups'); skel(gb, false);
+    bars(gb, Object.entries(gm).sort((a, z) => z[1].v - a[1].v).map(([g, a]) => ({ key: g, label: gname(g), values: { v: a.v }, extra: int(a.q) + T(' unit', ' units') + ' · ' + pct0(tv ? a.v / tv : null) })), ['v'], { horizontal: true, color: () => 'var(--ssb-purple)' });
+    // rising
+    const rising = list.filter((a) => a.q - a.pq >= 3).sort((a, z) => z.q - z.pq - (a.q - a.pq)).slice(0, 40);
+    table('tbl-rising', [
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.it.item_name },
+      { h: ['Unit', 'Units'], num: 1, f: (r) => int(r.q), x: (r) => r.q },
+      { h: ['Sebelumnya', 'Before'], num: 1, f: (r) => int(r.pq), x: (r) => r.pq },
+      { h: ['Naik', 'Up'], num: 1, f: (r) => '+' + int(r.q - r.pq), x: (r) => r.q - r.pq, cls: () => 'ss-up' },
+      { h: ['Kode', 'Code'], muted: 1, f: (r) => r.k },
+    ], R.cs ? rising : [], 'rising');
+    // top
+    $$('.ss-topsort button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.sort === S.sort)));
+    const q = (S.q || '').trim().toLowerCase();
+    const top = list.filter((a) => !q || a.it.item_name.toLowerCase().includes(q) || a.k.includes(q)).sort((a, z) => (S.sort === 'qty' ? z.q - a.q : z.v - a.v)).slice(0, 300);
+    const kn = kind() !== 'all' ? T(' Filter online/toko belum berlaku untuk data per judul.', ' The online/store filter does not apply to title data yet.') : '';
+    $('#top-note').textContent = kn + T(`300 judul teratas, ${fd(R.s)} – ${fdy(R.e)}. Unduh Excel untuk daftar lengkap yang tampil.`, `Top 300 titles, ${fd(R.s)} – ${fdy(R.e)}. Download Excel for the full list shown.`) + note;
+    table('tbl-top', [
+      { h: ['#', '#'], num: 1, f: (r) => String(top.indexOf(r) + 1), x: (r) => top.indexOf(r) + 1 },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.it.item_name },
+      { h: ['Kategori', 'Category'], f: (r) => gname(r.it.group), muted: 1 },
+      { h: ['Unit', 'Units'], num: 1, f: (r) => int(r.q), x: (r) => r.q },
+      { h: ['Penjualan', 'Sales'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+      { h: ['Porsi', 'Share'], num: 1, f: (r) => pct0(tv ? r.v / tv : null), x: (r) => (tv ? +(r.v / tv).toFixed(4) : '') },
+      { h: ['vs sebelumnya', 'vs prior'], num: 1, f: (r) => (R.cs ? (r.pq ? pct(r.q / r.pq - 1) : T('baru', 'new')) : '—'), x: (r) => (r.pq ? +(r.q / r.pq - 1).toFixed(4) : '') },
+      { h: ['Kode', 'Code'], muted: 1, f: (r) => r.k },
+    ], top, 'top');
+  }
+
+  // ---------------- RESELLER ----------------
+  function renderReseller() {
+    const rs = rows('resellers'), tk = rows('reseller_tracker'); const rt = $('#res-tiles');
+    if (!rs) { rt.replaceChildren(); return; }
+    const sum = (a, f) => a.reduce((s, r) => s + (+r[f] || 0), 0);
+    const active = rs.filter((r) => r.recency === 'Under 60 days');
+    const quiet = rs.filter((r) => /^P3/.test(r.play) || (/^P1/.test(r.play) && +r.days_since_last >= 45));
+    const mk = (lab, v, sub, cls) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big' + (cls ? ' ' + cls : ''), v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+    const contacted = tk ? tk.filter((r) => r.status && r.status !== 'Not contacted').length : 0;
+    rt.replaceChildren(
+      mk(T('Penjualan 2026 YTD', 'Sales 2026 YTD'), rp(sum(rs, 'sales_2026_ytd')), T('2025: ', '2025: ') + rp(sum(rs, 'sales_2025'))),
+      mk(T('Akun aktif (<60 hari)', 'Active accounts (<60 days)'), int(active.length), T('dari ', 'of ') + int(rs.length) + T(' akun', ' accounts')),
+      mk(T('Mulai diam', 'Going quiet'), int(quiet.length), rp(sum(quiet, 'sales_2026_ytd')) + T(' nilai 2026', ' 2026 value'), quiet.length ? 'ss-down' : ''),
+      mk(T('Progres kontak', 'Outreach progress'), tk ? pct0(contacted / tk.length) : '—', tk ? int(contacted) + ' / ' + int(tk.length) + T(' sudah dihubungi', ' contacted') : ''),
+    );
+    const byPlay = {}; rs.forEach((r) => { const k = r.play.replace(/ \(budget cycle\)/, ''); const a = byPlay[k] = byPlay[k] || { k, n: 0, v: 0, y: 0 }; a.n++; a.v += +r.total_jan25_oct26 || 0; a.y += +r.sales_2026_ytd || 0; });
+    table('tbl-plays', [
+      { h: ['Play', 'Play'], f: (r) => r.k },
+      { h: ['Akun', 'Accounts'], num: 1, f: (r) => int(r.n), x: (r) => r.n },
+      { h: ['2026 YTD', '2026 YTD'], num: 1, f: (r) => rp(r.y), x: (r) => Math.round(r.y) },
+      { h: ['Total Jan25–Okt26', 'Total Jan25–Oct26'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+    ], Object.values(byPlay).sort((a, z) => (a.k < z.k ? -1 : 1)));
+    const pic = {}; rs.forEach((r) => { const a = pic[r.pic || '-'] = pic[r.pic || '-'] || { k: r.pic || '-', n: 0, act: 0, quiet: 0, y: 0, tk: 0, done: 0 }; a.n++; if (r.recency === 'Under 60 days') a.act++; if (quiet.includes(r)) a.quiet++; a.y += +r.sales_2026_ytd || 0; });
+    (tk || []).forEach((r) => { const a = pic[r.pic || '-'] = pic[r.pic || '-'] || { k: r.pic || '-', n: 0, act: 0, quiet: 0, y: 0, tk: 0, done: 0 }; a.tk++; if (r.status && r.status !== 'Not contacted') a.done++; });
+    table('tbl-pic', [
+      { h: ['PIC', 'PIC'], f: (r) => r.k },
+      { h: ['Akun', 'Accounts'], num: 1, f: (r) => int(r.n), x: (r) => r.n },
+      { h: ['Aktif', 'Active'], num: 1, f: (r) => int(r.act), x: (r) => r.act },
+      { h: ['Mulai diam', 'Going quiet'], num: 1, f: (r) => int(r.quiet), x: (r) => r.quiet, cls: (r) => (r.quiet ? 'ss-warn' : '') },
+      { h: ['2026 YTD', '2026 YTD'], num: 1, f: (r) => rp(r.y), x: (r) => Math.round(r.y) },
+      { h: ['Daftar kontak', 'Outreach list'], num: 1, f: (r) => int(r.tk), x: (r) => r.tk },
+      { h: ['Sudah dihubungi', 'Contacted'], num: 1, f: (r) => int(r.done), x: (r) => r.done },
+    ], Object.values(pic).sort((a, z) => z.y - a.y), 'pic');
+    table('tbl-callnow', [
+      { h: ['Akun', 'Account'], name: 1, f: (r) => r.account + (r.shop ? ' (' + r.shop + ')' : '') },
+      { h: ['Segmen', 'Segment'], f: (r) => r.segment },
+      { h: ['PIC', 'PIC'], f: (r) => r.pic },
+      { h: ['Play', 'Play'], f: (r) => { const s = el('span', 'ss-pill ' + (/^P3/.test(r.play) ? 'bad' : 'warn'), r.play.replace(/ \(budget cycle\)/, '')); return s; }, x: (r) => r.play },
+      { h: ['Hari sejak order', 'Days since order'], num: 1, f: (r) => int(r.days_since_last), x: (r) => +r.days_since_last },
+      { h: ['Order terakhir', 'Last order'], num: 1, f: (r) => r.last_invoice },
+      { h: ['2026 YTD', '2026 YTD'], num: 1, f: (r) => rp(+r.sales_2026_ytd), x: (r) => +r.sales_2026_ytd },
+      { h: ['Invoice', 'Invoices'], num: 1, f: (r) => int(r.invoices), x: (r) => +r.invoices },
+    ], quiet.slice().sort((a, z) => +z.sales_2026_ytd - +a.sales_2026_ytd), 'callnow');
+    const seg = {}; rs.forEach((r) => { const a = seg[r.segment] = seg[r.segment] || { k: r.segment, n: 0, a: 0, y5: 0, y6: 0 }; a.n++; if (r.recency === 'Under 60 days') a.a++; a.y5 += +r.sales_2025 || 0; a.y6 += +r.sales_2026_ytd || 0; });
+    table('tbl-segments', [
+      { h: ['Segmen', 'Segment'], f: (r) => r.k },
+      { h: ['Akun', 'Accounts'], num: 1, f: (r) => int(r.n) },
+      { h: ['Aktif', 'Active'], num: 1, f: (r) => int(r.a) },
+      { h: ['2025', '2025'], num: 1, f: (r) => rp(r.y5) },
+      { h: ['2026 YTD', '2026 YTD'], num: 1, f: (r) => rp(r.y6) },
+    ], Object.values(seg).sort((a, z) => z.y6 - a.y6));
+    const q = (S.aq || '').trim().toLowerCase();
+    table('tbl-accounts', [
+      { h: ['Akun', 'Account'], name: 1, f: (r) => r.account + (r.shop ? ' (' + r.shop + ')' : '') },
+      { h: ['Segmen', 'Segment'], f: (r) => r.segment },
+      { h: ['PIC', 'PIC'], f: (r) => r.pic },
+      { h: ['Kebaruan', 'Recency'], f: (r) => { const ok = r.recency === 'Under 60 days'; return el('span', 'ss-pill ' + (ok ? 'ok' : /Churned/.test(r.recency) ? 'bad' : 'warn'), r.recency); }, x: (r) => r.recency },
+      { h: ['Total Jan25–Okt26', 'Total Jan25–Oct26'], num: 1, f: (r) => rp(+r.total_jan25_oct26), x: (r) => +r.total_jan25_oct26 },
+      { h: ['2026 YTD', '2026 YTD'], num: 1, f: (r) => rp(+r.sales_2026_ytd), x: (r) => +r.sales_2026_ytd },
+      { h: ['Rata-rata invoice', 'Avg ticket'], num: 1, f: (r) => rp(+r.avg_ticket), x: (r) => +r.avg_ticket },
+      { h: ['Order terakhir', 'Last order'], num: 1, f: (r) => r.last_invoice },
+      { h: ['Play', 'Play'], f: (r) => r.play, muted: 1 },
+    ], rs.filter((r) => !q || (r.account + ' ' + r.shop + ' ' + r.pic + ' ' + r.segment).toLowerCase().includes(q)).sort((a, z) => +z.total_jan25_oct26 - +a.total_jan25_oct26), 'accounts');
+  }
+
+  // ---------------- STOK ----------------
+  dash.calc('stock_summary', {
+    inputs: ['stock_runout', 'stock_oversold', 'stock_low_by_location', 'stock_dead_by_location'],
+    title: 'Stock alert counts',
+    description: 'Counts for the stock status line: items out within 7 and 21 days, oversold lines and units short, low-stock lines, dead-stock lines and units.',
+    fn: (stock_runout, stock_oversold, stock_low_by_location, stock_dead_by_location) => [{
+      runout_7: stock_runout.filter((r) => +r.days_left <= 7).length,
+      runout_21: stock_runout.length,
+      oversold: stock_oversold.length,
+      oversold_units: stock_oversold.reduce((s, r) => s - Math.min(0, +r.available), 0),
+      low_items: stock_low_by_location.reduce((s, r) => s + +r.low_stock_items, 0),
+      dead_items: stock_dead_by_location.reduce((s, r) => s + +r.items, 0),
+      dead_units: stock_dead_by_location.reduce((s, r) => s + +r.units, 0),
+    }],
+  });
+  function renderStock() {
+    const st = $('#stock-status'); const ss = ds('stock_summary');
+    if (ss.status === 'ok') {
+      const s = ss.data[0];
+      const m = (f, cls) => { const x = el('b', cls || ''); const sp = el('span', '', int(s[f])); sp.setAttribute('data-source', 'stock_summary'); sp.setAttribute('data-field', f); sp.setAttribute('data-row', '0'); x.append(sp); return x; };
+      const p = el('p');
+      if (lang() === 'id') p.append(m('runout_7', s.runout_7 ? 'ss-flag' : ''), document.createTextNode(' barang habis dalam 7 hari (dari '), m('runout_21'), document.createTextNode(' dalam 21 hari) · '), m('oversold', s.oversold ? 'ss-flag' : ''), document.createTextNode(' baris oversold (terjual melebihi stok), kurang '), m('oversold_units'), document.createTextNode(' unit · '), m('low_items'), document.createTextNode(' baris di bawah titik pesan ulang · '), m('dead_units'), document.createTextNode(' unit stok mati di '), m('dead_items'), document.createTextNode(' baris.'));
+      else p.append(m('runout_7', s.runout_7 ? 'ss-flag' : ''), document.createTextNode(' items run out within 7 days (of '), m('runout_21'), document.createTextNode(' within 21) · '), m('oversold', s.oversold ? 'ss-flag' : ''), document.createTextNode(' oversold lines, '), m('oversold_units'), document.createTextNode(' units short · '), m('low_items'), document.createTextNode(' lines below reorder point · '), m('dead_units'), document.createTextNode(' units of dead stock across '), m('dead_items'), document.createTextNode(' lines.'));
+      st.replaceChildren(p);
+    } else if (ss.status === 'error') failLine(st);
+    const sl = rows('stock_locations');
+    if (sl) {
+      const data = sl.filter((r) => +r.units > 0 || +r.oversold_lines > 0);
+      const tv = data.reduce((a, r) => a + +r.retail_value, 0);
+      table('tbl-stockloc', [
+        { h: ['Lokasi', 'Location'], f: (r) => r.location },
+        { h: ['SKU', 'SKUs'], num: 1, f: (r) => int(r.sku_lines), x: (r) => +r.sku_lines },
+        { h: ['Unit', 'Units'], num: 1, f: (r) => int(r.units), x: (r) => +r.units },
+        { h: ['Nilai (harga jual)', 'Value (retail)'], num: 1, f: (r) => rp(+r.retail_value), x: (r) => +r.retail_value },
+        { h: ['Porsi nilai', 'Value share'], num: 1, f: (r) => pct0(tv ? +r.retail_value / tv : null), x: (r) => +(+r.retail_value / tv).toFixed(4) },
+        { h: ['Sell-through', 'Sell-through'], num: 1, f: (r) => pct0((+r.units_sold + +r.units) ? +r.units_sold / (+r.units_sold + +r.units) : null), x: (r) => ((+r.units_sold + +r.units) ? +(+r.units_sold / (+r.units_sold + +r.units)).toFixed(4) : '') },
+        { h: ['Stok menipis', 'Low stock'], num: 1, f: (r) => int(r.low_lines), x: (r) => +r.low_lines },
+        { h: ['Oversold', 'Oversold'], num: 1, f: (r) => int(r.oversold_lines), x: (r) => +r.oversold_lines, cls: (r) => (+r.oversold_lines >= 10 ? 'ss-flag' : '') },
+        { h: ['Stok mati (unit)', 'Dead (units)'], num: 1, f: (r) => int(r.dead_units), x: (r) => +r.dead_units },
+        { h: ['Stok mati (nilai)', 'Dead (value)'], num: 1, f: (r) => rp(+r.dead_value), x: (r) => +r.dead_value },
+        { h: ['% mati', '% dead'], num: 1, f: (r) => pct0(+r.retail_value ? +r.dead_value / +r.retail_value : null), x: (r) => (+r.retail_value ? +(+r.dead_value / +r.retail_value).toFixed(4) : ''), cls: (r) => (+r.retail_value && +r.dead_value / +r.retail_value > 0.25 ? 'ss-flag' : '') },
+      ], data, 'stockloc');
+      const AG = [['units_age_0_29', ['< 30 hari', '< 30 days'], '#5FB98A'], ['units_age_30_89', ['30–89 hari', '30–89 days'], '#F2B33D'], ['units_age_90_179', ['90–179 hari', '90–179 days'], '#A77BBE'], ['units_age_180_plus', ['180+ hari', '180+ days'], '#2A1640']];
+      const cmap = Object.fromEntries(AG.map((a) => [a[0], a[2]])); const lmap = Object.fromEntries(AG.map((a) => [a[0], T(...a[1])]));
+      $('#legend-aging').replaceChildren(...AG.map((a) => { const s = el('span'); const i = el('i'); i.style.background = a[2]; s.append(i, document.createTextNode(T(...a[1]))); return s; }));
+      const ab = $('#chart-aging'); skel(ab, false);
+      bars(ab, data.filter((r) => +r.units > 0).map((r) => ({ key: r.location, label: r.location, values: Object.fromEntries(AG.map((a) => [a[0], +r[a[0]]])), valueLabel: int(r.units) + T(' unit', ' units') })), AG.map((a) => a[0]), { horizontal: true, fmt: (v) => int(v) + T(' unit', ' units'), color: (k) => cmap[k], label: (k) => lmap[k] });
+    } else { chartState($('#chart-aging'), 'stock_locations'); }
+    const tbl = (id, tid, cols, key) => { const r = rows(id); if (r) table(tid, cols, r, key); };
+    tbl('stock_runout', 'tbl-runout', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Terjual/hari', 'Sold/day'], num: 1, f: (r) => num(r.daily_avg), x: (r) => +r.daily_avg }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available_qty), x: (r) => +r.available_qty }, { h: ['Sisa hari', 'Days left'], num: 1, f: (r) => int(r.days_left), x: (r) => +r.days_left, cls: (r) => (+r.days_left <= 7 ? 'ss-flag' : +r.days_left <= 14 ? 'ss-warn' : '') }, { h: ['Pesan ulang', 'Reorder by'], num: 1, f: (r) => r.reorder_by }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'runout');
+    tbl('stock_oversold', 'tbl-oversold', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Lokasi', 'Location'], f: (r) => r.location }, { h: ['Stok', 'On hand'], num: 1, f: (r) => num(r.on_hand), x: (r) => +r.on_hand }, { h: ['Dipesan', 'Reserved'], num: 1, f: (r) => num(r.reserved), x: (r) => +r.reserved }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available), x: (r) => +r.available, cls: () => 'ss-flag' }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'oversold');
+    tbl('stock_transfers', 'tbl-transfers', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Dari', 'From'], f: (r) => r.from_location }, { h: ['Stok di asal', 'Stock at source'], num: 1, f: (r) => int(r.from_units), x: (r) => +r.from_units }, { h: ['Tidak laku (hari)', 'Unsold (days)'], num: 1, f: (r) => int(r.days_since_sale_from), x: (r) => +r.days_since_sale_from }, { h: ['Ke', 'To'], f: (r) => r.to_location }, { h: ['Terjual di tujuan', 'Sold at destination'], num: 1, f: (r) => int(r.to_units_sold), x: (r) => +r.to_units_sold }, { h: ['Stok di tujuan', 'Stock at destination'], num: 1, f: (r) => int(r.to_available), x: (r) => +r.to_available }, { h: ['Usulan unit', 'Suggested qty'], num: 1, f: (r) => int(r.suggested_qty), x: (r) => +r.suggested_qty, cls: () => 'ss-up' }, { h: ['Nilai', 'Value'], num: 1, f: (r) => rp(+r.suggested_value), x: (r) => +r.suggested_value }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'transfers');
+    tbl('stock_low_selling', 'tbl-lowsell', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Lokasi', 'Location'], f: (r) => r.location }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available_qty), x: (r) => +r.available_qty, cls: (r) => (+r.available_qty <= 1 ? 'ss-flag' : '') }, { h: ['Titik pesan', 'Reorder pt'], num: 1, f: (r) => num(r.reorder_point), x: (r) => +r.reorder_point }, { h: ['Terjual', 'Sold'], num: 1, f: (r) => num(r.units_sold), x: (r) => +r.units_sold }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'lowsell');
+    tbl('stock_best_sellers', 'tbl-fast', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Terjual', 'Sold'], num: 1, f: (r) => num(r.units_sold), x: (r) => +r.units_sold }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available_qty), x: (r) => +r.available_qty, cls: (r) => (+r.available_qty <= 0 ? 'ss-flag' : +r.available_qty < 20 ? 'ss-warn' : '') }, { h: ['Lokasi', 'Locations'], num: 1, f: (r) => num(r.locations), x: (r) => +r.locations }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'fast');
+    tbl('stock_dead_titles', 'tbl-deadtitles', [{ h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name }, { h: ['Unit', 'Units'], num: 1, f: (r) => num(r.units), x: (r) => +r.units }, { h: ['Hari sejak terjual', 'Days since sale'], num: 1, f: (r) => int(r.days_since_last_sale), x: (r) => +r.days_since_last_sale, cls: (r) => (+r.days_since_last_sale >= 180 ? 'ss-flag' : '') }, { h: ['Di mana', 'Where'], muted: 1, f: (r) => r.location_names }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'deadtitles');
+    tbl('stock_dead_items', 'tbl-dead', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Lokasi', 'Location'], f: (r) => r.location }, { h: ['Stok', 'On hand'], num: 1, f: (r) => num(r.available_qty), x: (r) => +r.available_qty }, { h: ['Hari sejak terjual', 'Days since sale'], num: 1, f: (r) => int(r.days_since_sale), x: (r) => +r.days_since_sale }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'deaditems');
+    const dt = rows('stock_dead_titles_total');
+    $$('[data-source="stock_dead_titles_total"]').forEach((x) => { x.textContent = dt ? int(dt[0][x.dataset.field]) : '—'; });
+  }
+
+  // ---------------- KEUANGAN ----------------
+  function renderFinance(b) {
+    const fr = finRows(); const ft = $('#fin-tiles');
+    if (!fr) { ft.replaceChildren(); chartState($('#chart-fees'), 'finance_daily'); return; }
+    const fb = bounds(fr); const R = clampTo(range(), fb);
+    const agg = (s, e, keyFn) => { const m = new Map(); if (!s || s > e) return m; for (const x of fr) { if (x.d < s || x.d > e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn ? keyFn(x) : '_'; const a = m.get(k) || { k, o: 0, g: 0, di: 0, f: 0, n: 0, cx: 0, cxv: 0 }; a.o += x.o; a.g += x.g; a.di += x.di; a.f += x.f; a.n += x.n; a.cx += x.cx; a.cxv += x.cxv; m.set(k, a); } return m; };
+    const cur = agg(R.s, R.e).get('_') || { o: 0, g: 0, di: 0, f: 0, n: 0, cx: 0, cxv: 0 };
+    const prev = R.cs ? agg(R.cs, R.ce).get('_') : null;
+    const mk = (lab, v, cv, pv, lower, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', v)); const s = el('div', 'ss-sub'); if (pv != null) s.append(chgEl(cv, pv, lower), document.createTextNode(' vs ' + T(...R.label))); if (sub) { if (pv != null) s.append(el('br')); s.append(document.createTextNode(sub)); } t.append(s); return t; };
+    ft.replaceChildren(
+      mk(T('Penjualan kotor', 'Gross sales'), rp(cur.g), cur.g, prev && prev.g, false, T('harga barang sebelum potongan', 'item value before deductions')),
+      mk(T('Diskon & voucher', 'Discounts & vouchers'), rp(cur.di), cur.di, prev && prev.di, true, pct0(cur.g ? cur.di / cur.g : null) + T(' dari kotor', ' of gross')),
+      mk(T('Biaya marketplace', 'Marketplace fees'), rp(cur.f), cur.f, prev && prev.f, true, pct0(cur.g ? cur.f / cur.g : null) + T(' dari kotor (Shopee)', ' of gross (Shopee)')),
+      mk(T('Uang diterima', 'Money received'), rp(cur.n), cur.n, prev && prev.n, false, pct0(cur.g ? cur.n / cur.g : null) + T(' dari kotor', ' of gross')),
+      mk(T('Penjualan hilang (batal)', 'Sales lost (cancelled)'), rp(cur.cxv), cur.cxv, prev && prev.cxv, true, int(cur.cx) + T(' pesanan', ' orders')),
+    );
+    $('#fin-note').textContent = T(`${fd(R.s)} – ${fdy(R.e)}. Kotor − diskon − biaya marketplace (± ongkir) = uang diterima.`, `${fd(R.s)} – ${fdy(R.e)}. Gross − discounts − marketplace fees (± shipping) = money received.`) + (R.clamped ? T(` Rincian keuangan hanya tersedia ${fd(fb.min)} – ${fdy(fb.max)}.`, ` Finance detail only covers ${fd(fb.min)} – ${fdy(fb.max)}.`) : '');
+    const ch = [...agg(R.s, R.e, (x) => x.c).values()].filter((a) => a.g || a.cx).sort((a, z) => z.g - a.g);
+    table('tbl-fin', [
+      { h: ['Kanal', 'Channel'], f: (r) => r.k },
+      { h: ['Pesanan', 'Orders'], num: 1, f: (r) => int(r.o), x: (r) => r.o },
+      { h: ['Kotor', 'Gross'], num: 1, f: (r) => rp(r.g), x: (r) => Math.round(r.g) },
+      { h: ['Diskon', 'Discounts'], num: 1, f: (r) => rp(r.di), x: (r) => Math.round(r.di) },
+      { h: ['Biaya marketplace', 'Marketplace fees'], num: 1, f: (r) => rp(r.f), x: (r) => Math.round(r.f) },
+      { h: ['Diterima', 'Received'], num: 1, f: (r) => rp(r.n), x: (r) => Math.round(r.n) },
+      { h: ['% diterima', '% received'], num: 1, f: (r) => pct0(r.g ? r.n / r.g : null), x: (r) => (r.g ? +(r.n / r.g).toFixed(4) : '') },
+      { h: ['Batal (nilai)', 'Cancelled (value)'], num: 1, f: (r) => rp(r.cxv), x: (r) => Math.round(r.cxv), cls: (r) => (r.g && r.cxv / r.g > 0.15 ? 'ss-flag' : '') },
+    ], ch, 'fin');
+    const fbx = $('#chart-fees'); skel(fbx, false);
+    bars(fbx, ch.filter((a) => a.g > 0).map((a) => ({ key: a.k, label: a.k, values: { di: a.di / a.g, f: a.f / a.g }, valueLabel: pct0((a.di + a.f) / a.g) })), ['di', 'f'], { horizontal: true, fmt: pct0, color: (k) => (k === 'di' ? 'var(--ssb-gold)' : 'var(--ssb-purple)'), label: (k) => (k === 'di' ? T('Diskon', 'Discounts') : T('Biaya', 'Fees')), noTotal: true });
+    const cr2 = rows('cancel_reasons');
+    if (cr2) {
+      const m = new Map(); cr2.forEach((r) => { if (b !== 'All' && r.brand !== b) return; const k = r.channel + '|' + r.reason; const a = m.get(k) || { c: r.channel, r: r.reason, st: r.status, o: 0, v: 0 }; a.o += +r.orders; a.v += +r.value; m.set(k, a); });
+      table('tbl-cancel', [
+        { h: ['Kanal', 'Channel'], f: (r) => r.c },
+        { h: ['Alasan', 'Reason'], name: 1, f: (r) => (r.r === 'false' || !r.r ? T('Tidak disebut', 'Not given') : r.r) },
+        { h: ['Status', 'Status'], f: (r) => (r.st === 'RETURNED' ? T('Retur', 'Returned') : T('Batal', 'Cancelled')), muted: 1 },
+        { h: ['Pesanan', 'Orders'], num: 1, f: (r) => int(r.o), x: (r) => r.o },
+        { h: ['Nilai', 'Value'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+      ], [...m.values()].sort((a, z) => z.o - a.o).slice(0, 60), 'cancel');
+    }
+  }
+
+  // ---------------- main render ----------------
+  function render() {
+    const L = lang(); const root = document.getElementById('ss-root'); root.dataset.lang = L;
+    $$('.ss-lang button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.lang === L)));
+    [...preset.options].forEach((o) => { o.textContent = T(...PRESETS[o.value]); });
+    const b = brand();
+    $$('.ss-brands button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.brand === b)));
+    $$('.ss-kind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === kind())));
+    $$('.ss-tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === S.tab)));
+    ['ringkasan', 'sales', 'produk', 'reseller', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
+    const usesBrand = ['ringkasan', 'sales', 'produk', 'finance'].includes(S.tab), usesPeriod = usesBrand;
+    $('.ss-brands').style.visibility = usesBrand ? 'visible' : 'hidden';
+    $('#period-ctl').style.display = usesPeriod ? '' : 'none';
+    $('#filters').style.display = usesBrand ? '' : 'none';
+    $('#insight-box').style.display = S.tab === 'panduan' ? 'none' : '';
+    updNotes();
+    const sr = salesRows(); if (sr) B = bounds(sr);
+    if (B) {
+      const R = range(); preset.value = R.p;
+      sIn.min = eIn.min = B.min; sIn.max = eIn.max = B.max;
+      if (document.activeElement !== sIn) sIn.value = R.s;
+      if (document.activeElement !== eIn) eIn.value = R.e;
+      $('#range-text').textContent = `${days(R.s, R.e)} ${T('hari', 'days')}` + (R.cs ? ` · ${T('dibanding', 'vs')} ${fd(R.cs)}${R.cs !== R.ce ? ' – ' + fd(R.ce) : ''}` : '') + (R.partial ? T(' · hari ini belum lengkap', ' · today is partial') : '');
+    }
+    renderHeader(b);
+    const fn = { ringkasan: renderRingkasan, sales: renderSales, produk: renderProduk, reseller: renderReseller, stock: renderStock, finance: renderFinance }[S.tab];
+    if (fn && (B || S.tab === 'reseller' || S.tab === 'stock')) fn(b);
+  }
+
+  dash.onData(render);
+  const named = location.hash.slice(1);
+  if (['ringkasan', 'sales', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) showTab(named);
+  else if (named === 'moving') showTab('stock');
+})();
+</script>
+
+</div>
+</body>
+</html>

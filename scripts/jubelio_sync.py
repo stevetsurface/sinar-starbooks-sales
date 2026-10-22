@@ -1,0 +1,297 @@
+#!/usr/bin/env python3
+"""Daily Jubelio export for the Wonder Bookstore / Sinar Starbooks dashboard.
+
+Logs in to Jubelio with JUBELIO_EMAIL / JUBELIO_PASSWORD (repo secrets), pulls
+sales orders (since 2025-10-01), order details (last 90 days, cached), and the
+inventory alert lists, then writes the CSV files the dashboard reads into data/.
+"""
+import csv, gzip, io, json, os, re, sys, time
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
+import urllib.request, urllib.error
+
+OUT = os.path.join(os.path.dirname(__file__), '..', 'data')
+CACHE = os.path.join(os.path.dirname(__file__), '..', 'cache')
+START = os.environ.get('SYNC_START', '2025-10-01')
+WIB = timezone(timedelta(hours=7))
+BASES = ['https://api2.jubelio.com', 'https://open.jubelio.com/core-api']
+TOKEN = None
+BASE = None
+
+
+def http(method, url, body=None, token=None, tries=4):
+    data = json.dumps(body).encode() if body is not None else None
+    for i in range(tries):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header('Content-Type', 'application/json')
+        if token:
+            req.add_header('Authorization', token)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 504) and i < tries - 1:
+                time.sleep(2 * (i + 1)); continue
+            raise RuntimeError(f'{method} {url} -> {e.code} {e.read()[:200]!r}')
+        except Exception:
+            if i < tries - 1:
+                time.sleep(2 * (i + 1)); continue
+            raise
+
+
+def login():
+    global TOKEN, BASE
+    email, pw = os.environ['JUBELIO_EMAIL'], os.environ['JUBELIO_PASSWORD']
+    r = http('POST', 'https://api2.jubelio.com/login', {'email': email, 'password': pw})
+    TOKEN = r['token']
+    for b in BASES:  # pick the first base that answers with this token
+        try:
+            http('GET', b + '/sales/orders/?page=1&pageSize=1', token=TOKEN, tries=1)
+            BASE = b; break
+        except Exception as e:
+            print('base failed', b, e, file=sys.stderr)
+    if not BASE:
+        raise SystemExit('No Jubelio API base accepted the token')
+    print('Using', BASE)
+
+
+def get(path):
+    return http('GET', BASE + path, token=TOKEN)
+
+
+# ---------------------------------------------------------------- orders
+def pull_orders(frm, to):
+    q = f'transactionDateFrom={frm}&transactionDateTo={to}&sortBy=salesorder_id&sortDirection=ASC'
+    first = get(f'/sales/orders/?page=1&pageSize=200&{q}')
+    n = (first['totalCount'] + 199) // 200
+    rows = list(first['data'])
+    with ThreadPoolExecutor(6) as ex:
+        for d in ex.map(lambda p: get(f'/sales/orders/?page={p}&pageSize=200&{q}'), range(2, n + 1)):
+            rows.extend(d['data'])
+    return rows
+
+
+def month_windows(start, end):
+    y, m = int(start[:4]), int(start[5:7])
+    while (y, m) <= (end.year, end.month):
+        s = datetime(y, m, 1, tzinfo=WIB)
+        m2, y2 = (m + 1, y) if m < 12 else (1, y + 1)
+        e = datetime(y2, m2, 1, tzinfo=WIB) - timedelta(seconds=1)
+        yield s.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), e.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        y, m = y2, m2
+
+
+def brand(s):
+    s = (s or '').upper()
+    if 'SINAR' in s or 'WOE-70018' in s: return 'Sinar Starbooks'
+    if 'KIKKERLAND' in s: return 'Kikkerland'
+    return 'Wonder Bookstore'
+
+
+def chan(c):
+    c = (c or '').upper()
+    if c.startswith('SHOP | TOKOPEDIA') or 'TIKTOK' in c: return 'TikTok Shop'
+    return {'SHOPEE': 'Shopee', 'TOKOPEDIA': 'Tokopedia', 'JUBELIO-POS': 'In-store POS', 'LAZADA': 'Lazada', 'BLIBLI': 'Blibli', 'INTERNAL': 'Internal / B2B'}.get(c, c.title())
+
+
+BAD = {'CANCELED', 'REQUEST_CANCEL', 'RETURNED'}
+def is_bad(o): return o.get('internal_status') in BAD or o.get('is_canceled') is True
+def wib(t): return datetime.fromisoformat(t.replace('Z', '+00:00')).astimezone(WIB)
+
+
+SKIP = re.compile(r'SHOPPING BAG|PACKING|KARDUS|BUBBLE|PAPER BAG|PAPERBAG|TAS BELANJA|GIFTWRAP|MATERAI|CREDIT VOUCHER|^PESANAN|PITA KADO')
+def cafe(code, name): return (name or '').strip().upper().startswith('*') or (code or '').startswith('CF')
+def skip_item(code, name): return cafe(code, name) or bool(SKIP.search((name or '').upper())) or code == '123'
+
+
+def write(name, header, rows):
+    with open(os.path.join(OUT, name), 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f); w.writerow(header); w.writerows(rows)
+    print('wrote', name, len(rows))
+
+
+def clean(s): return re.sub(r'[….,]{4,}', '', re.sub(r'\s+', ' ', str(s or ''))).strip()
+
+
+def main():
+    os.makedirs(OUT, exist_ok=True); os.makedirs(CACHE, exist_ok=True)
+    login()
+    now = datetime.now(WIB)
+    orders = []
+    for s, e in month_windows(START, now):
+        orders.extend(pull_orders(s, e))
+    orders = list({o['salesorder_id']: o for o in orders}.values())
+    print('orders', len(orders))
+
+    # sales_daily_detail
+    D = defaultdict(lambda: [0, 0.0, 0])
+    for o in orders:
+        k = (wib(o['transaction_date']).date().isoformat(), brand(o.get('store_name')), chan(o.get('channel_name')), o.get('location_name') or '-')
+        if is_bad(o): D[k][2] += 1
+        else: D[k][0] += 1; D[k][1] += float(o.get('grand_total') or 0)
+    write('sales_daily_detail.csv', ['date', 'brand', 'channel', 'location', 'orders', 'revenue', 'canceled'], [list(k) + [v[0], round(v[1]), v[2]] for k, v in sorted(D.items())])
+
+    since = (now - timedelta(days=90)).date().isoformat()
+    HD = defaultdict(lambda: [0, 0.0])
+    for o in orders:
+        if is_bad(o): continue
+        t = wib(o['transaction_date'])
+        if t.date().isoformat() < since: continue
+        HD[(brand(o.get('store_name')), 'store' if chan(o.get('channel_name')) == 'In-store POS' else 'online', t.weekday(), t.hour)][0] += 1
+        HD[(brand(o.get('store_name')), 'store' if chan(o.get('channel_name')) == 'In-store POS' else 'online', t.weekday(), t.hour)][1] += float(o.get('grand_total') or 0)
+    write('hour_dow.csv', ['brand', 'kind', 'dow', 'hour', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in HD.items()])
+
+    # order details (cached)
+    cpath = os.path.join(CACHE, 'details.json.gz')
+    det = json.load(gzip.open(cpath, 'rt')) if os.path.exists(cpath) else {}
+    recent = [o for o in orders if wib(o['transaction_date']).date().isoformat() >= since]
+    need = [o['salesorder_id'] for o in recent if str(o['salesorder_id']) not in det or det[str(o['salesorder_id'])].get('lm') != o.get('last_modified')]
+    print('details to fetch', len(need))
+    def fetch(i):
+        try:
+            d = get(f'/sales/orders/{i}')
+        except Exception as e:
+            return i, None
+        return i, {'sub': float(d.get('sub_total') or 0), 'disc': float(d.get('total_disc') or 0) + float(d.get('voucher_amount') or 0) + float(d.get('add_disc') or 0),
+                   'fee': float(d.get('service_fee') or 0), 'ship': float(d.get('shipping_cost') or 0), 'gt': float(d.get('grand_total') or 0),
+                   'cr': d.get('mp_cancel_reason') or (d.get('cancel_reason') if d.get('cancel_reason') not in (None, 'false') else None), 'cust': d.get('contact_id'),
+                   'items': [[it.get('item_id'), it.get('item_code'), it.get('item_name'), float(it.get('qty') or 0), float(it.get('amount') or 0), 1 if it.get('is_canceled_item') else 0] for it in d.get('items') or []]}
+    lm = {o['salesorder_id']: o.get('last_modified') for o in recent}
+    with ThreadPoolExecutor(8) as ex:
+        for i, d in ex.map(fetch, need):
+            if d:
+                d['lm'] = lm.get(i)
+                det[str(i)] = d
+    keep = {str(o['salesorder_id']) for o in recent}
+    det = {k: v for k, v in det.items() if k in keep}
+    json.dump(det, gzip.open(cpath, 'wt'))
+
+    # item master: prices + names
+    price = {}
+    first = get('/inventory/items/?page=1&pageSize=200'); n = (first['totalCount'] + 199) // 200
+    pages = [first] + [get(f'/inventory/items/?page={p}&pageSize=200') for p in range(2, n + 1)]
+    for pg in pages:
+        for g in pg.get('data', []):
+            for v in g.get('variants') or []:
+                price[v['item_id']] = float(v.get('sell_price') or g.get('sell_price') or 0)
+
+    def group(code, name):
+        nm = (name or '').upper()
+        if cafe(code, name): return 'Kafe'
+        if re.search(r'KOMIK|MANGA|\bVOL\.?\s*\d|OMNIBUS|GRAPHIC NOVEL', nm): return 'Komik & manga'
+        isbn = bool(re.match(r'^97[89]\d{10}$', code or ''))
+        if isbn and re.search(r'BOARD BOOK|STICKER BOOK|SOUND BOOK|COLOU?RING|PEPPA|BLUEY|DISNEY|MY FIRST|BABY|TODDLER|DOG MAN|WIMPY KID|BAD GUYS', nm): return 'Buku anak'
+        if isbn: return 'Buku umum'
+        return 'Alat tulis & gift'
+
+    byid = {str(o['salesorder_id']): o for o in recent}
+    F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}
+    for k, d in det.items():
+        o = byid.get(k)
+        if not o: continue
+        day = wib(o['transaction_date']).date().isoformat(); b = brand(o.get('store_name')); c = chan(o.get('channel_name'))
+        f = F[(day, b, c)]
+        if is_bad(o):
+            f[6] += 1; f[7] += d['sub']
+            CR[(b, c, o.get('internal_status'), str(d.get('cr') or o.get('cancel_reason') or 'Tidak disebut')[:60])][0] += 1
+            CR[(b, c, o.get('internal_status'), str(d.get('cr') or o.get('cancel_reason') or 'Tidak disebut')[:60])][1] += d['sub']
+            continue
+        gt = float(o.get('grand_total') or d['gt'])
+        f[0] += 1; f[1] += d['sub']; f[2] += d['disc']; f[3] += d['fee']; f[4] += d['ship']; f[5] += gt
+        if d.get('cust'): CU[(b, c, d['cust'])][0] += 1; CU[(b, c, d['cust'])][1] += gt
+        for iid, code, name, qty, amt, cx in d['items']:
+            if cx or skip_item(code, name) and not cafe(code, name): continue
+            T[(day, code, b)][0] += qty; T[(day, code, b)][1] += amt
+            ITEM.setdefault(code, (clean(name), group(code, name), price.get(iid, 0)))
+    write('finance_daily.csv', ['date', 'brand', 'channel', 'orders', 'gross', 'discounts', 'marketplace_fees', 'shipping', 'net', 'canceled_orders', 'canceled_value'], [list(k) + [v[0]] + [round(x) for x in v[1:6]] + [v[6], round(v[7])] for k, v in sorted(F.items())])
+    write('cancel_reasons.csv', ['brand', 'channel', 'status', 'reason', 'orders', 'value'], [list(k) + [v[0], round(v[1])] for k, v in sorted(CR.items(), key=lambda kv: -kv[1][0])])
+    CA = defaultdict(lambda: [0, 0, 0, 0.0, 0.0])
+    for (b, c, _), v in CU.items():
+        a = CA[(b, c)]; a[0] += 1; a[3] += v[1]
+        if v[0] > 1: a[1] += 1; a[2] += v[0]; a[4] += v[1]
+    write('customers_90d.csv', ['brand', 'channel', 'customers', 'repeat_customers', 'repeat_orders', 'revenue', 'repeat_revenue'], [list(k) + [a[0], a[1], a[2], round(a[3]), round(a[4])] for k, a in CA.items()])
+    write('titles_daily.csv', ['date', 'item_code', 'brand', 'qty', 'revenue'], [list(k) + [round(v[0], 2), round(v[1])] for k, v in sorted(T.items())])
+    write('items.csv', ['item_code', 'item_name', 'group', 'price'], [[c, n, g, round(p)] for c, (n, g, p) in ITEM.items()])
+
+    # ---------------------------------------------------------------- stock
+    inv = {p: get(f'/inventory/v2/{p}/').get('data', []) for p in ['need-restock', 'low-stock', 'days-to-dry', 'best-seller', 'dead-stock']}
+    ok = lambda x: not skip_item(x.get('item_code'), x.get('item_name'))
+    ro = sorted([x for x in inv['days-to-dry'] if ok(x) and x['location_name'] == 'Semua' and float(x['in_days']) <= 21 and float(x['daily_avg']) >= 0.1], key=lambda x: -float(x['daily_avg']))[:80]
+    write('stock_runout.csv', ['item_code', 'item_name', 'daily_avg', 'available_qty', 'days_left', 'reorder_by'], [[x['item_code'], clean(x['item_name']), float(x['daily_avg']), float(x['available_qty']), int(float(x['in_days'])), x['repurchase_date']] for x in ro])
+    os_ = sorted([x for x in inv['need-restock'] if ok(x)], key=lambda x: float(x['available_qty']))[:60]
+    write('stock_oversold.csv', ['item_code', 'item_name', 'location', 'on_hand', 'reserved', 'available'], [[x['item_code'], clean(x['item_name']), x['location_name'], float(x['end_qty']), float(x['order_qty']), float(x['available_qty'])] for x in os_])
+    bs = {(x['item_id'], x['location_name']): float(x['qty']) for x in inv['best-seller'] if ok(x)}
+    ls = [x for x in inv['low-stock'] if ok(x)]
+    lsl = defaultdict(int)
+    for x in ls: lsl[x['location_name']] += 1
+    write('stock_low_by_location.csv', ['location', 'low_stock_items'], sorted(lsl.items(), key=lambda kv: -kv[1]))
+    lss = sorted([dict(x, sold=bs.get((x['item_id'], x['location_name']), 0)) for x in ls], key=lambda x: -x['sold'])
+    write('stock_low_selling.csv', ['item_code', 'item_name', 'location', 'available_qty', 'reorder_point', 'units_sold'], [[x['item_code'], clean(x['item_name']), x['location_name'], float(x['available_qty']), float(x['rop'] or 0), x['sold']] for x in lss if x['sold'] > 0][:60])
+    agg = {}
+    for x in inv['best-seller']:
+        if not ok(x): continue
+        a = agg.setdefault(x['item_id'], [x['item_code'], clean(x['item_name']), 0, 0, 0]); a[2] += float(x['qty']); a[3] += float(x['available_qty']); a[4] += 1
+    write('stock_best_sellers.csv', ['item_code', 'item_name', 'units_sold', 'available_qty', 'locations'], sorted(agg.values(), key=lambda a: -a[2])[:40])
+    ds = [x for x in inv['dead-stock'] if ok(x) and float(x['available_qty']) > 0]
+    dead = [x for x in ds if x['last_transaction_sort_key'] >= 90]
+    dsl = defaultdict(lambda: [0, 0])
+    for x in dead: dsl[x['location_name']][0] += 1; dsl[x['location_name']][1] += float(x['available_qty'])
+    write('stock_dead_by_location.csv', ['location', 'items', 'units'], [[k, v[0], round(v[1])] for k, v in sorted(dsl.items(), key=lambda kv: -kv[1][1])])
+    write('stock_dead_items.csv', ['item_code', 'item_name', 'location', 'available_qty', 'days_since_sale'], [[x['item_code'], clean(x['item_name']), x['location_name'], float(x['available_qty']), x['last_transaction_sort_key']] for x in sorted(dead, key=lambda x: -float(x['available_qty']))[:50]])
+    sold_any = {x['item_id'] for x in inv['best-seller'] if float(x['qty']) > 0}
+    tg = {}
+    for x in ds:
+        a = tg.setdefault(x['item_id'], {'code': x['item_code'], 'name': clean(x['item_name']), 'units': 0, 'locs': [], 'min': 10 ** 9})
+        a['units'] += float(x['available_qty']); a['locs'].append(x['location_name']); a['min'] = min(a['min'], x['last_transaction_sort_key'])
+    dt = [a for i, a in tg.items() if a['min'] >= 90 and i not in sold_any]
+    write('stock_dead_titles.csv', ['item_code', 'item_name', 'units', 'locations', 'location_names', 'days_since_last_sale'], [[a['code'], a['name'], round(a['units']), len(a['locs']), ' / '.join(a['locs']), a['min']] for a in sorted(dt, key=lambda a: (-a['units'], -a['min']))[:60]])
+    write('stock_dead_titles_total.csv', ['dead_titles', 'dead_title_units'], [[len(dt), round(sum(a['units'] for a in dt))]])
+    # per-location situation + transfers
+    L = {}
+    def line(x):
+        return L.setdefault((x['item_id'], x['location_name']), {'id': x['item_id'], 'code': x['item_code'], 'name': clean(x['item_name']), 'loc': x['location_name'], 'avail': None, 'days': None, 'low': False, 'sold': 0, 'over': False})
+    for x in inv['dead-stock']:
+        if ok(x): l = line(x); l['avail'] = float(x['available_qty']); l['days'] = x['last_transaction_sort_key']
+    for x in inv['low-stock']:
+        if ok(x): l = line(x); l['avail'] = l['avail'] if l['avail'] is not None else float(x['available_qty']); l['low'] = True
+    for x in inv['best-seller']:
+        if ok(x): l = line(x); l['avail'] = l['avail'] if l['avail'] is not None else float(x['available_qty']); l['sold'] = float(x['qty'])
+    for x in inv['need-restock']:
+        if ok(x): l = line(x); l['avail'] = float(x['available_qty']); l['over'] = True
+    S = defaultdict(lambda: [0] * 14)
+    for l in L.values():
+        if l['loc'] == 'Semua': continue
+        s = S[l['loc']]; u = max(0, l['avail'] or 0); p = price.get(l['id'], 0)
+        if u > 0:
+            s[0] += 1; s[1] += u; s[2] += u * p
+            d = l['days']
+            s[9 if d is None or d < 30 else 10 if d < 90 else 11 if d < 180 else 12] += u
+            if d is not None and d >= 90: s[6] += 1; s[7] += u; s[8] += u * p
+            if l['low']: s[3] += 1
+        if l['over'] or (l['avail'] or 0) < 0: s[4] += 1; s[5] += -min(0, l['avail'] or 0)
+        s[13] += l['sold']
+    write('stock_locations.csv', ['location', 'sku_lines', 'units', 'retail_value', 'low_lines', 'oversold_lines', 'oversold_units', 'dead_lines', 'dead_units', 'dead_value', 'units_age_0_29', 'units_age_30_89', 'units_age_90_179', 'units_age_180_plus', 'units_sold'],
+          [[k] + [round(x) for x in v] for k, v in sorted(S.items(), key=lambda kv: -kv[1][2])])
+    by = defaultdict(list)
+    for l in L.values():
+        if l['loc'] != 'Semua': by[l['id']].append(l)
+    TR = []
+    for ls_ in by.values():
+        for s in [l for l in ls_ if (l['days'] or 0) >= 90 and (l['avail'] or 0) >= 2]:
+            for d in [l for l in ls_ if l['sold'] >= 3 and (l['avail'] or 0) < l['sold']]:
+                if d['loc'] == s['loc']: continue
+                q = min(s['avail'], max(1, round(d['sold'] - (d['avail'] or 0))))
+                TR.append([s['code'], s['name'], s['loc'], round(s['avail']), s['days'], d['loc'], round(d['sold']), round(d['avail'] or 0), q, round(q * price.get(s['id'], 0))])
+    TR.sort(key=lambda r: -r[9]); seen = set(); TR2 = []
+    for r in TR:
+        if (r[0], r[2]) in seen: continue
+        seen.add((r[0], r[2])); TR2.append(r)
+    write('stock_transfers.csv', ['item_code', 'item_name', 'from_location', 'from_units', 'days_since_sale_from', 'to_location', 'to_units_sold', 'to_available', 'suggested_qty', 'suggested_value'], TR2[:60])
+    last = max(o['transaction_date'] for o in orders)
+    stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    write('snapshots.csv', ['source', 'updated_at', 'last_order_at'], [['sales', stamp, last], ['stock', stamp, ''], ['sales_detail_90d', stamp, '']])
+
+
+if __name__ == '__main__':
+    main()

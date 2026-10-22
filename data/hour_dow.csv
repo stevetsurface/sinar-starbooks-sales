@@ -1,0 +1,508 @@
+brand,kind,dow,hour,orders,revenue
+Wonder Bookstore,store,4,12,209,47435450
+Wonder Bookstore,online,4,12,70,12820778
+Wonder Bookstore,store,4,13,141,29213190
+Wonder Bookstore,online,4,13,81,17269903
+Wonder Bookstore,store,4,14,128,33231770
+Wonder Bookstore,online,4,14,74,14640154
+Wonder Bookstore,store,4,15,140,47081340
+Wonder Bookstore,online,4,15,73,13052806
+Wonder Bookstore,store,4,16,119,31396380
+Sinar Starbooks,online,4,16,8,2457036
+Wonder Bookstore,online,4,16,64,12796778
+Wonder Bookstore,store,4,17,138,32939670
+Wonder Bookstore,online,4,17,58,11582655
+Sinar Starbooks,online,4,17,6,1544000
+Sinar Starbooks,online,4,18,5,1338807
+Wonder Bookstore,store,4,18,133,32913520
+Wonder Bookstore,online,4,18,37,7683523
+Wonder Bookstore,online,4,19,61,11656631
+Wonder Bookstore,store,4,19,119,25786840
+Wonder Bookstore,store,4,20,126,33437270
+Wonder Bookstore,online,4,20,61,11896755
+Kikkerland,online,4,20,1,202160
+Wonder Bookstore,store,4,21,56,15130340
+Wonder Bookstore,online,4,21,62,10635931
+Sinar Starbooks,online,4,21,5,1477425
+Kikkerland,online,4,22,1,167010
+Wonder Bookstore,online,4,22,65,11518038
+Sinar Starbooks,online,4,22,4,2148490
+Wonder Bookstore,online,4,23,33,5810605
+Wonder Bookstore,online,5,0,216,43645803
+Sinar Starbooks,online,5,0,19,5418005
+Wonder Bookstore,online,5,1,58,11254879
+Wonder Bookstore,online,5,2,25,5059789
+Wonder Bookstore,online,5,4,20,5430860
+Wonder Bookstore,online,5,5,36,7555668
+Sinar Starbooks,online,5,5,3,1038705
+Wonder Bookstore,online,5,6,59,15387384
+Sinar Starbooks,online,5,6,6,1116205
+Wonder Bookstore,store,5,6,21,758210
+Wonder Bookstore,online,5,7,70,14492891
+Sinar Starbooks,online,5,7,4,929675
+Wonder Bookstore,online,5,8,83,15794024
+Sinar Starbooks,online,5,8,7,3689425
+Wonder Bookstore,online,5,9,111,25349100
+Wonder Bookstore,store,5,9,44,8839940
+Wonder Bookstore,online,5,10,93,18967479
+Wonder Bookstore,store,5,10,128,30636510
+Wonder Bookstore,online,5,11,90,17607887
+Wonder Bookstore,store,5,11,191,40556200
+Sinar Starbooks,online,5,11,74,25211910
+Wonder Bookstore,online,4,0,48,13862065
+Wonder Bookstore,online,4,1,20,3280227
+Wonder Bookstore,online,4,2,13,3065175
+Wonder Bookstore,online,4,3,6,931893
+Wonder Bookstore,online,4,5,24,5098462
+Wonder Bookstore,online,4,6,32,6098927
+Wonder Bookstore,store,4,6,22,1009140
+Wonder Bookstore,online,4,7,57,13585864
+Wonder Bookstore,store,4,8,40,5622000
+Wonder Bookstore,online,4,8,86,25153653
+Wonder Bookstore,online,4,9,93,19703009
+Wonder Bookstore,store,4,9,67,12305840
+Sinar Starbooks,online,4,9,13,3384550
+Wonder Bookstore,store,4,10,101,23311630
+Sinar Starbooks,online,4,10,15,6281290
+Wonder Bookstore,online,4,10,83,19629007
+Wonder Bookstore,store,4,11,110,27615610
+Wonder Bookstore,online,4,11,72,13264615
+Wonder Bookstore,online,5,12,100,20577640
+Wonder Bookstore,store,5,12,214,55314446
+Sinar Starbooks,online,5,12,51,19880215
+Wonder Bookstore,online,5,13,90,16053550
+Kikkerland,online,5,13,1,215460
+Wonder Bookstore,store,5,13,244,66088528
+Wonder Bookstore,online,5,14,66,12544255
+Wonder Bookstore,store,5,14,281,64646040
+Sinar Starbooks,online,5,14,20,7302250
+Wonder Bookstore,store,5,15,252,56581990
+Sinar Starbooks,online,5,15,31,10019735
+Wonder Bookstore,online,5,15,64,11763100
+Wonder Bookstore,online,5,16,46,8422420
+Wonder Bookstore,store,5,16,250,69286380
+Sinar Starbooks,online,5,16,27,8362145
+Wonder Bookstore,online,5,17,76,15935289
+Wonder Bookstore,store,5,17,235,60281770
+Sinar Starbooks,online,5,17,22,5729200
+Wonder Bookstore,online,5,18,58,12085782
+Wonder Bookstore,store,5,18,224,47666424
+Wonder Bookstore,store,6,15,254,66879160
+Wonder Bookstore,online,6,15,95,20464912
+Wonder Bookstore,store,6,16,231,59760080
+Wonder Bookstore,online,6,16,76,15597986
+Wonder Bookstore,store,6,17,192,46148570
+Wonder Bookstore,online,6,17,51,9153227
+Wonder Bookstore,store,6,18,183,46288620
+Wonder Bookstore,online,6,18,67,12560767
+Sinar Starbooks,online,6,18,14,4251515
+Wonder Bookstore,online,6,19,96,19783780
+Wonder Bookstore,store,6,19,170,41969090
+Wonder Bookstore,online,6,20,121,21378381
+Wonder Bookstore,store,6,20,120,28427820
+Sinar Starbooks,online,6,20,15,5019445
+Kikkerland,online,6,20,1,207860
+Wonder Bookstore,store,6,21,42,8488820
+Wonder Bookstore,online,6,21,81,15052898
+Sinar Starbooks,online,6,21,11,4997959
+Wonder Bookstore,online,6,22,72,13233751
+Wonder Bookstore,store,5,19,194,46792760
+Wonder Bookstore,online,5,19,78,14576930
+Wonder Bookstore,store,5,20,203,53802620
+Wonder Bookstore,online,5,20,85,17744273
+Wonder Bookstore,online,5,21,60,12687530
+Wonder Bookstore,store,5,21,107,30087550
+Sinar Starbooks,online,5,21,13,5799635
+Wonder Bookstore,online,5,22,73,12992307
+Wonder Bookstore,online,5,23,79,15965415
+Sinar Starbooks,online,5,23,15,8703085
+Wonder Bookstore,online,6,0,47,9572190
+Sinar Starbooks,online,6,0,6,1559285
+Wonder Bookstore,online,6,1,22,4090727
+Sinar Starbooks,online,6,2,4,2080970
+Wonder Bookstore,online,6,2,10,1624156
+Wonder Bookstore,online,6,3,8,1126868
+Wonder Bookstore,online,6,4,7,1887917
+Wonder Bookstore,online,6,5,14,2831463
+Wonder Bookstore,online,6,6,21,3058999
+Wonder Bookstore,store,6,6,15,36000
+Wonder Bookstore,store,6,7,13,996300
+Wonder Bookstore,online,6,7,45,12102215
+Sinar Starbooks,online,6,8,12,4059375
+Wonder Bookstore,online,6,8,45,9292879
+Sinar Starbooks,online,6,12,11,4259014
+Wonder Bookstore,online,6,9,53,9692469
+Wonder Bookstore,store,6,9,25,4847970
+Wonder Bookstore,online,0,15,69,16574776
+Wonder Bookstore,store,0,15,130,30463130
+Sinar Starbooks,online,0,16,12,4860515
+Wonder Bookstore,store,0,16,92,29503690
+Wonder Bookstore,online,0,16,59,10694658
+Wonder Bookstore,store,0,17,86,21521560
+Wonder Bookstore,online,0,17,61,13460110
+Sinar Starbooks,online,0,17,5,1234190
+Wonder Bookstore,store,0,18,105,20828950
+Wonder Bookstore,online,0,18,90,18471766
+Wonder Bookstore,online,0,19,61,11360496
+Wonder Bookstore,store,0,19,94,22683080
+Wonder Bookstore,online,0,20,82,17271675
+Wonder Bookstore,store,0,20,53,14728360
+Sinar Starbooks,online,0,20,4,1484345
+Sinar Starbooks,online,0,21,12,2978650
+Wonder Bookstore,store,0,21,21,4784860
+Wonder Bookstore,online,0,21,93,18507758
+Wonder Bookstore,online,0,22,70,14484910
+Wonder Bookstore,online,0,23,48,8719635
+Sinar Starbooks,online,0,23,9,1660020
+Wonder Bookstore,online,1,0,66,13776175
+Wonder Bookstore,online,1,1,22,4914084
+Wonder Bookstore,online,1,3,8,1860704
+Wonder Bookstore,online,1,5,24,5289014
+Wonder Bookstore,online,1,6,48,10168678
+Wonder Bookstore,store,1,7,31,605800
+Wonder Bookstore,online,1,7,71,19103851
+Sinar Starbooks,online,1,7,9,2173995
+Wonder Bookstore,online,1,8,63,11672865
+Wonder Bookstore,store,1,8,28,3180820
+Sinar Starbooks,online,1,8,8,2447495
+Wonder Bookstore,online,1,9,64,12590051
+Wonder Bookstore,store,1,9,34,6721960
+Wonder Bookstore,online,1,10,71,16734241
+Wonder Bookstore,store,1,10,85,18234340
+Wonder Bookstore,store,1,11,87,19572110
+Wonder Bookstore,online,1,11,79,19059559
+Wonder Bookstore,online,1,12,74,16204573
+Wonder Bookstore,store,1,12,166,35008560
+Wonder Bookstore,store,1,13,130,33170910
+Wonder Bookstore,online,1,13,81,24024713
+Wonder Bookstore,online,1,14,84,19373703
+Wonder Bookstore,store,1,14,132,34453270
+Sinar Starbooks,online,1,14,10,4547595
+Wonder Bookstore,store,1,15,139,35718180
+Wonder Bookstore,online,1,15,61,11368514
+Wonder Bookstore,online,1,16,55,11442953
+Wonder Bookstore,store,1,16,114,26241120
+Wonder Bookstore,online,1,17,65,13879287
+Wonder Bookstore,store,1,17,107,28109670
+Wonder Bookstore,store,1,18,109,29317650
+Wonder Bookstore,online,1,18,57,10663654
+Wonder Bookstore,online,1,19,73,14857537
+Kikkerland,online,1,19,1,133760
+Wonder Bookstore,store,1,19,87,25971680
+Wonder Bookstore,online,1,20,76,12268393
+Wonder Bookstore,store,1,20,55,13903080
+Wonder Bookstore,online,1,21,71,14542153
+Wonder Bookstore,store,1,21,48,12255570
+Wonder Bookstore,online,1,22,60,11274868
+Wonder Bookstore,online,1,23,50,9908978
+Sinar Starbooks,online,2,0,30,11849550
+Wonder Bookstore,online,2,0,114,29893965
+Wonder Bookstore,online,6,23,48,9428542
+Wonder Bookstore,online,0,0,50,10509892
+Wonder Bookstore,online,0,1,12,2792485
+Wonder Bookstore,online,0,2,11,3673351
+Wonder Bookstore,online,0,3,11,2515645
+Wonder Bookstore,online,0,4,9,1408676
+Wonder Bookstore,online,0,5,23,3017684
+Wonder Bookstore,online,0,6,40,7502363
+Wonder Bookstore,store,0,6,18,402000
+Sinar Starbooks,online,0,6,5,2046330
+Wonder Bookstore,online,0,7,61,13024200
+Wonder Bookstore,store,0,7,12,973500
+Wonder Bookstore,online,0,8,57,11085237
+Wonder Bookstore,store,0,8,14,1473500
+Wonder Bookstore,online,0,9,93,21062995
+Sinar Starbooks,online,0,9,9,1531740
+Wonder Bookstore,store,0,9,51,6434750
+Wonder Bookstore,store,0,10,64,13493400
+Wonder Bookstore,online,0,10,94,18696634
+Wonder Bookstore,online,0,11,76,16820391
+Wonder Bookstore,store,0,11,80,17741080
+Wonder Bookstore,online,0,12,81,17187978
+Wonder Bookstore,store,0,12,136,28176100
+Sinar Starbooks,online,0,12,10,2182995
+Wonder Bookstore,online,0,13,90,18905385
+Wonder Bookstore,store,0,13,104,36034900
+Sinar Starbooks,online,0,13,10,3040085
+Wonder Bookstore,online,0,14,83,16011612
+Wonder Bookstore,store,0,14,142,36603830
+Sinar Starbooks,online,6,9,15,4415835
+Wonder Bookstore,store,6,10,136,37125100
+Wonder Bookstore,online,6,10,78,14671551
+Wonder Bookstore,store,6,11,168,50749960
+Wonder Bookstore,online,6,11,78,16513089
+Wonder Bookstore,store,6,12,240,67874800
+Wonder Bookstore,online,6,12,75,14882170
+Wonder Bookstore,online,6,13,81,14908750
+Wonder Bookstore,store,6,13,272,71533830
+Kikkerland,online,6,13,1,298800
+Wonder Bookstore,online,6,14,80,15007653
+Wonder Bookstore,store,6,14,313,87536190
+Sinar Starbooks,online,6,14,9,1675875
+Kikkerland,online,2,0,1,267520
+Wonder Bookstore,online,2,1,40,9043672
+Wonder Bookstore,online,2,2,15,2836847
+Wonder Bookstore,online,2,3,12,2872823
+Wonder Bookstore,online,2,4,18,5257605
+Wonder Bookstore,online,2,5,35,7809840
+Wonder Bookstore,online,2,6,58,10490806
+Wonder Bookstore,store,2,6,13,156000
+Sinar Starbooks,online,2,6,5,2533305
+Wonder Bookstore,online,2,7,60,10748362
+Wonder Bookstore,store,2,7,23,1489130
+Wonder Bookstore,online,2,8,85,17623223
+Wonder Bookstore,store,2,8,41,4503750
+Wonder Bookstore,online,2,9,89,18931785
+Wonder Bookstore,store,2,9,94,10601700
+Sinar Starbooks,online,2,10,14,6440085
+Wonder Bookstore,online,2,10,108,20603203
+Kikkerland,online,2,10,2,264670
+Wonder Bookstore,online,2,11,82,17697017
+Wonder Bookstore,store,2,11,107,22931220
+Sinar Starbooks,online,2,11,12,7678056
+Wonder Bookstore,online,2,12,108,18737432
+Wonder Bookstore,store,2,12,159,31946460
+Wonder Bookstore,store,2,13,136,35065010
+Wonder Bookstore,online,2,13,100,22174543
+Wonder Bookstore,online,2,14,84,16923794
+Wonder Bookstore,store,2,14,138,37772690
+Wonder Bookstore,store,2,15,125,34029440
+Wonder Bookstore,online,2,15,87,17101861
+Wonder Bookstore,store,2,16,125,27819020
+Wonder Bookstore,online,2,16,94,17553130
+Wonder Bookstore,store,2,17,119,24298610
+Wonder Bookstore,online,2,17,74,14650932
+Sinar Starbooks,online,2,17,6,3901560
+Wonder Bookstore,store,2,18,115,28619610
+Wonder Bookstore,online,2,18,66,11689458
+Sinar Starbooks,online,2,18,11,3151365
+Wonder Bookstore,store,2,19,72,17771680
+Wonder Bookstore,online,2,19,75,16437504
+Wonder Bookstore,store,2,20,64,18419960
+Wonder Bookstore,online,2,20,108,21623566
+Sinar Starbooks,online,2,20,13,3236645
+Kikkerland,online,2,20,2,424660
+Wonder Bookstore,store,2,21,42,9783740
+Wonder Bookstore,online,2,21,90,18318278
+Wonder Bookstore,online,2,22,84,15283447
+Sinar Starbooks,online,2,22,7,2398930
+Wonder Bookstore,online,2,23,47,9153533
+Wonder Bookstore,online,3,0,36,5888145
+Wonder Bookstore,online,3,1,27,5062579
+Wonder Bookstore,online,3,2,12,1646893
+Wonder Bookstore,online,3,3,10,2326371
+Wonder Bookstore,online,3,4,8,1924949
+Wonder Bookstore,store,3,5,2,0
+Wonder Bookstore,online,3,6,38,8023048
+Sinar Starbooks,online,3,6,4,749285
+Wonder Bookstore,online,3,7,39,7950634
+Wonder Bookstore,store,3,7,18,907980
+Kikkerland,online,3,7,1,182210
+Wonder Bookstore,online,3,8,70,15081976
+Wonder Bookstore,store,3,8,49,4605440
+Wonder Bookstore,online,3,9,70,16081502
+Sinar Starbooks,online,4,20,6,1287920
+Sinar Starbooks,online,3,9,13,3962300
+Wonder Bookstore,online,3,10,68,15191302
+Wonder Bookstore,store,3,10,69,14370240
+Wonder Bookstore,online,3,11,64,12320215
+Wonder Bookstore,store,3,11,104,22486450
+Wonder Bookstore,store,3,12,122,29631810
+Wonder Bookstore,online,3,12,79,16674377
+Wonder Bookstore,online,3,13,66,13664900
+Wonder Bookstore,store,3,13,133,31205660
+Wonder Bookstore,store,3,14,113,24928760
+Wonder Bookstore,online,3,14,75,14614157
+Sinar Starbooks,online,3,14,8,10630090
+Wonder Bookstore,online,3,15,66,12736218
+Wonder Bookstore,store,3,15,139,53766140
+Wonder Bookstore,store,3,16,117,27301870
+Wonder Bookstore,online,3,16,51,8957134
+Wonder Bookstore,online,3,17,58,12470323
+Wonder Bookstore,store,3,17,87,23179250
+Wonder Bookstore,online,3,18,67,13985831
+Wonder Bookstore,store,3,18,113,26028160
+Sinar Starbooks,online,3,18,10,3130414
+Wonder Bookstore,store,3,19,81,20979502
+Wonder Bookstore,online,3,19,67,16411153
+Wonder Bookstore,store,3,20,61,16956560
+Wonder Bookstore,online,3,20,93,18877767
+Wonder Bookstore,store,3,21,40,11250240
+Wonder Bookstore,online,3,21,65,11769889
+Sinar Starbooks,online,3,21,14,3110000
+Wonder Bookstore,online,3,22,81,20773405
+Wonder Bookstore,online,3,23,60,11210973
+Wonder Bookstore,store,4,7,16,693600
+Sinar Starbooks,online,4,7,4,1129165
+Kikkerland,online,4,8,2,456960
+Sinar Starbooks,online,4,13,15,7512421
+Sinar Starbooks,online,4,14,8,2711780
+Sinar Starbooks,online,4,15,6,3041190
+Sinar Starbooks,online,4,19,12,3280305
+Wonder Bookstore,store,5,7,10,775100
+Wonder Bookstore,store,5,8,22,3968660
+Sinar Starbooks,online,5,10,519,257259628
+Sinar Starbooks,online,5,13,46,20613320
+Sinar Starbooks,online,5,18,16,5730060
+Sinar Starbooks,online,5,19,15,5855875
+Sinar Starbooks,online,5,20,10,3386070
+Sinar Starbooks,online,5,22,14,4776885
+Sinar Starbooks,online,6,6,3,392050
+Sinar Starbooks,online,6,7,7,2249180
+Sinar Starbooks,online,6,10,12,4392845
+Sinar Starbooks,online,3,0,2,523490
+Wonder Bookstore,online,3,5,17,2713087
+Sinar Starbooks,online,3,5,2,649000
+Kikkerland,online,3,6,1,84800
+Sinar Starbooks,online,3,8,5,2226710
+Kikkerland,online,3,9,2,699770
+Sinar Starbooks,online,3,10,5,2332020
+Sinar Starbooks,online,3,11,11,5281560
+Kikkerland,online,3,13,1,194560
+Sinar Starbooks,online,3,13,19,10219398
+Sinar Starbooks,online,1,1,4,1548225
+Wonder Bookstore,online,1,2,13,3836056
+Sinar Starbooks,online,1,2,2,457120
+Sinar Starbooks,online,1,4,4,935070
+Wonder Bookstore,store,1,6,6,0
+Kikkerland,online,1,9,2,522880
+Sinar Starbooks,online,1,10,9,3019460
+Sinar Starbooks,online,1,11,9,5762119
+Sinar Starbooks,online,1,12,9,3305730
+Sinar Starbooks,online,1,13,13,5713580
+Sinar Starbooks,online,1,15,16,7838185
+Sinar Starbooks,online,2,13,19,13770163
+Sinar Starbooks,online,2,14,21,7833075
+Kikkerland,online,2,17,1,106800
+Sinar Starbooks,online,2,19,8,2918010
+Kikkerland,online,2,22,2,302600
+Sinar Starbooks,online,1,18,5,2889025
+Sinar Starbooks,online,1,19,3,629965
+Sinar Starbooks,online,1,23,8,4664780
+Sinar Starbooks,online,2,3,3,861365
+Sinar Starbooks,online,2,8,15,6179930
+Kikkerland,online,2,8,1,177460
+Wonder Bookstore,store,2,10,100,16973230
+Sinar Starbooks,online,6,15,10,4692915
+Sinar Starbooks,online,6,16,6,1944040
+Sinar Starbooks,online,6,17,6,1596995
+Sinar Starbooks,online,6,19,10,2778700
+Sinar Starbooks,online,6,23,5,1281370
+Sinar Starbooks,online,0,1,1,435000
+Sinar Starbooks,online,0,2,5,1002195
+Sinar Starbooks,online,0,7,4,1632660
+Sinar Starbooks,online,0,11,10,3948234
+Sinar Starbooks,online,0,15,26,11874380
+Sinar Starbooks,online,0,19,6,1126065
+Sinar Starbooks,online,3,15,12,5747065
+Sinar Starbooks,online,3,16,11,3682565
+Sinar Starbooks,online,3,20,11,2564924
+Sinar Starbooks,online,3,22,11,4209001
+Sinar Starbooks,online,4,3,1,174240
+Sinar Starbooks,online,4,8,7,2204370
+Wonder Bookstore,online,5,3,15,2657822
+Sinar Starbooks,online,5,3,3,550305
+Sinar Starbooks,online,5,4,5,2623265
+Sinar Starbooks,online,5,9,16,9742015
+Sinar Starbooks,online,5,1,7,2289535
+Kikkerland,online,5,17,1,84800
+Kikkerland,online,5,11,2,289620
+Sinar Starbooks,online,6,11,10,4428445
+Kikkerland,online,5,21,1,304760
+Sinar Starbooks,online,4,11,11,5637415
+Kikkerland,online,4,16,2,365520
+Sinar Starbooks,online,6,22,8,2737675
+Sinar Starbooks,online,0,10,11,3586355
+Sinar Starbooks,online,0,14,8,2417780
+Kikkerland,online,2,9,1,172710
+Sinar Starbooks,online,2,9,10,4220335
+Kikkerland,online,2,14,2,353780
+Kikkerland,online,2,15,1,283860
+Sinar Starbooks,online,2,16,20,14528133
+Sinar Starbooks,online,1,16,11,6212700
+Sinar Starbooks,online,1,20,4,2556945
+Sinar Starbooks,online,1,21,6,1242058
+Sinar Starbooks,online,1,22,8,2533665
+Kikkerland,online,0,19,1,196460
+Sinar Starbooks,online,0,22,4,877670
+Sinar Starbooks,online,1,0,10,3065375
+Wonder Bookstore,online,4,4,4,2149107
+Kikkerland,online,4,7,1,263720
+Kikkerland,online,4,13,1,495210
+Sinar Starbooks,online,3,1,3,829450
+Wonder Bookstore,store,3,9,75,9356040
+Sinar Starbooks,online,3,12,3,905620
+Sinar Starbooks,online,3,17,10,2916105
+Sinar Starbooks,online,3,19,9,2006170
+Sinar Starbooks,online,6,13,6,2179675
+Kikkerland,online,6,15,2,304570
+Wonder Bookstore,store,6,8,17,3415200
+Kikkerland,online,0,15,1,275880
+Kikkerland,online,0,16,2,483060
+Wonder Bookstore,store,1,5,6,0
+Sinar Starbooks,online,1,5,5,1691050
+Sinar Starbooks,online,1,6,5,1299617
+Sinar Starbooks,online,1,9,5,1333993
+Kikkerland,online,6,22,1,194560
+Sinar Starbooks,online,0,5,3,537940
+Kikkerland,online,2,21,2,559930
+Kikkerland,online,3,8,1,274360
+Sinar Starbooks,online,2,12,14,3960490
+Sinar Starbooks,online,2,15,11,4995075
+Kikkerland,online,3,23,1,325660
+Kikkerland,online,4,0,1,393110
+Kikkerland,online,4,11,1,91960
+Sinar Starbooks,online,6,3,1,278010
+Sinar Starbooks,online,6,4,2,407660
+Sinar Starbooks,online,6,5,1,274060
+Sinar Starbooks,online,0,18,5,1475605
+Sinar Starbooks,online,1,3,1,224150
+Wonder Bookstore,online,1,4,8,1354474
+Sinar Starbooks,online,0,8,6,1806610
+Sinar Starbooks,online,1,17,11,2521280
+Kikkerland,online,1,18,1,160360
+Sinar Starbooks,online,2,5,3,622155
+Sinar Starbooks,online,2,7,8,3150025
+Sinar Starbooks,online,2,21,6,2277015
+Sinar Starbooks,online,2,23,11,4040580
+Sinar Starbooks,online,4,0,5,1682175
+Wonder Bookstore,store,4,5,4,0
+Sinar Starbooks,online,4,23,6,1023940
+Wonder Bookstore,store,6,5,3,0
+Sinar Starbooks,online,0,0,5,906270
+Kikkerland,online,0,2,1,299760
+Kikkerland,online,3,18,2,226670
+Sinar Starbooks,online,3,23,3,827480
+Sinar Starbooks,online,2,1,3,585890
+Sinar Starbooks,online,2,4,3,798835
+Kikkerland,online,2,5,1,362800
+Wonder Bookstore,store,3,6,12,226000
+Sinar Starbooks,online,3,7,2,430960
+Wonder Bookstore,store,0,5,5,0
+Kikkerland,online,0,18,1,213560
+Sinar Starbooks,online,2,2,1,223740
+Kikkerland,online,6,9,1,91960
+Kikkerland,online,0,12,2,427120
+Sinar Starbooks,online,4,6,2,581125
+Kikkerland,online,6,12,2,324520
+Sinar Starbooks,online,4,1,2,1304820
+Sinar Starbooks,online,4,4,1,161360
+Wonder Bookstore,store,2,5,2,0
+Kikkerland,online,0,10,1,241110
+Kikkerland,online,5,0,1,205010
+Kikkerland,online,5,8,1,156560
+Sinar Starbooks,online,4,12,2,326046
+Kikkerland,online,5,18,1,172710
+Sinar Starbooks,online,3,3,1,145000
+Sinar Starbooks,online,5,2,2,189995
+Kikkerland,online,5,10,1,196460
+Wonder Bookstore,store,5,5,2,0
+Sinar Starbooks,online,6,1,4,1878170
+Kikkerland,online,0,17,1,68210
+Sinar Starbooks,online,3,2,1,583180
+Kikkerland,online,6,14,1,172710
+Kikkerland,online,6,16,1,196460
+Kikkerland,online,0,0,1,2151820
+Kikkerland,online,0,14,1,89110
+Kikkerland,online,3,2,1,439660
+Kikkerland,online,1,22,1,491800

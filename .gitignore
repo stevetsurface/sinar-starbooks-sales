@@ -1,0 +1,4 @@
+.DS_Store
+# Reseller data is not produced by the sync and stays out of the public repo
+data/resellers.csv
+data/reseller_tracker.csv
