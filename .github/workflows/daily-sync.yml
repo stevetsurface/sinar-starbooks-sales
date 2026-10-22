@@ -1,0 +1,28 @@
+name: Daily Jubelio sync
+on:
+  schedule:
+    - cron: "0 21 * * *"   # 04:00 WIB every day
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pull Jubelio data
+        env:
+          JUBELIO_EMAIL: ${{ secrets.JUBELIO_EMAIL }}
+          JUBELIO_PASSWORD: ${{ secrets.JUBELIO_PASSWORD }}
+        run: python scripts/jubelio_sync.py
+      - name: Commit data
+        run: |
+          git config user.name "jubelio-sync-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data cache
+          git diff --cached --quiet || git commit -m "Jubelio data $(date -u +%Y-%m-%d)"
+          git push
