@@ -94,6 +94,12 @@
   .ss-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ssb-gold); }
   .ss-top h1 { margin: 2px 0 0; font-family: var(--ssb-serif); font-weight: 700; font-size: 22px; line-height: 1.15; color: #fff; }
   .ss-topright { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ss-topright { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-left: auto; }
+  .ss-sync { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #EADCF6; }
+  .ss-sync-txt { display: inline-flex; align-items: center; gap: .4rem; }
+  .ss-sync-txt::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
+  .ss-sync-btn { font: inherit; font-size: 12px; font-weight: 700; color: var(--ssb-purple); background: #fff; border-radius: 999px; padding: 6px 12px; text-decoration: none; white-space: nowrap; }
+  .ss-sync-btn:hover { background: #EADCF6; }
   .ss-top .ss-seg { background: rgba(255,255,255,.12); }
   .ss-top .ss-seg button { color: #EADCF6; }
   .ss-top .ss-seg button[aria-pressed="true"] { background: #fff; color: var(--ssb-purple); }
@@ -194,6 +200,12 @@
       <h1 id="title"><span class="id">Dashboard Penjualan &amp; Stok</span><span class="en">Sales &amp; Stock Dashboard</span></h1>
     </div>
     <div class="ss-topright">
+      <div class="ss-sync" data-source="snapshots">
+        <span class="ss-sync-txt" id="upd-top">—</span>
+        <a class="ss-sync-btn" id="sync-btn" href="https://github.com/stevetsurface/sinar-starbooks-sales/actions/workflows/daily-sync.yml" target="_blank" rel="noopener"
+           title="Buka GitHub Actions lalu klik 'Run workflow' (perlu login GitHub). Data baru muncul ±10 menit kemudian. / Opens GitHub Actions, then click 'Run workflow' (GitHub login needed). New data appears in about 10 minutes.">
+          <span class="id">Sinkron data</span><span class="en">Sync data</span> ↗</a>
+      </div>
       <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
     </div>
     <div class="ss-seg ss-tabs" role="tablist" aria-label="Halaman / Pages" style="flex-basis:100%">
@@ -795,6 +807,10 @@
     const s = get('sales'), k = get('stock'), dd = get('sales_detail_90d');
     const txt = (r) => (r.updated_at ? T('Diperbarui ', 'Updated ') + fwib(r.updated_at) : '—');
     $('#upd-ctl').textContent = txt(s) + (s.last_order_at ? T(' · pesanan terakhir ', ' · last order ') + fwib(s.last_order_at).split(', ')[1] : '');
+    const ago = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); if (m < 60) return T(m + ' menit lalu', m + ' min ago'); const h = Math.round(m / 60); if (h < 48) return T(h + ' jam lalu', h + ' h ago'); return T(Math.round(h / 24) + ' hari lalu', Math.round(h / 24) + ' days ago'); };
+    $('#upd-top').textContent = s.updated_at
+      ? T('Data diperbarui ', 'Data updated ') + fwib(s.updated_at) + ' (' + ago(s.updated_at) + ')' + T(' · otomatis tiap hari 04:00 WIB', ' · auto-sync daily 04:00 WIB')
+      : T('Waktu pembaruan belum diketahui', 'Update time unknown');
     $$('.ss-upd-sales').forEach((x) => { x.textContent = txt(s); x.setAttribute('data-source', 'snapshots'); });
     $$('.ss-upd-stock').forEach((x) => { x.textContent = txt(k); x.setAttribute('data-source', 'snapshots'); });
     $$('.ss-upd-detail').forEach((x) => { x.textContent = txt(dd.updated_at ? dd : s); x.setAttribute('data-source', 'snapshots'); });
