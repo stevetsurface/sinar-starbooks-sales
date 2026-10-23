@@ -337,8 +337,8 @@ def all_stocks(ids):
     """POST /inventory/items/all-stocks/ in chunks -> (stock[(item_id, location_name)] = (on_hand, reserved, available), brands[item_id])."""
     stock, brands, locname = {}, {}, {}
     ids = list(ids)
-    for i in range(0, len(ids), 500):
-        r = http('POST', BASE + '/inventory/items/all-stocks/', {'ids': ids[i:i + 500]}, token=TOKEN)
+    for i in range(0, len(ids), 200):  # Jubelio caps ids at 200 per call
+        r = http('POST', BASE + '/inventory/items/all-stocks/', {'ids': ids[i:i + 200]}, token=TOKEN)
         for l in r.get('locations') or []:
             if l.get('location_name'): locname[str(l.get('location_id'))] = l['location_name'].strip()
         for it in r.get('data') or []:
