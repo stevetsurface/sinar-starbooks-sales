@@ -7219,7 +7219,7 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-19,Wonder Bookstore,Tokopedia,ONLINE,2,416760,0
 2026-10-19,Wonder Bookstore,Tokopedia,PIM,1,376010,0
 2026-10-20,Kikkerland,Tokopedia,ONLINE,1,491800,0
-2026-10-20,Sinar Starbooks,Shopee,ONLINE,22,10652470,2
+2026-10-20,Sinar Starbooks,Shopee,ONLINE,21,10380020,3
 2026-10-20,Sinar Starbooks,Tokopedia,ONLINE,1,363000,0
 2026-10-20,Wonder Bookstore,In-store POS,ASHTA,35,10840580,0
 2026-10-20,Wonder Bookstore,In-store POS,BALI-BERAWA,23,4372560,0
@@ -7293,18 +7293,19 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-22,Wonder Bookstore,Tokopedia,JKT-TSM,1,194560,0
 2026-10-22,Wonder Bookstore,Tokopedia,ONLINE,1,131800,0
 2026-10-22,Wonder Bookstore,Tokopedia,PIM,3,1310660,1
-2026-10-23,Sinar Starbooks,Shopee,ONLINE,4,2536235,1
-2026-10-23,Wonder Bookstore,In-store POS,ASHTA,1,244000,0
-2026-10-23,Wonder Bookstore,In-store POS,BALI-BERAWA,11,2068320,0
+2026-10-23,Sinar Starbooks,Shopee,ONLINE,6,3503760,1
+2026-10-23,Wonder Bookstore,In-store POS,ASHTA,7,2035020,0
+2026-10-23,Wonder Bookstore,In-store POS,BALI-BERAWA,12,2100320,0
 2026-10-23,Wonder Bookstore,In-store POS,BALI-TSM,1,340800,0
-2026-10-23,Wonder Bookstore,In-store POS,HUBLIFE,2,297800,0
-2026-10-23,Wonder Bookstore,In-store POS,PAMERAN ASHTA,6,1300140,0
-2026-10-23,Wonder Bookstore,In-store POS,PIM,4,2066000,0
+2026-10-23,Wonder Bookstore,In-store POS,HUBLIFE,3,420800,0
+2026-10-23,Wonder Bookstore,In-store POS,JKT-TSM,2,98620,0
+2026-10-23,Wonder Bookstore,In-store POS,PAMERAN ASHTA,11,2757560,0
+2026-10-23,Wonder Bookstore,In-store POS,PIM,8,2482500,0
 2026-10-23,Wonder Bookstore,Shopee,BALI-BERAWA,4,922017,1
 2026-10-23,Wonder Bookstore,Shopee,BALI-TSM,2,243347,0
 2026-10-23,Wonder Bookstore,Shopee,HUBLIFE,2,515115,0
-2026-10-23,Wonder Bookstore,Shopee,JKT-TSM,2,410089,0
-2026-10-23,Wonder Bookstore,Shopee,ONLINE,2,619121,1
+2026-10-23,Wonder Bookstore,Shopee,JKT-TSM,3,552773,0
+2026-10-23,Wonder Bookstore,Shopee,ONLINE,4,1183019,1
 2026-10-23,Wonder Bookstore,Shopee,PIM,6,943044,2
 2026-10-23,Wonder Bookstore,TikTok Shop,HUBLIFE,1,231610,0
 2026-10-23,Wonder Bookstore,Tokopedia,ASHTA,1,264010,0
