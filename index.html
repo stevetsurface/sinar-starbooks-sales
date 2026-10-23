@@ -35,7 +35,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["basket_daily", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["basket_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -175,6 +175,8 @@
   .ss-insights li::marker { color: var(--ssb-gold); }
   .ss-xl { font: inherit; font-size: 12px; font-weight: 700; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ssb-line-2); background: #fff; color: var(--ssb-purple); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .ss-xl:hover { background: var(--ssb-lilac); }
+  a.ss-xl { text-decoration: none; }
+  a.ss-dl::before { background: var(--ssb-purple); }
   .ss-xl::before { content: ""; width: 10px; height: 12px; border-radius: 2px; background: #1F7A4D; box-shadow: inset 0 -3px 0 rgba(255,255,255,.35); }
   .ss-card-tools { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .ss-search { font: inherit; font-size: 12px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--ssb-line-2); background: #fff; min-width: 9rem; }
@@ -446,6 +448,11 @@
   <!-- ================= STOK ================= -->
   <section id="stock" class="ss" hidden>
     <div class="ss-status" id="stock-status"><span class="dash-skeleton">—</span></div>
+    <div class="ss-card" id="card-transferfile">
+      <div class="ss-card-h"><h2><span class="id">File transfer stok (format toko)</span><span class="en">Stock transfer file (store format)</span></h2><span class="ss-card-tools"><a class="ss-xl ss-dl" id="transfer-dl" href="data/transfer_stok_toko_offline.xlsx" download><span class="id">Unduh Excel</span><span class="en">Download Excel</span></a></span></div>
+      <p class="ss-note"><span class="id">Transfer_Stok_Toko_Offline.xlsx seperti yang biasa dipakai tim toko: Ringkasan per toko, Rekomendasi Transfer (stok habis di toko tujuan tapi laku di sana, sampai 3 sumber), Daftar Transfer per Rute untuk dokumen transfer di Jubelio, dan Perlu Restock. Saran qty = ½ × penjualan POS 3 bulan. Dibuat ulang otomatis setiap pagi.</span><span class="en">Transfer_Stok_Toko_Offline.xlsx as the store team uses it: per-store summary, transfer recommendations (out of stock at the destination but selling there, up to 3 sources), a per-route list for Jubelio transfer documents, and a restock list. Suggested qty = ½ × 3-month POS sales. Regenerated automatically every morning.</span></p>
+      <p class="ss-note" id="transfer-info" data-source="transfer_summary">—</p>
+    </div>
     <div class="ss-card" id="card-stockloc">
       <div class="ss-card-h"><h2><span class="id">Situasi stok per lokasi</span><span class="en">Stock situation by location</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-stock">—</span><button class="ss-xl" data-export="stockloc">Excel</button></span></div>
       <p class="ss-note"><span class="id">Nilai stok dihitung dengan harga jual (Jubelio tidak menyimpan harga pokok). Umur = hari sejak barang itu terakhir terjual di lokasi tersebut. Sell-through = terjual ÷ (terjual + stok).</span><span class="en">Stock value is at selling price (Jubelio holds no cost price). Age = days since the item last sold at that location. Sell-through = sold ÷ (sold + on hand).</span></p>
@@ -470,7 +477,7 @@
       </div>
     </div>
     <div class="ss-card" id="card-transfers">
-      <div class="ss-card-h"><h2><span class="id">Usulan transfer antar toko</span><span class="en">Suggested transfers between stores</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="transfers">Excel</button></span></div>
+      <div class="ss-card-h"><h2><span class="id">Usulan transfer antar toko</span><span class="en">Suggested transfers between stores</span></h2><span class="ss-card-tools"><a class="ss-xl ss-dl" href="data/transfer_stok_toko_offline.xlsx" download><span class="id">File transfer (format toko)</span><span class="en">Transfer file (store format)</span></a><button class="ss-xl" data-export="transfers">Excel</button></span></div>
       <p class="ss-note"><span class="id">Barang yang tidak laku 90+ hari di satu lokasi tetapi laris dan menipis di lokasi lain. Jumlah = kekurangan di tujuan, maksimal stok di asal. Diurutkan menurut nilai jual.</span><span class="en">Items unsold for 90+ days at one location but selling and short at another. Qty = the shortfall at the destination, capped at the source stock. Sorted by sales value.</span></p>
       <div class="ss-tablebox" data-source="stock_transfers"><table class="ss-table" id="tbl-transfers"><thead></thead><tbody></tbody></table></div>
     </div>
@@ -1214,7 +1221,17 @@
       dead_units: stock_dead_by_location.reduce((s, r) => s + +r.units, 0),
     }],
   });
+  function renderTransferFile() {
+    const info = $('#transfer-info'); const ts = rows('transfer_summary'); const a = $('#transfer-dl');
+    if (!ts) { const d = ds('transfer_summary'); info.textContent = d.status === 'loading' ? '…' : T('File belum tersedia (menunggu sinkronisasi berikutnya).', 'File not available yet (waiting for the next sync).'); if (a) a.style.display = d.status === 'ok' ? '' : 'none'; return; }
+    const sum = (f) => ts.reduce((x, r) => x + (+r[f] || 0), 0); const g = ts[0] || {};
+    const stamp = (g.generated_at || '').slice(0, 10).replace(/-/g, '');
+    $$('a.ss-dl').forEach((x) => { x.style.display = ''; x.setAttribute('download', 'Transfer_Stok_Toko_Offline_' + stamp + '.xlsx'); });
+    info.textContent = T(`${int(sum('sku_transfer'))} SKU bisa ditransfer (${int(sum('qty_transfer'))} pcs, ${int(sum('sku_high'))} prioritas tinggi) · ${int(sum('sku_restock'))} SKU perlu restock tanpa sumber · penjualan POS ${fdy(g.window_start)} – ${fdy(g.window_end)} · dibuat ${fwib(g.generated_at)}`,
+      `${int(sum('sku_transfer'))} SKUs to transfer (${int(sum('qty_transfer'))} pcs, ${int(sum('sku_high'))} high priority) · ${int(sum('sku_restock'))} SKUs need restock with no source · POS sales ${fdy(g.window_start)} – ${fdy(g.window_end)} · generated ${fwib(g.generated_at)}`);
+  }
   function renderStock() {
+    renderTransferFile();
     const st = $('#stock-status'); const ss = ds('stock_summary');
     if (ss.status === 'ok') {
       const s = ss.data[0];

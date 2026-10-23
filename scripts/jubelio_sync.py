@@ -10,6 +10,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import urllib.request, urllib.error
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'data')
 CACHE = os.path.join(os.path.dirname(__file__), '..', 'cache')
@@ -199,10 +200,13 @@ def main():
     price = {}
     first = get('/inventory/items/?page=1&pageSize=200'); n = (first['totalCount'] + 199) // 200
     pages = [first] + [get(f'/inventory/items/?page={p}&pageSize=200') for p in range(2, n + 1)]
+    master, bundles = {}, set()
     for pg in pages:
         for g in pg.get('data', []):
             for v in g.get('variants') or []:
                 price[v['item_id']] = float(v.get('sell_price') or g.get('sell_price') or 0)
+                master[v['item_id']] = (v.get('item_code') or g.get('item_code') or '', clean(v.get('item_name') or g.get('item_name') or ''))
+                if g.get('is_bundle') or v.get('is_bundle'): bundles.add(v['item_id'])
 
     def group(code, name):
         nm = (name or '').upper()
@@ -320,6 +324,68 @@ def main():
     last = max(o['transaction_date'] for o in orders)
     stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     write('snapshots.csv', ['source', 'updated_at', 'last_order_at'], [['sales', stamp, last], ['stock', stamp, ''], ['sales_detail_90d', stamp, '']])
+
+    # ---------------------------------------------------------------- transfer workbook (store format)
+    try:
+        transfer_workbook(recent, det, price, master, bundles, now)
+    except Exception as e:  # never let the workbook break the data sync
+        import traceback; traceback.print_exc()
+        print('transfer workbook skipped:', e, file=sys.stderr)
+
+
+def all_stocks(ids):
+    """POST /inventory/items/all-stocks/ in chunks -> (stock[(item_id, location_name)] = (on_hand, reserved, available), brands[item_id])."""
+    stock, brands, locname = {}, {}, {}
+    ids = list(ids)
+    for i in range(0, len(ids), 500):
+        r = http('POST', BASE + '/inventory/items/all-stocks/', {'ids': ids[i:i + 500]}, token=TOKEN)
+        for l in r.get('locations') or []:
+            if l.get('location_name'): locname[str(l.get('location_id'))] = l['location_name'].strip()
+        for it in r.get('data') or []:
+            iid = it.get('item_id')
+            if it.get('brand_name'): brands[iid] = it['brand_name']
+            for ls in it.get('location_stocks') or []:
+                loc = locname.get(str(ls.get('location_id'))) or (ls.get('location_name') or ls.get('location_code') or '').strip()
+                if not loc: continue
+                oh = float(ls.get('on_hand') or 0); rs = float(ls.get('reserved') or 0)
+                av = float(ls['available']) if ls.get('available') is not None else oh - rs
+                stock[(iid, loc)] = (oh, rs, av)
+    return stock, brands
+
+
+def transfer_workbook(recent, det, price, master, bundles, now):
+    import transfer_workbook as tw
+    asof = now.date(); end = asof - timedelta(days=1); start = asof - timedelta(days=92)
+    months = tw.month_labels(start, end)
+    pos, online, last, names = defaultdict(dict), defaultdict(float), {}, dict(master)
+    stores = set()
+    for o in recent:
+        if is_bad(o): continue
+        d = det.get(str(o['salesorder_id']))
+        if not d: continue
+        day = wib(o['transaction_date']).date()
+        if day < start or day > end: continue
+        is_pos = chan(o.get('channel_name')) == 'In-store POS'; loc = (o.get('location_name') or '').strip()
+        if is_pos and not tw.is_store_loc(loc): continue
+        if is_pos: stores.add(loc)
+        for iid, code, name, qty, amt, cx in d['items']:
+            if cx or skip_item(code, name) or amt <= 0: continue
+            u = qty if qty > 0 else 1
+            names.setdefault(iid, (code or '', clean(name)))
+            if is_pos:
+                m = day.strftime('%Y-%m'); pos[(loc, iid)][m] = pos[(loc, iid)].get(m, 0) + u
+                last[(loc, iid)] = max(last.get((loc, iid), day), day)
+            else:
+                online[iid] += u
+    stores = sorted(stores)
+    ids = set(price) | {iid for (_, iid) in pos} | set(online)
+    stock, brands = all_stocks(ids)
+    print('all-stocks', len(ids), 'items,', len({l for _, l in stock}), 'locations, stores', stores)
+    out = os.path.join(OUT, 'transfer_stok_toko_offline.xlsx')
+    res = tw.build(out, stores, months, pos, online, last, stock, names, brands, bundles, start, end, asof)
+    print('wrote transfer_stok_toko_offline.xlsx', res['transfer_rows'], 'transfers,', res['restock_rows'], 'restock')
+    write('transfer_summary.csv', ['store', 'sku_out_sold', 'sku_out_sold2', 'sku_transfer', 'sku_full', 'sku_high', 'qty_transfer', 'sku_restock', 'window_start', 'window_end', 'generated_at'],
+          [[st] + [p['sold1'], p['sold2'], p['transfer'], p['full'], p['high'], p['qty'], p['restock']] + [start.isoformat(), end.isoformat(), now.strftime('%Y-%m-%dT%H:%M:%S+07:00')] for st, p in sorted(res['stores'].items())])
 
 
 if __name__ == '__main__':
