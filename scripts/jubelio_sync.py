@@ -105,6 +105,34 @@ def cafe(code, name): return (name or '').strip().upper().startswith('*') or (co
 def skip_item(code, name): return cafe(code, name) or bool(SKIP.search((name or '').upper())) or code == '123'
 
 
+def basket_rows(recent, det):
+    """Per day/brand/channel basket metrics from cached order details (last 90 days).
+
+    units: sum of item qty; a line with no qty but an amount counts as 1 (Jubelio POS lines
+    carry qty 0). Customers: contact_id > 0 only (-1 etc. = walk-in / anonymous). Returning =
+    the customer already had an earlier non-cancelled order inside the detail window."""
+    rec = sorted((o for o in recent if not is_bad(o) and str(o['salesorder_id']) in det), key=lambda o: o['transaction_date'])
+    seen = set(); BK = defaultdict(lambda: [0, 0.0, 0, 0.0, 0.0, 0, 0, 0, 0.0, 0.0])
+    for o in rec:
+        d = det[str(o['salesorder_id'])]
+        k = (wib(o['transaction_date']).date().isoformat(), brand(o.get('store_name')), chan(o.get('channel_name')))
+        a = BK[k]; a[0] += 1; a[3] += d['sub']; a[9] += float(o.get('grand_total') or d['gt'])
+        for iid, code, name, qty, amt, cx in d['items']:
+            if cx or skip_item(code, name): continue
+            a[1] += qty if qty > 0 else (1 if amt > 0 else 0); a[2] += 1
+        if d['disc'] > 0: a[4] += d['disc']; a[5] += 1
+        c = d.get('cust')
+        if c is not None and c > 0:
+            a[6] += 1
+            key = (k[1], k[2] == 'In-store POS', c)
+            if key in seen: a[7] += 1; a[8] += float(o.get('grand_total') or d['gt'])
+            seen.add(key)
+    return [list(k) + [v[0], round(v[1], 2), v[2], round(v[3]), round(v[9]), round(v[4]), v[5], v[6], v[7], round(v[8])] for k, v in sorted(BK.items())]
+
+
+BASKET_HEADER = ['date', 'brand', 'channel', 'orders', 'units', 'lines', 'gross', 'revenue', 'discount_amount', 'discounted_orders', 'identified_orders', 'returning_orders', 'returning_revenue']
+
+
 def write(name, header, rows):
     with open(os.path.join(OUT, name), 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f); w.writerow(header); w.writerows(rows)
@@ -156,7 +184,7 @@ def main():
         return i, {'sub': float(d.get('sub_total') or 0), 'disc': float(d.get('total_disc') or 0) + float(d.get('voucher_amount') or 0) + float(d.get('add_disc') or 0),
                    'fee': float(d.get('service_fee') or 0), 'ship': float(d.get('shipping_cost') or 0), 'gt': float(d.get('grand_total') or 0),
                    'cr': d.get('mp_cancel_reason') or (d.get('cancel_reason') if d.get('cancel_reason') not in (None, 'false') else None), 'cust': d.get('contact_id'),
-                   'items': [[it.get('item_id'), it.get('item_code'), it.get('item_name'), float(it.get('qty') or 0), float(it.get('amount') or 0), 1 if it.get('is_canceled_item') else 0] for it in d.get('items') or []]}
+                   'items': [[it.get('item_id'), it.get('item_code'), it.get('item_name'), float(it.get('qty') or it.get('qty_in_base') or it.get('quantity') or 0), float(it.get('amount') or 0), 1 if it.get('is_canceled_item') else 0] for it in d.get('items') or []]}
     lm = {o['salesorder_id']: o.get('last_modified') for o in recent}
     with ThreadPoolExecutor(8) as ex:
         for i, d in ex.map(fetch, need):
@@ -213,6 +241,7 @@ def main():
     write('customers_90d.csv', ['brand', 'channel', 'customers', 'repeat_customers', 'repeat_orders', 'revenue', 'repeat_revenue'], [list(k) + [a[0], a[1], a[2], round(a[3]), round(a[4])] for k, a in CA.items()])
     write('titles_daily.csv', ['date', 'item_code', 'brand', 'qty', 'revenue'], [list(k) + [round(v[0], 2), round(v[1])] for k, v in sorted(T.items())])
     write('items.csv', ['item_code', 'item_name', 'group', 'price'], [[c, n, g, round(p)] for c, (n, g, p) in ITEM.items()])
+    write('basket_daily.csv', BASKET_HEADER, basket_rows(recent, det))
 
     # ---------------------------------------------------------------- stock
     inv = {p: get(f'/inventory/v2/{p}/').get('data', []) for p in ['need-restock', 'low-stock', 'days-to-dry', 'best-seller', 'dead-stock']}

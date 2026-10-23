@@ -35,7 +35,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["basket_daily", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -302,6 +302,11 @@
       <p class="ss-note"><span class="id">Periode tetap, tidak ikut filter periode. Perubahan dibanding periode sebelumnya yang sebanding.</span><span class="en">Fixed periods, not affected by the period filter. Change vs the comparable period before.</span></p>
       <div class="ss-tiles" id="glance-tiles" data-source="sales_daily_detail"></div>
     </div>
+    <div class="ss-card" id="card-basket">
+      <div class="ss-card-h"><h2><span class="id">Keranjang · online vs toko</span><span class="en">Basket · online vs store</span><button class="ss-help" data-goto="guide-basket" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="basket">Excel</button><span class="ss-upd ss-upd-detail">—</span></span></div>
+      <p class="ss-note" id="basket-note"><span class="id">Periode terpilih, selalu online dan toko berdampingan (filter online/toko tidak berlaku di sini). Dari data rinci pesanan 90 hari terakhir.</span><span class="en">Selected period, always online and store side by side (the online/store filter doesn't apply here). From order-level data for the last 90 days.</span></p>
+      <div class="ss-tablebox" data-source="basket_daily"><table class="ss-table" id="tbl-basket"><thead></thead><tbody></tbody></table></div>
+    </div>
     <div class="ss-grid">
       <div class="ss-card" id="card-daily">
         <h2><span class="id">Harian · 60 hari</span><span class="en">Daily · 60 days</span></h2>
@@ -551,6 +556,27 @@
           <p class="en">The filter applies to Overview, Sales &amp; stores and Finance. It doesn't apply to title-level data (Titles tab) yet.</p>
         </div>
       </div>
+      <div class="ss-card" id="guide-basket">
+        <h2><span class="id">Keranjang: online vs toko</span><span class="en">Basket: online vs store</span></h2>
+        <div class="ss-guide">
+          <p class="id">Kartu <b>Keranjang</b> di Ringkasan membandingkan perilaku belanja online dan di toko untuk periode terpilih. Sumbernya data rinci pesanan Jubelio, yang hanya diambil untuk <b>90 hari terakhir</b>; periode lebih panjang dipotong otomatis.</p>
+          <p class="en">The <b>Basket</b> card on the Overview compares shopping behaviour online and in store for the selected period. It uses Jubelio order-level data, which is only pulled for the <b>last 90 days</b>; longer periods are clamped automatically.</p>
+          <ul class="id">
+            <li><b>Transaksi</b> = pesanan / struk yang tidak dibatalkan. <b>Rata-rata per transaksi</b> = nilai dibayar ÷ transaksi.</li>
+            <li><b>Unit per keranjang</b> = jumlah unit ÷ transaksi. Kasir Jubelio tidak mengirim qty per baris, jadi tiap baris kasir dihitung 1 unit. Kemasan, kantong, dan materai tidak dihitung.</li>
+            <li><b>Diskon</b> = diskon penjual + voucher + potongan tambahan yang tercatat di pesanan (bukan subsidi marketplace).</li>
+            <li><b>Pelanggan terdata</b> = pesanan dengan ID pelanggan. Online hampir selalu terdata; di toko hanya kalau kasir mencatat member/pelanggan (walk-in tidak dihitung). Karena itu angka toko menggambarkan member saja.</li>
+            <li><b>Pelanggan kembali</b> = pelanggan terdata yang sudah pernah belanja lebih awal dalam 90 hari data. Pembelian sebelum jendela itu tidak terlihat, jadi angka ini sedikit terlalu rendah.</li>
+          </ul>
+          <ul class="en">
+            <li><b>Tickets</b> = non-cancelled orders / receipts. <b>Average ticket</b> = paid value ÷ tickets.</li>
+            <li><b>Units per basket</b> = units ÷ tickets. Jubelio POS doesn't send a quantity per line, so each till line counts as 1 unit. Packaging, bags and stamps are excluded.</li>
+            <li><b>Discount</b> = seller discount + vouchers + extra deductions recorded on the order (not marketplace-funded subsidies).</li>
+            <li><b>Known customer</b> = order with a customer ID. Online nearly always has one; in store only when the cashier records a member/customer (walk-ins are not counted), so the store figures describe members only.</li>
+            <li><b>Returning</b> = a known customer who already had an earlier order within the 90-day data. Purchases before that window aren't visible, so this is slightly understated.</li>
+          </ul>
+        </div>
+      </div>
     </div>
     <div class="ss-card" id="guide-terms">
       <h2><span class="id">Arti istilah</span><span class="en">Glossary</span></h2>
@@ -793,7 +819,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -943,6 +969,44 @@
     const fr = finRows(); if (fr) { const RR = clampTo(R, bounds(fr)); let g = 0, n = 0; if (RR && RR.s <= RR.e) for (const x of fr) { if (x.d < RR.s || x.d > RR.e || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; g += x.g; n += x.n; } tiles.push(mini(T('Uang diterima / kotor', 'Received / gross'), pct0(g ? n / g : null), T('setelah diskon & biaya', 'after discounts & fees'))); }
     const rs = rows('resellers'); if (rs) { const act = rs.filter((r) => r.recency === 'Under 60 days').length; tiles.push(mini(T('Reseller aktif (<60 hr)', 'Active resellers (<60d)'), int(act), T('dari ', 'of ') + int(rs.length) + T(' akun', ' accounts'))); }
     ht.replaceChildren(...tiles);
+    renderBasket(b, R);
+  }
+
+  const basketRows = () => rows('basket_daily', (r) => ({ d: String(r.date).slice(0, 10), b: r.brand, c: r.channel, o: +r.orders, u: +r.units, l: +r.lines, g: +r.gross, v: +r.revenue, da: +r.discount_amount, dn: +r.discounted_orders, io: +r.identified_orders, ro: +r.returning_orders, rv: +r.returning_revenue }));
+  function renderBasket(b, R) {
+    const br = basketRows(); const box = $('#card-basket .ss-tablebox'); const note = $('#basket-note');
+    if (!br) { chartState(box, 'basket_daily'); return; }
+    skel(box, false);
+    const RR = clampTo(R, bounds(br));
+    const z = () => ({ o: 0, u: 0, l: 0, g: 0, v: 0, da: 0, dn: 0, io: 0, ro: 0, rv: 0 });
+    const A = { on: z(), st: z(), all: z() };
+    if (RR && RR.s <= RR.e) for (const x of br) {
+      if (x.d < RR.s || x.d > RR.e || (b !== 'All' && x.b !== b)) continue;
+      for (const t of [x.c === 'In-store POS' ? A.st : A.on, A.all]) for (const k of Object.keys(t)) t[k] += x[k];
+    }
+    const span = RR && RR.s <= RR.e ? (RR.s === RR.e ? fdy(RR.s) : fd(RR.s) + ' – ' + fdy(RR.e)) : '—';
+    note.replaceChildren(document.createTextNode(span + (RR && RR.clamped ? T(' (dipotong ke 90 hari data rinci)', ' (clamped to the 90-day detail window)') : '') + T(' · online dan toko selalu berdampingan; filter online/toko tidak berlaku di kartu ini.', ' · online and store always side by side; the online/store filter does not apply to this card.')));
+    const r = (n, f, note) => ({ n, on: f(A.on), st: f(A.st), all: f(A.all), note: note || '' });
+    const div = (a, c) => (c ? a / c : null);
+    const data = [
+      r(T('Transaksi (struk / pesanan)', 'Tickets (receipts / orders)'), (t) => int(t.o)),
+      r(T('Rata-rata per transaksi', 'Average ticket'), (t) => (t.o ? rp(t.v / t.o) : '—'), T('nilai dibayar ÷ transaksi', 'paid value ÷ tickets')),
+      r(T('Unit per keranjang', 'Units per basket'), (t) => (t.o ? num(t.u / t.o) : '—'), T('baris kasir tanpa qty dihitung 1', 'POS lines without qty count as 1')),
+      r(T('Judul per keranjang', 'Lines per basket'), (t) => (t.o ? num(t.l / t.o) : '—')),
+      r(T('Transaksi pakai diskon', 'Tickets with a discount'), (t) => pct0(div(t.dn, t.o)), T('diskon penjual + voucher', 'seller discount + vouchers')),
+      r(T('Rata-rata diskon per transaksi berdiskon', 'Avg discount per discounted ticket'), (t) => (t.dn ? rp(t.da / t.dn) : '—')),
+      r(T('Diskon ÷ nilai kotor', 'Discount ÷ gross value'), (t) => pct0(div(t.da, t.g))),
+      r(T('Transaksi dengan pelanggan terdata', 'Tickets with a known customer'), (t) => pct0(div(t.io, t.o)), T('toko: hanya member / pelanggan yang dicatat kasir', 'store: only members / customers recorded at the till')),
+      r(T('Pelanggan kembali (dari yang terdata)', 'Returning customers (of known)'), (t) => pct0(div(t.ro, t.io)), T('sudah pernah belanja dalam 90 hari data', 'had an earlier order within the 90-day data')),
+      r(T('Nilai dari pelanggan kembali', 'Revenue from returning customers'), (t) => pct0(div(t.rv, t.v))),
+    ];
+    const cols = [
+      { h: ['Ukuran', 'Metric'], name: true, f: (x) => { const d = el('div'); d.append(document.createTextNode(x.n)); if (x.note) { const sm = el('div', 'ss-sub', x.note); sm.style.fontWeight = '400'; d.append(sm); } return d; }, x: (x) => x.n },
+      { h: ['Online', 'Online'], num: true, f: (x) => x.on },
+      { h: ['Toko (POS)', 'Store (POS)'], num: true, f: (x) => x.st },
+      { h: ['Semua', 'All'], num: true, f: (x) => x.all },
+    ];
+    table('tbl-basket', cols, data, 'basket');
   }
 
   // ---------------- PENJUALAN ----------------
