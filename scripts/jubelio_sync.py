@@ -234,7 +234,7 @@ def main():
         if d.get('cust'): CU[(b, c, d['cust'])][0] += 1; CU[(b, c, d['cust'])][1] += gt
         for iid, code, name, qty, amt, cx in d['items']:
             if cx or skip_item(code, name) and not cafe(code, name): continue
-            T[(day, code, b)][0] += qty; T[(day, code, b)][1] += amt
+            T[(day, code, b)][0] += qty if qty > 0 else (1 if amt > 0 else 0); T[(day, code, b)][1] += amt  # POS lines carry qty 0: count the line
             ITEM.setdefault(code, (clean(name), group(code, name), price.get(iid, 0)))
     write('finance_daily.csv', ['date', 'brand', 'channel', 'orders', 'gross', 'discounts', 'marketplace_fees', 'shipping', 'net', 'canceled_orders', 'canceled_value'], [list(k) + [v[0]] + [round(x) for x in v[1:6]] + [v[6], round(v[7])] for k, v in sorted(F.items())])
     write('cancel_reasons.csv', ['brand', 'channel', 'status', 'reason', 'orders', 'value'], [list(k) + [v[0], round(v[1])] for k, v in sorted(CR.items(), key=lambda kv: -kv[1][0])])

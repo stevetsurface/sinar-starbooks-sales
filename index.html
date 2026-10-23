@@ -415,7 +415,7 @@
     </div>
     <div class="ss-card" id="card-top">
       <div class="ss-card-h"><h2><span class="id">Judul terlaris</span><span class="en">Best-selling titles</span></h2>
-        <span class="ss-card-tools"><div class="ss-seg ss-topsort"><button data-sort="revenue"><span class="id">Rupiah</span><span class="en">Revenue</span></button><button data-sort="qty"><span class="id">Unit</span><span class="en">Units</span></button></div><input class="ss-search" id="top-search" placeholder="Cari / Search"><button class="ss-xl" data-export="top">Excel</button></span></div>
+        <span class="ss-card-tools"><div class="ss-seg ss-topcat" role="group" aria-label="Jenis barang / Item type"><button data-cat="all"><span class="id">Semua</span><span class="en">All</span></button><button data-cat="books"><span class="id">Buku</span><span class="en">Books</span></button><button data-cat="gift"><span class="id">Gift &amp; alat tulis</span><span class="en">Gift &amp; stationery</span></button></div><div class="ss-seg ss-topsort"><button data-sort="revenue"><span class="id">Rupiah</span><span class="en">Revenue</span></button><button data-sort="qty"><span class="id">Unit</span><span class="en">Units</span></button></div><input class="ss-search" id="top-search" placeholder="Cari / Search"><button class="ss-xl" data-export="top">Excel</button></span></div>
       <p class="ss-note" id="top-note">–</p>
       <div class="ss-tablebox" data-source="titles_daily items"><table class="ss-table" id="tbl-top"><thead></thead><tbody></tbody></table></div>
     </div>
@@ -673,7 +673,7 @@
   const monthEnd = (m) => add(iso(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 1))), -1);
   const GROUPS = { 'Buku umum': ['Buku umum', 'General books'], 'Komik & manga': ['Komik & manga', 'Comics & manga'], 'Buku anak': ['Buku anak', "Children's books"], 'Alat tulis & gift': ['Alat tulis & gift', 'Stationery & gifts'], 'Kafe': ['Kafe', 'Café'] };
   const gname = (g) => T(...(GROUPS[g] || [g, g]));
-  window.ssState = window.ssState || { tab: 'ringkasan', heat: 'all', sort: 'revenue', q: '', aq: '', split: 'brand' };
+  window.ssState = window.ssState || { tab: 'ringkasan', heat: 'all', sort: 'revenue', cat: 'all', q: '', aq: '', split: 'brand' };
   const S = window.ssState;
   const P = () => dash.params();
   const brand = () => P().brand || 'All';
@@ -861,6 +861,7 @@
   $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
   $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
   $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
+  $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
   $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
   $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
   const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
@@ -1138,10 +1139,16 @@
     ], R.cs ? rising : [], 'rising');
     // top
     $$('.ss-topsort button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.sort === S.sort)));
+    $$('.ss-topcat button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.cat === (S.cat || 'all'))));
+    const isBook = (g) => ['Buku umum', 'Buku anak', 'Komik & manga'].includes(g);
+    const catOk = (a) => (S.cat === 'books' ? isBook(a.it.group) : S.cat === 'gift' ? !isBook(a.it.group) : true);
     const q = (S.q || '').trim().toLowerCase();
-    const top = list.filter((a) => !q || a.it.item_name.toLowerCase().includes(q) || a.k.includes(q)).sort((a, z) => (S.sort === 'qty' ? z.q - a.q : z.v - a.v)).slice(0, 300);
+    const catList = list.filter(catOk); const ctv = catList.reduce((x, a) => x + a.v, 0);
+    const top = catList.filter((a) => !q || a.it.item_name.toLowerCase().includes(q) || a.k.includes(q)).sort((a, z) => (S.sort === 'qty' ? z.q - a.q : z.v - a.v)).slice(0, 300);
     const kn = kind() !== 'all' ? T(' Filter online/toko belum berlaku untuk data per judul.', ' The online/store filter does not apply to title data yet.') : '';
-    $('#top-note').textContent = kn + T(`300 judul teratas, ${fd(R.s)} – ${fdy(R.e)}. Unduh Excel untuk daftar lengkap yang tampil.`, `Top 300 titles, ${fd(R.s)} – ${fdy(R.e)}. Download Excel for the full list shown.`) + note;
+    const catLab = S.cat === 'books' ? T('buku', 'books') : S.cat === 'gift' ? T('gift & alat tulis', 'gift & stationery') : T('judul', 'titles');
+    const catSum = S.cat && S.cat !== 'all' ? T(` ${catLab[0].toUpperCase() + catLab.slice(1)}: ${int(catList.length)} barang, ${int(catList.reduce((x, a) => x + a.q, 0))} unit, ${rp(ctv)} (${pct0(tv ? ctv / tv : null)} dari penjualan barang).`, ` ${catLab[0].toUpperCase() + catLab.slice(1)}: ${int(catList.length)} items, ${int(catList.reduce((x, a) => x + a.q, 0))} units, ${rp(ctv)} (${pct0(tv ? ctv / tv : null)} of item sales).`) : '';
+    $('#top-note').textContent = kn + T(`300 ${catLab} teratas, ${fd(R.s)} – ${fdy(R.e)}. Porsi = bagian dari penjualan barang periode ini. Unduh Excel untuk daftar lengkap yang tampil.`, `Top 300 ${catLab}, ${fd(R.s)} – ${fdy(R.e)}. Share = part of this period's item sales. Download Excel for the full list shown.`) + catSum + note;
     table('tbl-top', [
       { h: ['#', '#'], num: 1, f: (r) => String(top.indexOf(r) + 1), x: (r) => top.indexOf(r) + 1 },
       { h: ['Judul', 'Title'], name: 1, f: (r) => r.it.item_name },
