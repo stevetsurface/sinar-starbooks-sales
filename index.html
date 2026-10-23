@@ -149,11 +149,14 @@
   .ss-upd { font-size: 12px; color: var(--ssb-muted); display: inline-flex; align-items: center; gap: .4rem; }
   .ss-upd::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
   .ss-ctl .ss-upd { margin-left: auto; }
-  .ss-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr)); gap: 12px; }
+  .ss-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px; }
   .ss-tile, .ss-card, .ss-status { background: #fff; border: 1px solid var(--ssb-line); border-radius: 10px; padding: 16px 18px; min-width: 0; box-shadow: none; }
-  .ss-tile { border-top: 3px solid var(--ssb-gold); }
+  .ss-tile { border-top: 3px solid var(--ssb-gold); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lab lab' 'big spark' 'sub sub'; align-items: end; column-gap: 8px; }
+  .ss-tile > .ss-lab { grid-area: lab; } .ss-tile > .ss-big { grid-area: big; } .ss-tile > .ss-sub { grid-area: sub; }
+  .ss-tile > .ss-spark { grid-area: spark; display: block; line-height: 0; margin-bottom: 6px; }
+  .ss-spark svg { display: block; }
   .ss-lab { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ssb-purple); }
-  .ss-big { display: block; font-family: var(--ssb-serif); font-weight: 500; font-size: 28px; line-height: 1.05; letter-spacing: -0.02em; color: var(--ssb-purple); margin: 6px 0 4px; }
+  .ss-big { display: block; font-family: var(--ssb-serif); font-weight: 500; font-size: 26px; line-height: 1.05; letter-spacing: -0.02em; color: var(--ssb-purple); margin: 6px 0 4px; white-space: nowrap; min-width: 0; }
   .ss-sub { font-size: 12px; color: var(--ssb-muted); line-height: 1.5; }
   .ss-up { color: var(--color-ok); font-weight: 700; } .ss-down { color: var(--color-bad); font-weight: 700; }
   .ss-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 12px; }
@@ -174,6 +177,9 @@
   .ss-table td { padding: 7px 8px; border-bottom: 1px solid var(--ssb-line); vertical-align: top; color: var(--ssb-ink); }
   .ss-table tbody tr:hover td { background: var(--ssb-lilac); }
   .ss-table .num { text-align: right; white-space: nowrap; }
+  .ss-table th.ss-sortable { cursor: pointer; user-select: none; }
+  .ss-table th.ss-sortable:hover { color: var(--ssb-purple); }
+  .ss-table th.ss-sort-desc::after { content: ' ▼'; font-size: 8px; } .ss-table th.ss-sort-asc::after { content: ' ▲'; font-size: 8px; }
   .ss-table td.ss-name { max-width: 22rem; font-weight: 600; }
   .ss-table td.ss-locs { color: var(--ssb-muted); max-width: 14rem; }
   .ss-flag { color: var(--color-bad); font-weight: 800; }
@@ -187,6 +193,12 @@
 
   #ss-root [hidden] { display: none !important; }
   .ss-top .ss-tabs { flex-wrap: wrap; }
+  @media (min-width: 1100px) {
+    /* persistent left navigation on wide screens: the section list stays in reach while long tables scroll */
+    #dash-root { padding-left: 232px; }
+    #ss-root .ss-top .ss-tabs { position: fixed; top: 16px; left: max(24px, calc((100vw - 1320px) / 2 + 24px)); width: 184px; flex-direction: column; align-items: stretch; flex-basis: auto !important; gap: 4px; padding: 10px; border-radius: 10px; background: var(--ssb-purple); z-index: 30; }
+    #ss-root .ss-top .ss-tabs button { justify-content: flex-start; text-align: left; min-height: 40px; padding: 0 12px; }
+  }
   .ss-filters .ss-ctl { flex: 1 1 520px; }
   .ss-insights { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; line-height: 1.5; color: var(--ssb-ink-2); }
   .ss-insights li b { color: var(--ssb-deep); }
@@ -806,13 +818,26 @@
   // ---------------- tables + excel export ----------------
   const EXPORTS = {};
   // cols: [{h:[id,en], f:(r)=>value for display, x:(r)=>raw value for excel, num, cls, name}]
+  const SORTS = {}; // per-table column sort chosen by clicking a header; survives re-renders
   function table(id, cols, data, exportName) {
     const t = $('#' + id); if (!t) return;
     const thead = t.querySelector('thead'), tbody = t.querySelector('tbody');
-    thead.replaceChildren(el('tr')); cols.forEach((c) => { const th = el('th', c.num ? 'num' : '', T(...c.h)); thead.firstChild.append(th); });
-    tbody.replaceChildren(...data.map((r) => { const tr = el('tr'); cols.forEach((c) => { const td = el('td', [c.num ? 'num' : '', c.name ? 'ss-name' : '', c.muted ? 'ss-locs' : '', c.cls ? c.cls(r) || '' : ''].filter(Boolean).join(' ')); const v = c.f(r); if (v instanceof Node) td.append(v); else td.textContent = v ?? ''; tr.append(td); }); return tr; }));
-    if (!data.length) { const tr = el('tr'); const td = el('td', '', T('Tidak ada data untuk pilihan ini', 'No data for this selection')); td.colSpan = cols.length; td.style.color = 'var(--ssb-muted)'; tr.append(td); tbody.append(tr); }
-    if (exportName) EXPORTS[exportName] = { name: id, cols, data };
+    const cell = (c, r) => { const v = c.x ? c.x(r) : c.f(r); return v instanceof Node ? v.textContent : v; };
+    const num = (v) => { if (typeof v === 'number') return isFinite(v) ? v : null; const n = parseFloat(String(v ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')); return isNaN(n) ? null : n; };
+    const body = (rows) => {
+      tbody.replaceChildren(...rows.map((r) => { const tr = el('tr'); cols.forEach((c) => { const td = el('td', [c.num ? 'num' : '', c.name ? 'ss-name' : '', c.muted ? 'ss-locs' : '', c.cls ? c.cls(r) || '' : ''].filter(Boolean).join(' ')); const v = c.f(r); if (v instanceof Node) td.append(v); else td.textContent = v ?? ''; tr.append(td); }); return tr; }));
+      if (!rows.length) { const tr = el('tr'); const td = el('td', '', T('Tidak ada data untuk pilihan ini', 'No data for this selection')); td.colSpan = cols.length; td.style.color = 'var(--ssb-muted)'; tr.append(td); tbody.append(tr); }
+    };
+    const sorted = () => { const st = SORTS[id]; if (!st || !cols[st.i]) return data; const c = cols[st.i]; return data.slice().sort((a, z) => { const va = cell(c, a), vz = cell(c, z); const na = num(va), nz = num(vz); const d = na != null && nz != null ? na - nz : String(va ?? '').localeCompare(String(vz ?? ''), LOC()); return st.dir === 'desc' ? -d : d; }); };
+    thead.replaceChildren(el('tr'));
+    cols.forEach((c, i) => {
+      const st = SORTS[id]; const th = el('th', [c.num ? 'num' : '', 'ss-sortable', st && st.i === i ? 'ss-sort-' + st.dir : ''].filter(Boolean).join(' '), T(...c.h));
+      th.title = T('Klik untuk mengurutkan', 'Click to sort'); th.setAttribute('aria-sort', st && st.i === i ? (st.dir === 'desc' ? 'descending' : 'ascending') : 'none');
+      th.addEventListener('click', () => { const cur = SORTS[id]; SORTS[id] = cur && cur.i === i ? (cur.dir === 'desc' ? { i, dir: 'asc' } : null) : { i, dir: c.num ? 'desc' : 'asc' }; if (SORTS[id] === null) delete SORTS[id]; table(id, cols, data, exportName); });
+      thead.firstChild.append(th);
+    });
+    body(sorted());
+    if (exportName) EXPORTS[exportName] = { name: id, cols, data: sorted() };
   }
   const xmlEsc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
   const colName = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
@@ -902,6 +927,15 @@
     return m;
   }
   const one = (m) => m.get('_') || ZERO;
+  // daily series for sparklines: one value per day in s..e (missing days = 0)
+  const daily = (r, s, e, b, pick) => { const m = sumBy(r, s, e, b, (x) => x.d); const out = []; for (let t = s; t <= e; t = add(t, 1)) { const a = m.get(t); out.push(a ? pick(a) : 0); } return out; };
+  function spark(tile, vals, color) {
+    let box = tile.querySelector(':scope > .ss-spark'); if (!vals || vals.length < 2) { if (box) box.remove(); return; }
+    if (!box) { box = el('span', 'ss-spark'); const sub = tile.querySelector(':scope > .ss-sub'); tile.insertBefore(box, sub || null); }
+    const w = 64, h = 24, mx = Math.max(...vals.map((v) => (isFinite(v) ? v : 0)), 1e-9);
+    const pts = vals.map((v, i) => `${((i / (vals.length - 1)) * w).toFixed(1)},${(h - 2 - ((isFinite(v) ? v : 0) / mx) * (h - 4)).toFixed(1)}`).join(' ');
+    box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline fill="none" stroke="${color || 'var(--ssb-gold)'}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/><circle r="2" fill="${color || 'var(--ssb-gold)'}" cx="${w}" cy="${(h - 2 - ((isFinite(vals[vals.length - 1]) ? vals[vals.length - 1] : 0) / mx) * (h - 4)).toFixed(1)}"/></svg>`;
+  }
   const cr = (a) => ((a.o + a.x) ? a.x / (a.o + a.x) : null);
 
   // ---------------- header, notes, insights ----------------
@@ -983,7 +1017,7 @@
       const R = rangeFor(p, B.min, L);
       const c = one(sumBy(sr, R.s, R.e, b)), q = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
       const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab + ' · ' + (R.s === R.e ? fd(R.s) : fd(R.s) + '–' + fd(R.e))), el('span', 'ss-big', rp(c.v)));
-      const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub); return t;
+      const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub); spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
     }));
     // daily 60
     const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
@@ -1054,6 +1088,8 @@
     const cur = one(sumBy(sr, R.s, R.e, b)), prev = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
     const setTile = (t, big, cv, pv, lower, ptxt) => { const bg = t.querySelector('.ss-big'); skel(bg, false); bg.textContent = big; const sub = t.querySelector('.ss-sub'); if (pv == null) { sub.textContent = T('Tidak ada pembanding', 'No comparison'); return; } sub.replaceChildren(chgEl(cv, pv, lower), document.createTextNode(' vs ' + T(...R.label)), el('br'), document.createTextNode(ptxt)); };
     const bf = T('Sebelumnya: ', 'Before: ');
+    const ss0 = days(R.s, R.e) >= 14 ? R.s : [add(R.e, -13), B.min].sort()[1]; const dv = daily(sr, ss0, R.e, b, (a) => a.v), dO = daily(sr, ss0, R.e, b, (a) => a.o), dx = daily(sr, ss0, R.e, b, (a) => a.x);
+    spark(tiles.rev, dv); spark(tiles.ord, dO); spark(tiles.aov, dv.map((v, i) => (dO[i] ? v / dO[i] : 0))); spark(tiles.can, dx.map((x, i) => ((dO[i] + x) ? x / (dO[i] + x) : 0)), 'var(--color-bad)');
     setTile(tiles.rev, rp(cur.v), cur.v, prev && prev.v, false, prev ? bf + rp(prev.v) : '');
     setTile(tiles.ord, int(cur.o), cur.o, prev && prev.o, false, prev ? bf + int(prev.o) : '');
     setTile(tiles.aov, cur.o ? rp(cur.v / cur.o) : '–', cur.o ? cur.v / cur.o : null, prev && prev.o ? prev.v / prev.o : null, false, prev && prev.o ? bf + rp(prev.v / prev.o) : '');
