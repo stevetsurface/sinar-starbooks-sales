@@ -7295,11 +7295,11 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-22,Wonder Bookstore,Tokopedia,PIM,3,1310660,1
 2026-10-23,Sinar Starbooks,Shopee,ONLINE,4,2536235,1
 2026-10-23,Wonder Bookstore,In-store POS,ASHTA,1,244000,0
-2026-10-23,Wonder Bookstore,In-store POS,BALI-BERAWA,10,2001320,0
+2026-10-23,Wonder Bookstore,In-store POS,BALI-BERAWA,11,2068320,0
 2026-10-23,Wonder Bookstore,In-store POS,BALI-TSM,1,340800,0
 2026-10-23,Wonder Bookstore,In-store POS,HUBLIFE,2,297800,0
-2026-10-23,Wonder Bookstore,In-store POS,PAMERAN ASHTA,5,1255140,0
-2026-10-23,Wonder Bookstore,In-store POS,PIM,3,1313200,0
+2026-10-23,Wonder Bookstore,In-store POS,PAMERAN ASHTA,6,1300140,0
+2026-10-23,Wonder Bookstore,In-store POS,PIM,4,2066000,0
 2026-10-23,Wonder Bookstore,Shopee,BALI-BERAWA,4,922017,1
 2026-10-23,Wonder Bookstore,Shopee,BALI-TSM,2,243347,0
 2026-10-23,Wonder Bookstore,Shopee,HUBLIFE,2,515115,0
@@ -7311,4 +7311,4 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-23,Wonder Bookstore,Tokopedia,BALI-TSM,1,297160,0
 2026-10-23,Wonder Bookstore,Tokopedia,JKT-TSM,1,699020,0
 2026-10-23,Wonder Bookstore,Tokopedia,ONLINE,3,940400,1
-2026-10-23,Wonder Bookstore,Tokopedia,PIM,1,172710,0
+2026-10-23,Wonder Bookstore,Tokopedia,PIM,2,314510,0
