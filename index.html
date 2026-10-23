@@ -38,7 +38,7 @@
   #ss-root [data-fresh="stale"]::before { background: var(--ssb-gold) !important; }
   #ss-root [data-fresh="old"]::before { background: #D9534F !important; }
   @media (max-width: 600px) {
-    #ss-root .ss-seg button, #ss-root .ss-xl, #ss-root .ss-sync-btn { min-height: 44px; }
+    #ss-root .ss-seg button, #ss-root .ss-xl, #ss-root .ss-sync-btn { min-height: 44px; box-sizing: border-box; }
     #ss-root .ss-ctl select, #ss-root .ss-ctl input { height: 44px; }
     #ss-root .ss-help { width: 44px; height: 44px; font-size: 14px; }
     #ss-root .ss-tabs button { flex: 1 0 auto; min-height: 48px; padding: 0 14px; scroll-snap-align: start; }
