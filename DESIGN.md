@@ -18,7 +18,8 @@ Why those dials: the page is read for numbers, not persuasion (ENERGY 1). Sectio
 - Excel buttons carry a small green sheet glyph so the eye finds "export" in a crowded card header. No other icons on the page; where none is relevant, none is used.
 - No dark mode: the page is read in bright shops and printed into WhatsApp screenshots; the brand surfaces are cream and white. Documented choice, not deferred work; revisit if staff ask for it.
 - Empty, loading and error states: every card shows a skeleton while loading, a muted failure line on fetch error, and "No data for this selection" in tables.
-- Mobile: single column, controls at least 44 px tall under 600 px, tables scroll inside their card so the page never scrolls sideways.
+- Mobile: single column, controls at least 44 px tall under 600 px, tables scroll inside their card so the page never scrolls sideways. Under 600 px the section tabs become a fixed bottom bar (the pattern phone users know from every stats app; the header row scrolled out of reach).
+- Period stepper (‹ ›) next to the date range: moves the selection back or forward by its own length, a calendar month stays a month and a month-to-date range lands on the same days of the previous month. Phone users page through weeks and months without typing dates.
 - Keyboard: every control is a real button, link, select or input; focus shows a 3 px wood ring (white on the green header).
 - Copy: Indonesian first, English second, plain sentences, no marketing words. Numbers are Jubelio's; where Jubelio has no data (cost price, Tokopedia fees, POS quantities) the guide says so instead of estimating.
 

@@ -41,7 +41,11 @@
     #ss-root .ss-seg button, #ss-root .ss-xl, #ss-root .ss-sync-btn { min-height: 44px; }
     #ss-root .ss-ctl select, #ss-root .ss-ctl input { height: 44px; }
     #ss-root .ss-help { width: 44px; height: 44px; font-size: 14px; }
-    #ss-root .ss-tabs button { flex: 1 1 auto; }
+    #ss-root .ss-tabs button { flex: 1 0 auto; min-height: 48px; padding: 0 14px; scroll-snap-align: start; }
+    /* bottom tab bar: the pattern phone users already know; the header row would scroll away */
+    #ss-root .ss-top .ss-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-radius: 0; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); background: var(--ssb-purple); box-shadow: 0 -1px 0 rgba(255,255,255,.14); }
+    #ss-root .ss-top .ss-tabs::-webkit-scrollbar { display: none; }
+    #ss-root { padding-bottom: 76px; }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -121,7 +125,7 @@
   .ss-sync { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #E9E3D6; }
   .ss-sync-txt { display: inline-flex; align-items: center; gap: .4rem; }
   .ss-sync-txt::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
-  .ss-sync-btn { font: inherit; font-size: 12px; font-weight: 700; color: var(--ssb-purple); background: #fff; border-radius: 999px; padding: 6px 12px; text-decoration: none; white-space: nowrap; }
+  .ss-sync-btn { font: inherit; font-size: 12px; font-weight: 700; color: var(--ssb-purple); background: #fff; border-radius: 999px; padding: 6px 12px; text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
   .ss-sync-btn:hover { background: #E9E3D6; }
   .ss-top .ss-seg { background: rgba(255,255,255,.12); }
   .ss-top .ss-seg button { color: #E9E3D6; }
@@ -140,6 +144,8 @@
   .ss-ctl label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
   .ss-ctl select, .ss-ctl input { font: inherit; font-size: 13px; font-weight: 600; color: var(--ssb-ink); background: var(--ssb-lilac); border: 1px solid transparent; border-radius: 10px; height: 32px; padding: 0 10px; }
   .ss-ctl .ss-range { color: var(--ssb-muted); }
+  .ss-step button { min-width: 36px; font-size: 18px; line-height: 1; padding: 0 10px; }
+  .ss-step button:disabled { opacity: .35; cursor: default; }
   .ss-upd { font-size: 12px; color: var(--ssb-muted); display: inline-flex; align-items: center; gap: .4rem; }
   .ss-upd::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
   .ss-ctl .ss-upd { margin-left: auto; }
@@ -297,6 +303,7 @@
       </label>
       <label><span class="id">Dari</span><span class="en">From</span> <input type="date" class="ss-start" min="2025-10-01" max="2099-12-31" aria-label="Dari / From"></label>
       <label><span class="id">Sampai</span><span class="en">To</span> <input type="date" class="ss-end" min="2025-10-01" max="2099-12-31" aria-label="Sampai / To"></label>
+      <span class="ss-seg ss-step" role="group" aria-label="Periode sebelumnya / berikutnya"><button type="button" data-step="-1" aria-label="Periode sebelumnya / Previous period">‹</button><button type="button" data-step="1" aria-label="Periode berikutnya / Next period">›</button></span>
       <span class="ss-range" id="range-text"></span>
       <span class="ss-upd" data-source="snapshots" id="upd-ctl">–</span>
     </div>
@@ -868,6 +875,14 @@
   preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
   const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
   sIn.addEventListener('change', dateChange); eIn.addEventListener('change', dateChange);
+  // step the selected range back or forward by its own length (a month stays a calendar month)
+  $$('.ss-step button').forEach((b) => b.addEventListener('click', () => {
+    const R = range(); if (!R) return; const dir = +b.dataset.step; let s, e;
+    if (R.s.slice(8) === '01') { const t = D(R.s); t.setUTCMonth(t.getUTCMonth() + dir); const m = iso(t).slice(0, 7); s = m + '-01'; e = R.e === monthEnd(R.s.slice(0, 7)) ? monthEnd(m) : [add(s, days(R.s, R.e) - 1), monthEnd(m)].sort()[0]; }
+    else { const n = days(R.s, R.e); s = add(R.s, dir * n); e = add(R.e, dir * n); }
+    if (e > B.max) e = B.max; if (s < B.min) s = B.min; if (s > e) return;
+    dash.setParams({ period: 'custom', start: s, end: e });
+  }));
   sIn.addEventListener('blur', () => render()); eIn.addEventListener('blur', () => render());
   const showTab = (t) => { S.tab = t; dash.setLink(t); render(); };
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
@@ -1361,6 +1376,7 @@
       sIn.min = eIn.min = B.min; sIn.max = eIn.max = B.max;
       if (document.activeElement !== sIn) sIn.value = R.s;
       if (document.activeElement !== eIn) eIn.value = R.e;
+      const nx = $('.ss-step button[data-step="1"]'); if (nx) nx.disabled = R.e >= B.max; const pv = $('.ss-step button[data-step="-1"]'); if (pv) pv.disabled = R.s <= B.min;
       $('#range-text').textContent = `${days(R.s, R.e)} ${T('hari', 'days')}` + (R.cs ? ` · ${T('dibanding', 'vs')} ${fd(R.cs)}${R.cs !== R.ce ? ' – ' + fd(R.ce) : ''}` : '') + (R.partial ? T(' · hari ini belum lengkap', ' · today is partial') : '');
     }
     renderHeader(b);
