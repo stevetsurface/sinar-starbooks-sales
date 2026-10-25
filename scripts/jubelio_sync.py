@@ -289,9 +289,9 @@ def main():
         if is_bad(o): continue
         t = wib(o['transaction_date'])
         if t.date().isoformat() < since: continue
-        HD[(brand(o.get('store_name')), 'store' if chan(o.get('channel_name')) == 'In-store POS' else 'online', t.weekday(), t.hour)][0] += 1
-        HD[(brand(o.get('store_name')), 'store' if chan(o.get('channel_name')) == 'In-store POS' else 'online', t.weekday(), t.hour)][1] += float(o.get('grand_total') or 0)
-    write('hour_dow.csv', ['brand', 'kind', 'dow', 'hour', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in HD.items()])
+        hk = (brand(o.get('store_name')), 'store' if chan(o.get('channel_name')) == 'In-store POS' else 'online', (o.get('location_name') or '-').strip(), t.weekday(), t.hour)
+        HD[hk][0] += 1; HD[hk][1] += float(o.get('grand_total') or 0)
+    write('hour_dow.csv', ['brand', 'kind', 'location', 'dow', 'hour', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in HD.items()])
 
     # order details (cached)
     cpath = os.path.join(CACHE, 'details.json.gz')

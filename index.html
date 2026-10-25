@@ -150,6 +150,7 @@
   .ss-seg button[aria-pressed="true"] { background: var(--ssb-purple); color: #fff; }
   .ss-ctl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; color: var(--ssb-ink-2); background: #fff; border: 1px solid var(--ssb-line); border-radius: 10px; padding: 8px 12px; }
   .ss-ctl label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
+  .ss-heatloc { font: inherit; font-size: 12px; font-weight: 600; color: var(--ssb-ink); background: var(--ssb-lilac); border: 1px solid transparent; border-radius: 10px; height: 30px; padding: 0 8px; max-width: 12rem; }
   .ss-ctl select, .ss-ctl input { font: inherit; font-size: 13px; font-weight: 600; color: var(--ssb-ink); background: var(--ssb-lilac); border: 1px solid transparent; border-radius: 10px; height: 32px; padding: 0 10px; }
   .ss-ctl .ss-range { color: var(--ssb-muted); }
   .ss-step button { min-width: 36px; font-size: 18px; line-height: 1; padding: 0 10px; }
@@ -439,8 +440,8 @@
     </div>
     <div class="ss-grid">
       <div class="ss-card" id="card-heat">
-        <div class="ss-card-h"><h2><span class="id">Jam ramai</span><span class="en">Busy hours</span></h2><div class="ss-seg ss-heatkind"><button data-kind="all"><span class="id">Semua</span><span class="en">All</span></button><button data-kind="store"><span class="id">Toko</span><span class="en">Stores</span></button><button data-kind="online">Online</button></div></div>
-        <p class="ss-note"><span class="id">Pendapatan per hari dan jam (WIB), 90 hari terakhir. Makin gelap makin ramai: pakai untuk jadwal staf dan jam promo.</span><span class="en">Revenue by weekday and hour (WIB), last 90 days. Darker = busier: use it for staff rosters and promo timing.</span></p>
+        <div class="ss-card-h"><h2><span class="id">Jam ramai</span><span class="en">Busy hours</span></h2><span class="ss-card-tools"><select class="ss-heatloc" id="heat-loc" aria-label="Lokasi / Location"></select><div class="ss-seg ss-heatkind"><button data-kind="all"><span class="id">Semua</span><span class="en">All</span></button><button data-kind="store"><span class="id">Toko</span><span class="en">Stores</span></button><button data-kind="online">Online</button></div></span></div>
+        <p class="ss-note"><span class="id">Pendapatan per hari dan jam (WIB), 90 hari terakhir. Pilih lokasi untuk melihat satu toko (termasuk pesanan online yang dikirim dari toko itu). Makin gelap makin ramai: pakai untuk jadwal staf dan jam promo.</span><span class="en">Revenue by weekday and hour (WIB), last 90 days. Pick a location to see one store (including online orders shipped from it). Darker = busier: use it for staff rosters and promo timing.</span></p>
         <div class="ss-heat" id="heat" data-source="hour_dow"></div>
       </div>
       <div class="ss-card" id="card-customers">
@@ -459,6 +460,11 @@
       <div class="ss-card-h"><h2><span class="id">Rapor toko</span><span class="en">Store scorecard</span><button class="ss-help" data-goto="guide-toko" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><div class="ss-seg ss-stores" role="group" aria-label="Toko / Store"></div></span></div>
       <p class="ss-note" id="toko-note">–</p>
       <div class="ss-tiles" id="toko-tiles" data-source="sales_daily_detail store_daily stock_locations transfer_summary"></div>
+    </div>
+    <div class="ss-card" id="card-tokoheat">
+      <div class="ss-card-h"><h2><span class="id">Jam ramai toko ini</span><span class="en">This store's busy hours</span></h2><span class="ss-upd ss-upd-detail">–</span></div>
+      <p class="ss-note" id="tokoheat-note"><span class="id">Pendapatan kasir per hari dan jam (WIB), 90 hari terakhir. Makin gelap makin ramai: untuk jadwal staf dan jam promo toko ini.</span><span class="en">POS revenue by weekday and hour (WIB), last 90 days. Darker = busier: for this store's rosters and promo timing.</span></p>
+      <div class="ss-heat" id="toko-heat" data-source="hour_dow"></div>
     </div>
     <div class="ss-card" id="card-stores">
       <div class="ss-card-h"><h2><span class="id">Semua toko berdampingan</span><span class="en">All stores side by side</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="stores">Excel</button></span></div>
@@ -973,6 +979,7 @@
   $$('.ss-gran button').forEach((b) => b.addEventListener('click', () => dash.setParams({ gran: b.dataset.gran })));
   $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
   $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
+  $('#heat-loc').addEventListener('change', (e) => { S.heatLoc = e.target.value || ''; render(); });
   $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
   $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
@@ -1248,17 +1255,18 @@
     // heatmap
     $$('.ss-heatkind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === S.heat)));
     const hd = rows('hour_dow'); const heat = $('#heat');
-    if (hd) {
-      const g = {}; let mx = 0, minH = 23, maxH = 0;
-      for (const r of hd) { if ((b !== 'All' && r.brand !== b) || ((kind() !== 'all' ? kind() : S.heat) !== 'all' && r.kind !== (kind() !== 'all' ? kind() : S.heat))) continue; const k = r.dow + '|' + r.hour; g[k] = (g[k] || 0) + +r.revenue; if (+r.revenue > 0) { minH = Math.min(minH, +r.hour); maxH = Math.max(maxH, +r.hour); } }
-      Object.values(g).forEach((v) => (mx = Math.max(mx, v)));
-      if (minH > maxH) { minH = 8; maxH = 22; }
-      const col = d3.interpolateRgb('#F3EFE6', '#0F2D24');
-      const tbl = el('table'); const th = el('thead'); const tr0 = el('tr'); tr0.append(el('th', '', '')); for (let h = minH; h <= maxH; h++) tr0.append(el('th', '', String(h).padStart(2, '0'))); th.append(tr0); tbl.append(th);
-      const tbd = el('tbody');
-      for (let d = 0; d < 7; d++) { const tr = el('tr'); tr.append(el('th', '', DOWM[lang()][d])); for (let h = minH; h <= maxH; h++) { const v = g[d + '|' + h] || 0; const td = el('td'); td.style.background = v ? col(Math.sqrt(v / mx)) : '#FBFAFC'; td.title = DOWM[lang()][d] + ' ' + String(h).padStart(2, '0') + ':00 · ' + rp(v); tr.append(td); } tbd.append(tr); }
-      tbl.append(tbd); heat.replaceChildren(tbl);
-    } else heat.replaceChildren();
+    const hk = kind() !== 'all' ? kind() : S.heat;
+    // location picker: stores (POS) first, then ONLINE and other locations seen in the data
+    const sel = $('#heat-loc');
+    if (hd && sel) {
+      const locs = [...new Set(hd.map((r) => r.location).filter((l) => l && l !== '-'))].sort((a, z) => (isStoreLoc(z) - isStoreLoc(a)) || a.localeCompare(z));
+      if (locs.length) {
+        const want = ['', ...locs]; const have = [...sel.options].map((o) => o.value);
+        if (want.join('|') !== have.join('|')) sel.replaceChildren(...want.map((l) => { const o = el('option', '', l); o.value = l; return o; }));
+        sel.options[0].textContent = T('Semua lokasi', 'All locations'); sel.value = want.includes(S.heatLoc || '') ? (S.heatLoc || '') : ''; sel.style.display = '';
+      } else sel.style.display = 'none';
+    }
+    if (hd) drawHeat(heat, hd, (r) => (b === 'All' || r.brand === b) && (hk === 'all' || r.kind === hk) && (!S.heatLoc || r.location === S.heatLoc)); else heat.replaceChildren();
     // customers
     const cu = rows('customers_90d');
     if (cu) {
@@ -1501,6 +1509,19 @@
     }
   }
 
+  function drawHeat(box, hd, keep) {
+    const g = {}; let mx = 0, minH = 23, maxH = 0;
+    for (const r of hd) { if (!keep(r)) continue; const k = r.dow + '|' + r.hour; g[k] = (g[k] || 0) + +r.revenue; if (+r.revenue > 0) { minH = Math.min(minH, +r.hour); maxH = Math.max(maxH, +r.hour); } }
+    Object.values(g).forEach((v) => (mx = Math.max(mx, v)));
+    if (!mx) { box.replaceChildren(el('div', 'ss-sub', T('Tidak ada data untuk pilihan ini', 'No data for this selection'))); return; }
+    if (minH > maxH) { minH = 8; maxH = 22; }
+    const col = d3.interpolateRgb('#F3EFE6', '#0F2D24');
+    const tbl = el('table'); const th = el('thead'); const tr0 = el('tr'); tr0.append(el('th', '', '')); for (let h = minH; h <= maxH; h++) tr0.append(el('th', '', String(h).padStart(2, '0'))); th.append(tr0); tbl.append(th);
+    const tbd = el('tbody');
+    for (let d = 0; d < 7; d++) { const tr = el('tr'); tr.append(el('th', '', DOWM[lang()][d])); for (let h = minH; h <= maxH; h++) { const v = g[d + '|' + h] || 0; const td = el('td'); td.style.background = v ? col(Math.sqrt(v / mx)) : '#FBFAFC'; td.title = DOWM[lang()][d] + ' ' + String(h).padStart(2, '0') + ':00 · ' + rp(v); tr.append(td); } tbd.append(tr); }
+    tbl.append(tbd); box.replaceChildren(tbl);
+  }
+
   // ---------------- RAPOR TOKO ----------------
   const storeRows = () => rows('store_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, o: +r.orders, u: +r.units, ln: +r.lines, io: +r.identified_orders, dn: +r.discounted_orders, da: +r.discount_amount, v: +r.revenue }));
   const isStoreLoc = (l) => !!l && l !== 'ONLINE' && l !== '-' && !/^(PAMERAN|SAMPLE|TRANSIT)/i.test(l);
@@ -1542,6 +1563,7 @@
       tile(T('Stok mati 90+ hari', 'Dead stock 90+ days'), pct0(m.deadShare), 'deadShare', [document.createTextNode(rp(m.dead) + T(' harga jual', ' at retail'))]),
       tile(T('Transfer masuk disarankan', 'Suggested transfers in'), int(m.tin) + ' pcs', null, [document.createTextNode(int(m.thigh) + T(' SKU prioritas tinggi · file di tab Stok', ' high-priority SKUs · file on the Stock tab'))]),
     );
+    const hdT = rows('hour_dow'); const hb = $('#toko-heat'); if (hdT) { if (hdT.some((r) => r.location)) drawHeat(hb, hdT, (r) => r.kind === 'store' && r.location === S.store); else hb.replaceChildren(el('div', 'ss-sub', T('Rincian per toko tersedia setelah sinkronisasi berikutnya.', 'Per-store detail arrives after the next sync.'))); } else chartState(hb, 'hour_dow');
     const per = R.s === R.e ? fdy(R.s) : fd(R.s) + ' – ' + fdy(R.e);
     note.textContent = `${S.store} · ${per}` + T(' · angka kasir (POS); peringkat = posisi di antara ', ' · POS figures; rank = position among ') + stores.length + T(' toko', ' stores') + (RR && RR.clamped ? T(' · pelanggan terdata & unit per struk dipotong ke 90 hari data rinci', ' · known customers & units per ticket clamped to the 90-day detail') : '') + T(' · stok & transfer = posisi saat ini', ' · stock & transfers = current position');
     const sel = (r) => (r.st === S.store ? 'ss-sel' : '');
