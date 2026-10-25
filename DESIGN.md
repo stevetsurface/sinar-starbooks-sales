@@ -25,7 +25,7 @@ Why those dials: the page is read for numbers, not persuasion (ENERGY 1). Sectio
 
 ## Patterns borrowed from reference dashboards (Mobbin: Shopify Analytics, Stripe, Steep, Jobber, Fresha)
 
-- Persistent left navigation from 1100 px up: the section list stays in reach while long tables scroll; under that width the same buttons become the bottom tab bar. One set of buttons, two placements.
+- Persistent left sidebar from 1100 px up: full height, hugging the left edge, Wonder mark on top, the section list in reach while long tables scroll; under that width the same buttons become the bottom tab bar. One set of buttons, two placements. (A first version floated as a short box beside the header and read as a stray card.)
 - Sparklines inside the KPI tiles (revenue, orders, average order, cancel rate, and the four At-a-glance tiles): the number says where we are, the 14-day-or-longer line says which way it is moving, without opening the chart. Wood on cream; the cancel-rate line is red because up is bad.
 - Sortable table headers on every table: one click sorts descending (numbers) or ascending (text), a second flips, a third restores the default order; the Excel export follows the visible order.
 

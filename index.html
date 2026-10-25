@@ -237,10 +237,12 @@
   #ss-root [hidden] { display: none !important; }
   .ss-top .ss-tabs { flex-wrap: wrap; }
   @media (min-width: 1100px) {
-    /* persistent left navigation on wide screens: the section list stays in reach while long tables scroll */
-    #dash-root { padding-left: 232px; }
-    #ss-root .ss-top .ss-tabs { position: fixed; top: 16px; left: max(24px, calc((100vw - 1320px) / 2 + 24px)); width: 184px; flex-direction: column; align-items: stretch; flex-basis: auto !important; gap: 4px; padding: 10px; border-radius: 10px; background: var(--ssb-purple); z-index: 30; }
+    /* persistent left sidebar on wide screens: full height, hugging the left edge, with the Wonder mark on top */
+    #dash-root { margin: 0; padding-left: 240px; max-width: 1560px; }
+    #ss-root .ss-top .ss-tabs { position: fixed; top: 0; bottom: 0; left: 0; width: 216px; box-sizing: border-box; flex-direction: column; align-items: stretch; justify-content: flex-start; flex-basis: auto !important; gap: 4px; padding: 20px 14px 24px; border-radius: 0; background: var(--ssb-purple); z-index: 30; overflow-y: auto; }
+    #ss-root .ss-top .ss-tabs::before { content: ''; display: block; height: 44px; margin: 0 0 18px 2px; background: url(icons/icon.svg) no-repeat left center / 44px 44px; border-radius: 12px; }
     #ss-root .ss-top .ss-tabs button { justify-content: flex-start; text-align: left; min-height: 40px; padding: 0 12px; }
+    #ss-root .ss-top .ss-tabs button[aria-pressed="true"] { background: var(--ssb-lilac); color: var(--ssb-purple); }
   }
   .ss-filters .ss-ctl { flex: 1 1 520px; }
   .ss-insights { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; line-height: 1.5; color: var(--ssb-ink-2); }
