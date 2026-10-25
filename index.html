@@ -52,7 +52,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["basket_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -181,6 +181,26 @@
   .ss-table th.ss-sortable:hover { color: var(--ssb-purple); }
   .ss-table th.ss-sort-desc::after { content: ' ▼'; font-size: 8px; } .ss-table th.ss-sort-asc::after { content: ' ▲'; font-size: 8px; }
   .ss-table td.ss-name { max-width: 22rem; font-weight: 600; }
+  .ss-table td.ss-sel { background: var(--ssb-gold-soft); }
+  .ss-bell { font: inherit; font-size: 12px; font-weight: 700; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .ss-bell:hover, .ss-bell[aria-expanded="true"] { background: rgba(255,255,255,.24); }
+  .ss-bell-n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #D9534F; color: #fff; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+  .ss-bell-n.ss-zero { background: rgba(255,255,255,.3); }
+  .ss-inbox { position: fixed; top: 72px; right: 24px; width: min(440px, calc(100vw - 32px)); max-height: min(72vh, 680px); overflow: auto; background: #fff; border: 1px solid var(--ssb-line-2); border-radius: 10px; box-shadow: 0 12px 30px rgba(16,32,26,.18); z-index: 60; padding: 14px 16px; }
+  .ss-inbox-h { display: flex; align-items: center; gap: 10px; }
+  .ss-inbox-h h2 { margin: 0; flex: 1; font-family: var(--ssb-serif); font-weight: 500; font-size: 15px; letter-spacing: -0.01em; text-transform: uppercase; color: var(--ssb-purple); }
+  .ss-inbox-read { font: inherit; font-size: 12px; font-weight: 700; color: var(--ssb-purple); background: var(--ssb-lilac); border: 0; border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+  .ss-inbox-close { font: inherit; font-size: 22px; line-height: 1; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ssb-muted); cursor: pointer; }
+  .ss-inbox-list { list-style: none; margin: 6px 0 0; padding: 0; }
+  .ss-inbox-day { font-size: 10.5px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--ssb-muted); margin: 10px 0 2px; }
+  .ss-inbox-item { display: grid; grid-template-columns: 10px 1fr; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; }
+  .ss-inbox-item:hover, .ss-inbox-item:focus-visible { background: var(--ssb-lilac); }
+  .ss-inbox-item i { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--ssb-gold); }
+  .ss-inbox-item.high i { background: #D9534F; } .ss-inbox-item.low i { background: #9DB4A8; }
+  .ss-inbox-item b { display: block; font-size: 13px; color: var(--ssb-ink); } .ss-inbox-item.read b { font-weight: 500; color: var(--ssb-ink-2); }
+  .ss-inbox-item span { display: block; font-size: 12px; color: var(--ssb-muted); line-height: 1.4; }
+  .ss-inbox-item small { display: block; font-size: 11px; color: var(--ssb-purple); font-weight: 700; margin-top: 2px; }
+  @media (max-width: 600px) { .ss-inbox { top: auto; bottom: 76px; right: 16px; left: 16px; width: auto; max-height: 60vh; } }
   .ss-table td.ss-locs { color: var(--ssb-muted); max-width: 14rem; }
   .ss-flag { color: var(--color-bad); font-weight: 800; }
   .ss-warn { color: var(--color-warn); font-weight: 700; }
@@ -281,11 +301,13 @@
            title="Buka GitHub Actions lalu klik 'Run workflow' (perlu login GitHub). Data baru muncul ±10 menit kemudian. / Opens GitHub Actions, then click 'Run workflow' (GitHub login needed). New data appears in about 10 minutes.">
           <span class="id">Sinkron data</span><span class="en">Sync data</span> ↗</a>
       </div>
+      <button type="button" class="ss-bell" id="bell" aria-expanded="false" aria-controls="inbox"><span class="id">Notifikasi</span><span class="en">Alerts</span><span class="ss-bell-n" id="bell-n" hidden>0</span></button>
       <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
     </div>
     <div class="ss-seg ss-tabs" role="tablist" aria-label="Halaman / Pages" style="flex-basis:100%">
       <button data-tab="ringkasan"><span class="id">Ringkasan</span><span class="en">Overview</span></button>
       <button data-tab="sales"><span class="id">Penjualan &amp; toko</span><span class="en">Sales &amp; stores</span></button>
+      <button data-tab="toko"><span class="id">Rapor toko</span><span class="en">Store scorecard</span></button>
       <button data-tab="produk"><span class="id">Produk</span><span class="en">Titles</span></button>
       <button data-tab="reseller">Reseller</button>
       <button data-tab="stock"><span class="id">Stok</span><span class="en">Stock</span></button>
@@ -293,6 +315,11 @@
       <button data-tab="panduan"><span class="id">Panduan</span><span class="en">Guide</span></button>
     </div>
   </header>
+  <div class="ss-inbox" id="inbox" hidden role="dialog" aria-labelledby="inbox-title">
+    <div class="ss-inbox-h"><h2 id="inbox-title"><span class="id">Notifikasi</span><span class="en">Alerts</span></h2><button type="button" class="ss-inbox-read" id="inbox-readall"><span class="id">Tandai semua dibaca</span><span class="en">Mark all read</span></button><button type="button" class="ss-inbox-close" id="inbox-close" aria-label="Tutup / Close">×</button></div>
+    <p class="ss-note" id="inbox-note"></p>
+    <ul class="ss-inbox-list" id="inbox-list"></ul>
+  </div>
 
   <div class="ss-filters" id="filters">
     <div class="ss-seg ss-brands" role="group" aria-label="Merek / Brand">
@@ -418,6 +445,20 @@
   </section>
 
   <!-- ================= PRODUK ================= -->
+  <!-- ================= RAPOR TOKO ================= -->
+  <section id="toko" class="ss" hidden>
+    <div class="ss-card" id="card-toko">
+      <div class="ss-card-h"><h2><span class="id">Rapor toko</span><span class="en">Store scorecard</span><button class="ss-help" data-goto="guide-toko" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><div class="ss-seg ss-stores" role="group" aria-label="Toko / Store"></div></span></div>
+      <p class="ss-note" id="toko-note">–</p>
+      <div class="ss-tiles" id="toko-tiles" data-source="sales_daily_detail store_daily stock_locations transfer_summary"></div>
+    </div>
+    <div class="ss-card" id="card-stores">
+      <div class="ss-card-h"><h2><span class="id">Semua toko berdampingan</span><span class="en">All stores side by side</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="stores">Excel</button></span></div>
+      <p class="ss-note"><span class="id">Periode terpilih, transaksi kasir (POS) per toko. Klik judul kolom untuk mengurutkan; baris toko terpilih disorot. Filter merek dan online/toko tidak berlaku di halaman ini.</span><span class="en">Selected period, POS transactions per store. Click a column header to sort; the selected store's row is highlighted. The brand and online/store filters do not apply on this page.</span></p>
+      <div class="ss-tablebox" data-source="sales_daily_detail"><table class="ss-table" id="tbl-stores"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
   <section id="produk" class="ss" hidden>
     <div class="ss-tiles" id="prod-tiles" data-source="titles_daily items"></div>
     <div class="ss-grid">
@@ -559,6 +600,24 @@
       </div>
     </div>
     <p class="ss-foot"><span class="id">Rincian keuangan tersedia untuk 90 hari terakhir (data per pesanan dari Jubelio). Jubelio hanya mencatat biaya layanan untuk Shopee; biaya Tokopedia/TikTok belum tercatat sehingga uang diterima untuk kanal itu masih terlalu tinggi. Harga pokok (HPP) tidak diisi di Jubelio, jadi margin belum bisa dihitung di sini.</span><span class="en">Finance detail covers the last 90 days (order-level data from Jubelio). Jubelio only records the service fee for Shopee; Tokopedia/TikTok fees aren't recorded, so money received for those channels is overstated. Cost price (HPP) is empty in Jubelio, so margin can't be calculated here yet.</span></p>
+    <div class="ss-card" id="card-crec">
+      <div class="ss-card-h"><h2><span class="id">Pemulihan pembatalan</span><span class="en">Cancellation recovery</span><button class="ss-help" data-goto="guide-crec" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="crec">Excel</button><span class="ss-upd ss-upd-detail">–</span></span></div>
+      <p class="ss-note"><span class="id">90 hari terakhir dari data rinci pesanan; tidak ikut filter periode. <b>Belanja lagi</b> = pelanggan yang sama memesan lagi dalam 7 hari setelah pembatalan. <b>Benar-benar hilang</b> = nilai batal dikurangi yang belanja lagi. Pembeli tanpa ID pelanggan (walk-in kasir) tidak bisa dilacak.</span><span class="en">Last 90 days from order-level data; not affected by the period filter. <b>Bought again</b> = the same customer ordered again within 7 days of the cancellation. <b>Truly lost</b> = cancelled value minus those who bought again. Buyers without a customer ID (till walk-ins) cannot be traced.</span></p>
+      <div class="ss-tiles" id="crec-tiles" data-source="cancel_recovery"></div>
+      <div class="ss-tablebox" data-source="cancel_recovery" style="margin-top:12px"><table class="ss-table" id="tbl-crec"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-grid">
+      <div class="ss-card" id="card-ctit">
+        <div class="ss-card-h"><h2><span class="id">Judul paling sering batal</span><span class="en">Most cancelled titles</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="ctit">Excel</button></span></div>
+        <p class="ss-note"><span class="id">90 hari, per kanal. Judul yang sering batal biasanya soal harga atau stok yang ternyata kosong.</span><span class="en">90 days, per channel. Titles that keep getting cancelled are usually a price or an out-of-stock problem.</span></p>
+        <div class="ss-tablebox" data-source="cancel_titles"><table class="ss-table" id="tbl-ctit"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="ss-card" id="card-cloc">
+        <div class="ss-card-h"><h2><span class="id">Pembatalan per toko pengirim</span><span class="en">Cancellations by shipping store</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="cloc">Excel</button></span></div>
+        <p class="ss-note"><span class="id">Pesanan online dikirim dari stok toko. Toko dengan pembatalan tinggi biasanya punya masalah stok tercatat vs fisik. Filter merek tidak berlaku.</span><span class="en">Online orders ship from store stock. A store with many cancellations usually has a recorded-vs-physical stock problem. The brand filter does not apply.</span></p>
+        <div class="ss-tablebox" data-source="cancel_by_location"><table class="ss-table" id="tbl-cloc"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
   </section>
   <!-- ================= PANDUAN ================= -->
   <section id="panduan" class="ss" hidden>
@@ -591,6 +650,20 @@
           <p class="en">In the <i>Revenue trend</i> chart, choose <b>Store vs online</b> to see both stacked per day.</p>
           <p class="id">Filter ini berlaku di Ringkasan, Penjualan &amp; toko, dan Keuangan. Belum berlaku untuk data per judul (tab Produk).</p>
           <p class="en">The filter applies to Overview, Sales &amp; stores and Finance. It doesn't apply to title-level data (Titles tab) yet.</p>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-toko">
+        <h2><span class="id">Rapor toko</span><span class="en">Store scorecard</span></h2>
+        <div class="ss-guide">
+          <p class="id">Satu halaman per toko fisik, angka kasir (POS) untuk periode terpilih, dengan peringkat di antara semua toko. <b>Online dari toko</b> = pesanan marketplace yang dikirim dari stok toko itu. <b>Pelanggan terdata</b> dan <b>unit per struk</b> berasal dari data rinci 90 hari, jadi periode lebih panjang dipotong. Stok menipis, stok mati, oversold dan usulan transfer adalah posisi saat ini, bukan periode.</p>
+          <p class="en">One page per physical store, POS numbers for the selected period, ranked among all stores. <b>Online from store</b> = marketplace orders shipped from that store's stock. <b>Known customers</b> and <b>units per ticket</b> come from the 90-day order detail, so longer periods are clamped. Low stock, dead stock, oversold and suggested transfers are the current position, not the period.</p>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-crec">
+        <h2><span class="id">Pemulihan pembatalan</span><span class="en">Cancellation recovery</span></h2>
+        <div class="ss-guide">
+          <p class="id">Tidak semua pembatalan hilang: banyak pembeli yang "ubah pesanan" memesan ulang. Kartu ini mencocokkan ID pelanggan tiap pesanan batal dengan pesanan baru pelanggan yang sama dalam 7 hari. Yang tidak memesan ulang = benar-benar hilang. Judul dan toko pengirim menunjukkan di mana masalahnya: harga, stok kosong, atau pengiriman terlambat.</p>
+          <p class="en">Not every cancellation is lost: many "modify order" buyers simply re-order. This card matches each cancelled order's customer ID with a new order by the same customer within 7 days. Those who didn't re-order = truly lost. Titles and shipping stores show where the problem is: price, stock-outs or late shipping.</p>
         </div>
       </div>
       <div class="ss-card" id="guide-basket">
@@ -869,7 +942,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -912,6 +985,36 @@
   const showTab = (t) => { S.tab = t; dash.setLink(t); render(); };
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
   $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  // alerts inbox: read state lives in this browser only
+  const READ_KEY = 'ss_alerts_read';
+  const readSet = () => { try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); } catch (e) { return new Set(); } };
+  const saveRead = (st) => { try { localStorage.setItem(READ_KEY, JSON.stringify([...st].slice(-500))); } catch (e) {} };
+  const openInbox = () => { $('#inbox').hidden = false; $('#bell').setAttribute('aria-expanded', 'true'); $('#inbox-close').focus(); };
+  const closeInbox = (refocus) => { const ib = $('#inbox'); if (ib.hidden) return; ib.hidden = true; $('#bell').setAttribute('aria-expanded', 'false'); if (refocus) $('#bell').focus(); };
+  $('#bell').addEventListener('click', () => ($('#inbox').hidden ? openInbox() : closeInbox(true)));
+  $('#inbox-close').addEventListener('click', () => closeInbox(true));
+  $('#inbox-readall').addEventListener('click', () => { const st = readSet(); (rows('alerts') || []).forEach((a) => st.add(a.id)); saveRead(st); renderInbox(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInbox(true); });
+  document.addEventListener('click', (e) => { const ib = $('#inbox'); if (ib.hidden || ib.contains(e.target) || $('#bell').contains(e.target)) return; closeInbox(false); });
+  const ALERT_TAB = { ringkasan: ['Ringkasan', 'Overview'], sales: ['Penjualan', 'Sales'], toko: ['Rapor toko', 'Store scorecard'], stock: ['Stok', 'Stock'], finance: ['Keuangan', 'Finance'], produk: ['Produk', 'Titles'] };
+  function renderInbox() {
+    const al = rows('alerts'); const n = $('#bell-n'), list = $('#inbox-list'), note = $('#inbox-note'), bell = $('#bell');
+    if (!al) { n.hidden = true; list.replaceChildren(); note.textContent = ds('alerts').status === 'loading' ? '…' : T('Belum ada notifikasi (menunggu sinkronisasi berikutnya).', 'No alerts yet (waiting for the next sync).'); return; }
+    const rd = readSet(); const unread = al.filter((a) => !rd.has(a.id)).length;
+    n.hidden = false; n.textContent = String(unread); n.classList.toggle('ss-zero', !unread); bell.title = T(`${unread} belum dibaca`, `${unread} unread`);
+    note.textContent = al.length ? T('Dihitung setiap pagi dari data terbaru; 14 hari terakhir. Klik untuk membuka tab terkait.', 'Computed every morning from the latest data; last 14 days. Click one to open the related tab.') : T('Tidak ada yang perlu diperhatikan hari ini.', 'Nothing needs attention today.');
+    const items = []; let lastDay = null;
+    for (const a of al) {
+      if (a.date !== lastDay) { lastDay = a.date; items.push(el('li', 'ss-inbox-day', fdy(a.date))); }
+      const li = el('li', 'ss-inbox-item ' + a.severity + (rd.has(a.id) ? ' read' : '')); li.tabIndex = 0; li.setAttribute('role', 'button');
+      const body = el('div'); body.append(el('b', '', T(a.title_id, a.title_en)), el('span', '', T(a.detail_id, a.detail_en)), el('small', '', T('Buka ', 'Open ') + T(...(ALERT_TAB[a.tab] || [a.tab, a.tab]))));
+      li.append(el('i'), body);
+      const go = () => { const st = readSet(); st.add(a.id); saveRead(st); closeInbox(false); if (ALERT_TAB[a.tab]) showTab(a.tab); else render(); };
+      li.addEventListener('click', go); li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      items.push(li);
+    }
+    list.replaceChildren(...items);
+  }
 
   // ---------------- shared aggregations ----------------
   const ZERO = { v: 0, o: 0, x: 0, pos: 0, onl: 0, by: {} };
@@ -1390,6 +1493,102 @@
     }
   }
 
+  // ---------------- RAPOR TOKO ----------------
+  const storeRows = () => rows('store_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, o: +r.orders, u: +r.units, ln: +r.lines, io: +r.identified_orders, dn: +r.discounted_orders, da: +r.discount_amount, v: +r.revenue }));
+  const isStoreLoc = (l) => !!l && l !== 'ONLINE' && l !== '-' && !/^(PAMERAN|SAMPLE|TRANSIT)/i.test(l);
+  function renderToko() {
+    const sr = salesRows(); const box = $('#toko-tiles'); const note = $('#toko-note');
+    if (!sr) { box.replaceChildren(); return; }
+    const R = range();
+    const stores = [...new Set(sr.filter((x) => x.c === 'In-store POS' && isStoreLoc(x.l) && x.d >= add(B.max, -90)).map((x) => x.l))].sort();
+    if (!stores.length) { box.replaceChildren(); note.textContent = T('Tidak ada transaksi kasir dalam 90 hari.', 'No POS transactions in the last 90 days.'); return; }
+    if (!S.store || !stores.includes(S.store)) S.store = stores[0];
+    $('.ss-stores').replaceChildren(...stores.map((st) => { const bt = el('button', '', st); bt.dataset.store = st; bt.setAttribute('aria-pressed', String(st === S.store)); bt.addEventListener('click', () => { S.store = st; render(); }); return bt; }));
+    const M = (s, e) => { const m = {}; if (!s) return m; for (const x of sr) { if (x.d < s || x.d > e || !isStoreLoc(x.l)) continue; const a = m[x.l] || (m[x.l] = { pos: 0, po: 0, onl: 0, oo: 0, x: 0 }); if (x.c === 'In-store POS') { a.pos += x.v; a.po += x.o; } else { a.onl += x.v; a.oo += x.o; } a.x += x.x; } return m; };
+    const cur = M(R.s, R.e), prv = R.cs ? M(R.cs, R.ce) : null;
+    const sd = storeRows(); const RR = sd ? clampTo(R, bounds(sd)) : null; const SD = {};
+    if (sd && RR && RR.s <= RR.e) for (const x of sd) { if (x.d < RR.s || x.d > RR.e) continue; const a = SD[x.l] || (SD[x.l] = { o: 0, u: 0, io: 0, dn: 0 }); a.o += x.o; a.u += x.u; a.io += x.io; a.dn += x.dn; }
+    const SL = Object.fromEntries((rows('stock_locations') || []).map((r) => [r.location, r])); const TS = Object.fromEntries((rows('transfer_summary') || []).map((r) => [r.store, r]));
+    const metrics = (st) => { const c = cur[st] || { pos: 0, po: 0, onl: 0, oo: 0, x: 0 }, d = SD[st] || { o: 0, u: 0, io: 0, dn: 0 }, k = SL[st] || {}, t = TS[st] || {}; return {
+      st, rev: c.pos, tix: c.po, avg: c.po ? c.pos / c.po : null, onl: c.onl, onlShare: (c.pos + c.onl) ? c.onl / (c.pos + c.onl) : null, cancel: (c.po + c.oo + c.x) ? c.x / (c.po + c.oo + c.x) : null,
+      upb: d.o ? d.u / d.o : null, member: d.o ? d.io / d.o : null, disc: d.o ? d.dn / d.o : null,
+      low: +k.low_lines || 0, dead: +k.dead_value || 0, deadShare: +k.retail_value ? (+k.dead_value) / (+k.retail_value) : null, over: +k.oversold_lines || 0, tin: +t.qty_transfer || 0, thigh: +t.sku_high || 0 }; };
+    const all = Object.fromEntries(stores.map((st) => [st, metrics(st)]));
+    const rank = (key, lowerBetter) => Object.fromEntries(stores.map((st) => [st, all[st][key]]).filter(([, v]) => v != null).sort((a, z) => (lowerBetter ? a[1] - z[1] : z[1] - a[1])).map(([st], i) => [st, i + 1]));
+    const ranks = { rev: rank('rev'), tix: rank('tix'), avg: rank('avg'), onlShare: rank('onlShare'), cancel: rank('cancel', true), upb: rank('upb'), member: rank('member'), low: rank('low', true), deadShare: rank('deadShare', true), over: rank('over', true) };
+    const m = all[S.store], p = prv && prv[S.store];
+    const rk = (key) => (ranks[key][S.store] ? `#${ranks[key][S.store]} ${T('dari', 'of')} ${stores.length}` : '');
+    const tile = (lab, val, key, extra, spk, color) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', val)); const sub = el('div', 'ss-sub'); const r = key ? rk(key) : ''; if (r) sub.append(document.createTextNode(r)); if (extra && extra.length) { if (r) sub.append(document.createTextNode(' · ')); sub.append(...extra); } t.append(sub); if (spk) spark(t, spk, color); return t; };
+    const dailyStore = (s, e, pick) => { const mm = {}; for (const x of sr) { if (x.l !== S.store || x.c !== 'In-store POS' || x.d < s || x.d > e) continue; mm[x.d] = (mm[x.d] || 0) + pick(x); } const out = []; for (let t = s; t <= e; t = add(t, 1)) out.push(mm[t] || 0); return out; };
+    const ss0 = days(R.s, R.e) >= 14 ? R.s : [add(R.e, -13), B.min].sort()[1];
+    const vs = (cv, pv, lower) => (p ? [chgEl(cv, pv, lower), document.createTextNode(' vs ' + T(...R.label))] : []);
+    box.replaceChildren(
+      tile(T('Pendapatan kasir', 'POS revenue'), rp(m.rev), 'rev', vs(m.rev, p && p.pos), dailyStore(ss0, R.e, (x) => x.v)),
+      tile(T('Transaksi (struk)', 'Tickets'), int(m.tix), 'tix', vs(m.tix, p && p.po), dailyStore(ss0, R.e, (x) => x.o)),
+      tile(T('Rata-rata per struk', 'Average ticket'), m.avg != null ? rp(m.avg) : '–', 'avg', vs(m.avg, p && p.po ? p.pos / p.po : null)),
+      tile(T('Online dikirim dari toko', 'Online shipped from store'), rp(m.onl), 'onlShare', [document.createTextNode(pct0(m.onlShare) + T(' dari total toko', ' of store total'))]),
+      tile(T('Pelanggan terdata di kasir', 'Known customers at the till'), pct0(m.member), 'member', [document.createTextNode(T('member / dicatat kasir', 'members / recorded at till'))]),
+      tile(T('Unit per struk', 'Units per ticket'), m.upb != null ? num(m.upb) : '–', 'upb', [document.createTextNode(pct0(m.disc) + T(' struk pakai diskon', ' tickets discounted'))]),
+      tile(T('Batal & retur (dikirim dari toko)', 'Cancel & return (shipped from store)'), pct0(m.cancel), 'cancel', vs(m.cancel, p && (p.po + p.oo + p.x) ? p.x / (p.po + p.oo + p.x) : null, true)),
+      tile(T('Stok menipis', 'Low stock'), int(m.low) + T(' baris', ' lines'), 'low', [document.createTextNode(int(m.over) + T(' baris oversold', ' oversold lines'))]),
+      tile(T('Stok mati 90+ hari', 'Dead stock 90+ days'), pct0(m.deadShare), 'deadShare', [document.createTextNode(rp(m.dead) + T(' harga jual', ' at retail'))]),
+      tile(T('Transfer masuk disarankan', 'Suggested transfers in'), int(m.tin) + ' pcs', null, [document.createTextNode(int(m.thigh) + T(' SKU prioritas tinggi · file di tab Stok', ' high-priority SKUs · file on the Stock tab'))]),
+    );
+    const per = R.s === R.e ? fdy(R.s) : fd(R.s) + ' – ' + fdy(R.e);
+    note.textContent = `${S.store} · ${per}` + T(' · angka kasir (POS); peringkat = posisi di antara ', ' · POS figures; rank = position among ') + stores.length + T(' toko', ' stores') + (RR && RR.clamped ? T(' · pelanggan terdata & unit per struk dipotong ke 90 hari data rinci', ' · known customers & units per ticket clamped to the 90-day detail') : '') + T(' · stok & transfer = posisi saat ini', ' · stock & transfers = current position');
+    const sel = (r) => (r.st === S.store ? 'ss-sel' : '');
+    table('tbl-stores', [
+      { h: ['Toko', 'Store'], name: 1, f: (r) => r.st, cls: sel },
+      { h: ['Pendapatan kasir', 'POS revenue'], num: 1, f: (r) => rp(r.rev), x: (r) => Math.round(r.rev), cls: sel },
+      { h: ['Struk', 'Tickets'], num: 1, f: (r) => int(r.tix), x: (r) => r.tix, cls: sel },
+      { h: ['Rata-rata struk', 'Avg ticket'], num: 1, f: (r) => (r.avg != null ? rp(r.avg) : '–'), x: (r) => (r.avg != null ? Math.round(r.avg) : ''), cls: sel },
+      { h: ['Online dari toko', 'Online from store'], num: 1, f: (r) => rp(r.onl), x: (r) => Math.round(r.onl), cls: sel },
+      { h: ['Pelanggan terdata', 'Known customers'], num: 1, f: (r) => pct0(r.member), x: (r) => (r.member != null ? +r.member.toFixed(4) : ''), cls: sel },
+      { h: ['Unit/struk', 'Units/ticket'], num: 1, f: (r) => (r.upb != null ? num(r.upb) : '–'), x: (r) => (r.upb != null ? +r.upb.toFixed(2) : ''), cls: sel },
+      { h: ['Batal', 'Cancel'], num: 1, f: (r) => pct0(r.cancel), x: (r) => (r.cancel != null ? +r.cancel.toFixed(4) : ''), cls: sel },
+      { h: ['Stok menipis', 'Low stock'], num: 1, f: (r) => int(r.low), x: (r) => r.low, cls: sel },
+      { h: ['Stok mati', 'Dead stock'], num: 1, f: (r) => pct0(r.deadShare), x: (r) => (r.deadShare != null ? +r.deadShare.toFixed(4) : ''), cls: sel },
+      { h: ['Oversold', 'Oversold'], num: 1, f: (r) => int(r.over), x: (r) => r.over, cls: sel },
+      { h: ['Transfer masuk', 'Transfers in'], num: 1, f: (r) => int(r.tin), x: (r) => r.tin, cls: sel },
+    ], stores.map((st) => all[st]).sort((a, z) => z.rev - a.rev), 'stores');
+  }
+
+  // ---------------- PEMULIHAN PEMBATALAN ----------------
+  const crRows = () => rows('cancel_recovery', (r) => ({ b: r.brand, c: r.channel, st: r.status, o: +r.orders, v: +r.value, ro: +r.reordered_orders, rv: +r.reordered_value }));
+  const ctRows = () => rows('cancel_titles', (r) => ({ k: r.item_code, n: r.item_name, b: r.brand, c: r.channel, o: +r.canceled_orders, u: +r.canceled_units, v: +r.value }));
+  const clRows = () => rows('cancel_by_location', (r) => ({ l: r.location, c: r.channel, st: r.status, o: +r.orders, v: +r.value, ro: +r.reordered_orders, rv: +r.reordered_value }));
+  function renderCancelRecovery(b) {
+    const cr = crRows(), ct = ctRows(), cl = clRows(); const tiles = $('#crec-tiles');
+    if (!cr) { tiles.replaceChildren(); chartState($('#card-crec .ss-tablebox'), 'cancel_recovery'); return; }
+    skel($('#card-crec .ss-tablebox'), false);
+    const f = cr.filter((x) => (b === 'All' || x.b === b) && kindOk(x.c));
+    const sum = (arr, k) => arr.reduce((a, x) => a + x[k], 0); const o = sum(f, 'o'), v = sum(f, 'v'), ro = sum(f, 'ro'), rv = sum(f, 'rv');
+    const mk = (lab, val, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', val), el('div', 'ss-sub', sub)); return t; };
+    tiles.replaceChildren(
+      mk(T('Nilai batal & retur', 'Cancelled & returned value'), rp(v), int(o) + T(' pesanan, 90 hari', ' orders, 90 days')),
+      mk(T('Belanja lagi dalam 7 hari', 'Bought again within 7 days'), pct0(o ? ro / o : null), int(ro) + T(' pesanan · ', ' orders · ') + rp(rv)),
+      mk(T('Benar-benar hilang', 'Truly lost'), rp(v - rv), pct0(v ? (v - rv) / v : null) + T(' dari nilai batal', ' of cancelled value')),
+    );
+    const grp = (arr, keyFn) => { const m = new Map(); for (const x of arr) { const k = keyFn(x); const a = m.get(k) || { k, o: 0, v: 0, ro: 0, rv: 0 }; a.o += x.o; a.v += x.v; a.ro += x.ro; a.rv += x.rv; m.set(k, a); } return [...m.values()]; };
+    const cols = (kh) => [
+      { h: kh, name: 1, f: (r) => r.k },
+      { h: ['Pesanan batal', 'Cancelled orders'], num: 1, f: (r) => int(r.o), x: (r) => r.o },
+      { h: ['Nilai', 'Value'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+      { h: ['Belanja lagi', 'Bought again'], num: 1, f: (r) => pct0(r.o ? r.ro / r.o : null), x: (r) => (r.o ? +(r.ro / r.o).toFixed(4) : '') },
+      { h: ['Benar-benar hilang', 'Truly lost'], num: 1, f: (r) => rp(r.v - r.rv), x: (r) => Math.round(r.v - r.rv), cls: () => 'ss-flag' },
+    ];
+    table('tbl-crec', cols(['Kanal', 'Channel']), grp(f, (x) => x.c).sort((a, z) => (z.v - z.rv) - (a.v - a.rv)), 'crec');
+    if (ct) table('tbl-ctit', [
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.n },
+      { h: ['Kanal', 'Channel'], muted: 1, f: (r) => r.c },
+      { h: ['Pesanan batal', 'Cancelled orders'], num: 1, f: (r) => int(r.o), x: (r) => r.o },
+      { h: ['Unit', 'Units'], num: 1, f: (r) => int(r.u), x: (r) => r.u },
+      { h: ['Nilai', 'Value'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+      { h: ['Kode', 'Code'], muted: 1, f: (r) => r.k },
+    ], ct.filter((x) => (b === 'All' || x.b === b) && kindOk(x.c)).slice(0, 60), 'ctit');
+    if (cl) table('tbl-cloc', cols(['Toko pengirim', 'Shipping store']), grp(cl.filter((x) => kindOk(x.c)), (x) => x.l).sort((a, z) => z.o - a.o), 'cloc');
+  }
+
   // ---------------- main render ----------------
   function render() {
     const L = lang(); const root = document.getElementById('ss-root'); root.dataset.lang = L;
@@ -1399,13 +1598,13 @@
     $$('.ss-brands button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.brand === b)));
     $$('.ss-kind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === kind())));
     $$('.ss-tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === S.tab)));
-    ['ringkasan', 'sales', 'produk', 'reseller', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
-    const usesBrand = ['ringkasan', 'sales', 'produk', 'finance'].includes(S.tab), usesPeriod = usesBrand;
+    ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
+    const usesBrand = ['ringkasan', 'sales', 'toko', 'produk', 'finance'].includes(S.tab), usesPeriod = usesBrand;
     $('.ss-brands').style.visibility = usesBrand ? 'visible' : 'hidden';
     $('#period-ctl').style.display = usesPeriod ? '' : 'none';
     $('#filters').style.display = usesBrand ? '' : 'none';
     $('#insight-box').style.display = S.tab === 'panduan' ? 'none' : '';
-    updNotes();
+    updNotes(); renderInbox();
     const sr = salesRows(); if (sr) B = bounds(sr);
     if (B) {
       const R = range(); preset.value = R.p;
@@ -1416,13 +1615,13 @@
       $('#range-text').textContent = `${days(R.s, R.e)} ${T('hari', 'days')}` + (R.cs ? ` · ${T('dibanding', 'vs')} ${fd(R.cs)}${R.cs !== R.ce ? ' – ' + fd(R.ce) : ''}` : '') + (R.partial ? T(' · hari ini belum lengkap', ' · today is partial') : '');
     }
     renderHeader(b);
-    const fn = { ringkasan: renderRingkasan, sales: renderSales, produk: renderProduk, reseller: renderReseller, stock: renderStock, finance: renderFinance }[S.tab];
+    const fn = { ringkasan: renderRingkasan, sales: renderSales, toko: renderToko, produk: renderProduk, reseller: renderReseller, stock: renderStock, finance: (bb) => { renderFinance(bb); renderCancelRecovery(bb); } }[S.tab];
     if (fn && (B || S.tab === 'reseller' || S.tab === 'stock')) fn(b);
   }
 
   dash.onData(render);
   const named = location.hash.slice(1);
-  if (['ringkasan', 'sales', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) showTab(named);
+  if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) showTab(named);
   else if (named === 'moving') showTab('stock');
 })();
 </script>

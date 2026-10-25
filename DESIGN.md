@@ -29,6 +29,13 @@ Why those dials: the page is read for numbers, not persuasion (ENERGY 1). Sectio
 - Sparklines inside the KPI tiles (revenue, orders, average order, cancel rate, and the four At-a-glance tiles): the number says where we are, the 14-day-or-longer line says which way it is moving, without opening the chart. Wood on cream; the cancel-rate line is red because up is bad.
 - Sortable table headers on every table: one click sorts descending (numbers) or ascending (text), a second flips, a third restores the default order; the Excel export follows the visible order.
 
+## Added 25 Oct: scorecards, cancellation recovery, alerts inbox
+
+- Rapor toko (Store scorecard) tab: one store at a time, chosen with a segment, ten tiles each carrying the store's rank among the six, plus a side-by-side table. Ranks turn a number into a comparison without a chart; the selected store's row is highlighted in the table so the eye finds it.
+- Pemulihan pembatalan (Cancellation recovery) on Keuangan: three tiles (cancelled value, bought again within 7 days, truly lost) and tables by channel, by title and by shipping store. The "truly lost" column is red because that is the number to act on.
+- Notifikasi (Alerts) as an inbox behind a header button with an unread count, not a banner: alerts accumulate over 14 days and each reader marks their own as read (browser storage), so the page stays calm and nothing is shouted twice. Severity is a coloured dot (red, wood, sage), each item opens its tab. Escape and click-outside close it; the whole thing is keyboard reachable.
+- Alert rules and thresholds live in one dictionary in the sync script so they can be tuned without touching the page.
+
 ## Things this page deliberately does not have
 
 Hero section, feature grid, testimonials, pricing, "trusted by" bar, gradients, glows, background patterns, animations, illustrations, generic icons.
