@@ -7341,11 +7341,13 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-24,Wonder Bookstore,Tokopedia,ONLINE,1,218663,0
 2026-10-24,Wonder Bookstore,Tokopedia,PIM,3,641430,0
 2026-10-25,Sinar Starbooks,Lazada,ONLINE,0,0,1
-2026-10-25,Sinar Starbooks,Shopee,ONLINE,7,4458585,0
-2026-10-25,Wonder Bookstore,Shopee,ASHTA,3,399577,0
-2026-10-25,Wonder Bookstore,Shopee,BALI-BERAWA,3,538555,1
+2026-10-25,Sinar Starbooks,Shopee,ONLINE,8,5889050,0
+2026-10-25,Sinar Starbooks,Tokopedia,ONLINE,1,175000,1
+2026-10-25,Wonder Bookstore,In-store POS,BALI-BERAWA,1,538800,0
+2026-10-25,Wonder Bookstore,Shopee,ASHTA,4,626834,0
+2026-10-25,Wonder Bookstore,Shopee,BALI-BERAWA,5,1096158,1
 2026-10-25,Wonder Bookstore,Shopee,BALI-TSM,3,1197919,0
-2026-10-25,Wonder Bookstore,Shopee,HUBLIFE,1,169135,0
+2026-10-25,Wonder Bookstore,Shopee,HUBLIFE,2,266385,0
 2026-10-25,Wonder Bookstore,Shopee,JKT-TSM,1,127004,0
-2026-10-25,Wonder Bookstore,Shopee,ONLINE,5,1061952,0
-2026-10-25,Wonder Bookstore,Shopee,PIM,5,985627,1
+2026-10-25,Wonder Bookstore,Shopee,ONLINE,12,2482242,0
+2026-10-25,Wonder Bookstore,Shopee,PIM,9,1848419,2

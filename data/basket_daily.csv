@@ -602,5 +602,7 @@ date,brand,channel,orders,units,lines,gross,revenue,discount_amount,discounted_o
 2026-10-24,Wonder Bookstore,Shopee,48,56.0,56,10995400,8802097,0,0,48,3,799451
 2026-10-24,Wonder Bookstore,TikTok Shop,1,1.0,1,195800,195800,0,0,1,0,0
 2026-10-24,Wonder Bookstore,Tokopedia,8,9.0,9,1718200,1665950,52250,6,8,6,1055053
-2026-10-25,Sinar Starbooks,Shopee,7,17.0,17,5545000,4458585,0,0,7,6,3920485
-2026-10-25,Wonder Bookstore,Shopee,21,22.0,22,5876600,4479769,293830,21,21,6,1141610
+2026-10-25,Sinar Starbooks,Shopee,8,20.0,20,7314000,5889050,0,0,8,7,5350950
+2026-10-25,Sinar Starbooks,Tokopedia,1,1.0,1,175000,175000,0,0,1,1,175000
+2026-10-25,Wonder Bookstore,In-store POS,1,4.0,4,538800,538800,0,0,0,0,0
+2026-10-25,Wonder Bookstore,Shopee,36,40.0,40,10051200,7644961,502560,36,36,13,2508338

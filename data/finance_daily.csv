@@ -646,5 +646,7 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-10-24,Wonder Bookstore,TikTok Shop,1,195800,0,0,0,195800,0,0
 2026-10-24,Wonder Bookstore,Tokopedia,8,1718200,52250,0,0,1665950,0,0
 2026-10-25,Sinar Starbooks,Lazada,0,0,0,0,0,0,1,264800
-2026-10-25,Sinar Starbooks,Shopee,7,5545000,0,1077665,0,4458585,0,0
-2026-10-25,Wonder Bookstore,Shopee,21,5876600,293830,1076751,0,4479769,2,421600
+2026-10-25,Sinar Starbooks,Shopee,8,7314000,0,1414950,0,5889050,0,0
+2026-10-25,Sinar Starbooks,Tokopedia,1,175000,0,0,0,175000,1,175000
+2026-10-25,Wonder Bookstore,In-store POS,1,538800,0,0,0,538800,0,0
+2026-10-25,Wonder Bookstore,Shopee,36,10051200,502560,1858679,0,7644961,3,608400
