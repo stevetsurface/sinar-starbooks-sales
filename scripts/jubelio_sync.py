@@ -134,6 +134,128 @@ def basket_rows(recent, det):
 BASKET_HEADER = ['date', 'brand', 'channel', 'orders', 'units', 'lines', 'gross', 'revenue', 'discount_amount', 'discounted_orders', 'identified_orders', 'returning_orders', 'returning_revenue']
 
 
+def cancel_recovery(recent, det):
+    """Cancelled / returned orders in the detail window, and whether the same customer bought again within 7 days.
+    Returns (by brand+channel+status, by shipping location, by title)."""
+    good = defaultdict(list)
+    for o in recent:
+        if is_bad(o): continue
+        c = (det.get(str(o['salesorder_id'])) or {}).get('cust')
+        if c is not None and c > 0: good[c].append(wib(o['transaction_date']))
+    for v in good.values(): v.sort()
+    REC = defaultdict(lambda: [0, 0.0, 0, 0.0]); LOC = defaultdict(lambda: [0, 0.0, 0, 0.0]); TIT = defaultdict(lambda: [0, 0.0, 0.0])
+    for o in recent:
+        if not is_bad(o): continue
+        d = det.get(str(o['salesorder_id']))
+        if not d: continue
+        t = wib(o['transaction_date']); b = brand(o.get('store_name')); c = chan(o.get('channel_name')); st = o.get('internal_status') or 'CANCELED'
+        loc = (o.get('location_name') or '-').strip(); val = d['sub']; cust = d.get('cust')
+        again = bool(cust and cust > 0 and any(t < g <= t + timedelta(days=7) for g in good.get(cust, [])))
+        for a in (REC[(b, c, st)], LOC[(loc, c, st)]):
+            a[0] += 1; a[1] += val
+            if again: a[2] += 1; a[3] += val
+        for iid, code, name, qty, amt, cx in d['items']:
+            if skip_item(code, name): continue
+            u = qty if qty > 0 else (1 if amt > 0 else 0)
+            tt = TIT[(code or '', clean(name), b, c)]; tt[0] += 1; tt[1] += u; tt[2] += amt
+    rec = [list(k) + [v[0], round(v[1]), v[2], round(v[3])] for k, v in sorted(REC.items())]
+    loc = [list(k) + [v[0], round(v[1]), v[2], round(v[3])] for k, v in sorted(LOC.items())]
+    tit = [list(k) + [v[0], round(v[1], 1), round(v[2])] for k, v in sorted(TIT.items(), key=lambda kv: -kv[1][0])[:300]]
+    return rec, loc, tit
+
+
+def store_daily(recent, det):
+    """Per day and store (POS orders): tickets, units, lines, identified customers, discounted tickets, revenue."""
+    S = defaultdict(lambda: [0, 0.0, 0, 0, 0, 0.0, 0.0])
+    for o in recent:
+        if is_bad(o) or chan(o.get('channel_name')) != 'In-store POS': continue
+        d = det.get(str(o['salesorder_id']))
+        if not d: continue
+        a = S[(wib(o['transaction_date']).date().isoformat(), (o.get('location_name') or '-').strip())]
+        a[0] += 1; a[6] += float(o.get('grand_total') or d['gt'])
+        if d.get('cust') is not None and d['cust'] > 0: a[3] += 1
+        if d['disc'] > 0: a[4] += 1; a[5] += d['disc']
+        for iid, code, name, qty, amt, cx in d['items']:
+            if cx or skip_item(code, name) or amt <= 0: continue
+            a[1] += qty if qty > 0 else 1; a[2] += 1
+    return [list(k) + [v[0], round(v[1], 1), v[2], v[3], v[4], round(v[5]), round(v[6])] for k, v in sorted(S.items())]
+
+
+ALERT_RULES = {  # thresholds the morning alerts use; edit here, no code changes needed
+    'store_drop_medium': 0.20, 'store_drop_high': 0.35, 'store_min_revenue': 5_000_000,
+    'cancel_rate_medium': 0.12, 'cancel_rate_high': 0.20, 'cancel_min_orders': 30,
+    'runout_days': 7, 'oversold_lines_medium': 40, 'oversold_lines_high': 80,
+    'stale_hours_high': 36, 'keep_days': 14,
+}
+
+
+def alerts_from_data(now):
+    """Reads the CSVs just written and keeps a rolling 14-day alerts.csv (today's rows are recomputed each run)."""
+    R = ALERT_RULES; today = now.date().isoformat(); y = (now.date() - timedelta(days=1))
+    def rd(name):
+        pth = os.path.join(OUT, name)
+        return list(csv.DictReader(open(pth, encoding='utf-8'))) if os.path.exists(pth) else []
+    out = []
+    def add(rule, key, sev, tab, tid, ten, did, den):
+        out.append([f'{rule}:{key}:{today}', today, sev, rule, key, tab, tid, ten, did, den])
+    sd = rd('sales_daily_detail.csv')
+    d7 = {(y - timedelta(days=i)).isoformat() for i in range(7)}; p7 = {(y - timedelta(days=7 + i)).isoformat() for i in range(7)}
+    # stores: POS revenue last 7 days vs the 7 before
+    cur = defaultdict(float); prv = defaultdict(float)
+    for r in sd:
+        if r['channel'] != 'In-store POS': continue
+        if r['date'] in d7: cur[r['location']] += float(r['revenue'])
+        elif r['date'] in p7: prv[r['location']] += float(r['revenue'])
+    for loc, pv in prv.items():
+        cv = cur.get(loc, 0.0)
+        if pv < R['store_min_revenue']: continue
+        drop = 1 - cv / pv
+        if drop >= R['store_drop_medium']:
+            sev = 'high' if drop >= R['store_drop_high'] else 'medium'
+            add('store_drop', loc, sev, 'toko', f'Toko {loc} turun {drop:.0%} minggu ini', f'{loc} store down {drop:.0%} this week',
+                f'Penjualan kasir 7 hari terakhir Rp {cv/1e6:.1f} jt vs Rp {pv/1e6:.1f} jt pada 7 hari sebelumnya.', f'POS sales last 7 days Rp {cv/1e6:.1f}M vs Rp {pv/1e6:.1f}M the 7 days before.')
+    # cancel rate by channel, last 7 days
+    co = defaultdict(lambda: [0, 0])
+    for r in sd:
+        if r['date'] in d7: co[r['channel']][0] += int(r['orders']); co[r['channel']][1] += int(r['canceled'])
+    for ch, (o, x) in co.items():
+        if o + x < R['cancel_min_orders']: continue
+        rate = x / (o + x)
+        if rate >= R['cancel_rate_medium']:
+            sev = 'high' if rate >= R['cancel_rate_high'] else 'medium'
+            add('cancel_rate', ch, sev, 'finance', f'Pembatalan {ch} {rate:.0%} minggu ini', f'{ch} cancellations at {rate:.0%} this week',
+                f'{x} dari {o + x} pesanan 7 hari terakhir dibatalkan atau diretur.', f'{x} of {o + x} orders in the last 7 days cancelled or returned.')
+    # bestsellers about to run out
+    ro = [r for r in rd('stock_runout.csv') if float(r['days_left']) <= R['runout_days']]
+    if ro:
+        names = ', '.join(r['item_name'][:40] for r in ro[:3]) + (' …' if len(ro) > 3 else '')
+        add('runout', 'all', 'high', 'stock', f'{len(ro)} barang laris habis dalam {R["runout_days"]} hari', f'{len(ro)} fast sellers run out within {R["runout_days"]} days', names, names)
+    # oversold lines
+    ov = rd('stock_oversold.csv')
+    if len(ov) >= R['oversold_lines_medium']:
+        sev = 'high' if len(ov) >= R['oversold_lines_high'] else 'medium'
+        add('oversold', 'all', sev, 'stock', f'{len(ov)} baris oversold', f'{len(ov)} oversold lines', 'Terjual melebihi stok tersedia; cek fisik dan stok marketplace.', 'Sold beyond available stock; check physical and marketplace stock.')
+    # transfers ready
+    ts = rd('transfer_summary.csv')
+    hi = sum(int(r['sku_high']) for r in ts); qty = sum(int(r['qty_transfer']) for r in ts)
+    if hi:
+        add('transfers', 'all', 'low', 'stock', f'{hi} SKU prioritas tinggi siap ditransfer', f'{hi} high-priority SKUs ready to transfer', f'Total usulan {qty} pcs. File transfer ada di tab Stok.', f'{qty} pcs suggested in total. The transfer file is on the Stock tab.')
+    # sync health
+    sn = {r['source']: r for r in rd('snapshots.csv')}
+    lo = sn.get('sales', {}).get('last_order_at')
+    if lo:
+        age = (now - datetime.fromisoformat(lo.replace('Z', '+00:00'))).total_seconds() / 3600
+        if age >= R['stale_hours_high']:
+            add('stale', 'all', 'high', 'ringkasan', f'Tidak ada pesanan baru {age:.0f} jam', f'No new orders for {age:.0f} h', 'Jubelio mungkin tidak terhubung; cek sinkronisasi.', 'Jubelio may be disconnected; check the sync.')
+    # rolling window: keep earlier days, replace today
+    keep = [r for r in rd('alerts.csv') if r.get('date') and r['date'] != today and r['date'] >= (now.date() - timedelta(days=R['keep_days'])).isoformat()]
+    hdr = ['id', 'date', 'severity', 'rule', 'key', 'tab', 'title_id', 'title_en', 'detail_id', 'detail_en']
+    rows = out + [[r[h] for h in hdr] for r in keep]
+    order = {'high': 0, 'medium': 1, 'low': 2}
+    rows.sort(key=lambda r: (r[1], -order.get(r[2], 3)), reverse=True)
+    write('alerts.csv', hdr, rows)
+
+
 def write(name, header, rows):
     with open(os.path.join(OUT, name), 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f); w.writerow(header); w.writerows(rows)
@@ -246,6 +368,11 @@ def main():
     write('titles_daily.csv', ['date', 'item_code', 'brand', 'qty', 'revenue'], [list(k) + [round(v[0], 2), round(v[1])] for k, v in sorted(T.items())])
     write('items.csv', ['item_code', 'item_name', 'group', 'price'], [[c, n, g, round(p)] for c, (n, g, p) in ITEM.items()])
     write('basket_daily.csv', BASKET_HEADER, basket_rows(recent, det))
+    rec, locr, tit = cancel_recovery(recent, det)
+    write('cancel_recovery.csv', ['brand', 'channel', 'status', 'orders', 'value', 'reordered_orders', 'reordered_value'], rec)
+    write('cancel_by_location.csv', ['location', 'channel', 'status', 'orders', 'value', 'reordered_orders', 'reordered_value'], locr)
+    write('cancel_titles.csv', ['item_code', 'item_name', 'brand', 'channel', 'canceled_orders', 'canceled_units', 'value'], tit)
+    write('store_daily.csv', ['date', 'location', 'orders', 'units', 'lines', 'identified_orders', 'discounted_orders', 'discount_amount', 'revenue'], store_daily(recent, det))
 
     # ---------------------------------------------------------------- stock
     inv = {p: get(f'/inventory/v2/{p}/').get('data', []) for p in ['need-restock', 'low-stock', 'days-to-dry', 'best-seller', 'dead-stock']}
@@ -331,6 +458,11 @@ def main():
     except Exception as e:  # never let the workbook break the data sync
         import traceback; traceback.print_exc()
         print('transfer workbook skipped:', e, file=sys.stderr)
+    try:
+        alerts_from_data(now)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print('alerts skipped:', e, file=sys.stderr)
 
 
 def all_stocks(ids):
