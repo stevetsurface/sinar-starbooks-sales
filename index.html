@@ -162,6 +162,9 @@
   .ss-tile, .ss-card, .ss-status { background: #fff; border: 1px solid var(--ssb-line); border-radius: 10px; padding: 16px 18px; min-width: 0; box-shadow: none; }
   .ss-tile { border-top: 3px solid var(--ssb-gold); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lab lab' 'big spark' 'sub sub'; align-items: end; column-gap: 8px; }
   .ss-tile > .ss-lab { grid-area: lab; } .ss-tile > .ss-big { grid-area: big; } .ss-tile > .ss-sub { grid-area: sub; }
+  .ss-tile { grid-template-areas: 'lab lab' 'big spark' 'sub sub' 'split split'; }
+  .ss-tile > .ss-split-line { grid-area: split; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--ssb-line); color: var(--ssb-ink-2); }
+  .ss-split-line b { color: var(--ssb-ink-2); font-weight: 700; }
   .ss-tile > .ss-spark { grid-area: spark; display: block; line-height: 0; margin-bottom: 6px; }
   .ss-spark svg { display: block; }
   .ss-lab { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ssb-purple); }
@@ -1155,7 +1158,13 @@
       const R = rangeFor(p, B.min, L);
       const c = one(sumBy(sr, R.s, R.e, b)), q = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
       const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab + ' · ' + (R.s === R.e ? fd(R.s) : fd(R.s) + '–' + fd(R.e))), el('span', 'ss-big', rp(c.v)));
-      const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub); spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
+      const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub);
+      if (kind() === 'all') { // store vs online halves, each against the same comparable period
+        const split = el('div', 'ss-sub ss-split-line');
+        split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(c.pos) + ' '), chgEl(c.pos, q && q.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(c.onl) + ' '), chgEl(c.onl, q && q.onl));
+        t.append(split);
+      }
+      spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
     }));
     // this month against the whole of last month: share reached so far, and where the current pace lands
     { const Rm = rangeFor('mtd', B.min, L), Rl = rangeFor('last_month', B.min, L);
