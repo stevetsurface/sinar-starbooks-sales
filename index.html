@@ -2,9 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Wonder Bookstore &amp; Sinar Starbooks · Dashboard</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<meta name="theme-color" content="#0F2D24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dashboard WB">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
   :root {
@@ -13,7 +20,7 @@
     --cds-dur-slow: .3s;
   }
   html, body { margin: 0; background: #F3EFE6; }
-  #dash-root { max-width: 1320px; margin: 0 auto; padding: 16px 24px 40px; box-sizing: border-box; }
+  #dash-root { max-width: 1320px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 24px 40px; box-sizing: border-box; }
   @media (max-width: 600px) { #dash-root { padding: 12px 16px 32px; } }
   .dash-skeleton { position: relative; color: transparent !important; }
   .dash-skeleton::after { content: ""; position: absolute; left: 0; top: 50%; width: 60%; height: .8em; transform: translateY(-50%); border-radius: 6px; background: #EFE9F4; animation: ssbPulse 1.2s ease-in-out infinite; }
