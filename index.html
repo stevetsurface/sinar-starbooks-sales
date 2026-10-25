@@ -245,10 +245,11 @@
   .ss-mini .ss-v { font-family: var(--ssb-serif); font-weight: 700; font-size: 20px; color: var(--ssb-deep); display: block; margin-top: 2px; }
   .ss-mini .ss-sub { font-size: 11px; }
   .ss-heat { overflow-x: auto; }
-  .ss-heat table { border-collapse: separate; border-spacing: 3px; font-size: 11px; }
-  .ss-heat td { width: 30px; height: 22px; border-radius: 5px; text-align: center; color: transparent; }
+  .ss-heat table { border-collapse: separate; border-spacing: 2px; font-size: 11px; width: 100%; table-layout: fixed; }
+  .ss-heat td { height: 22px; border-radius: 4px; text-align: center; color: transparent; }
   .ss-heat th { font-weight: 600; color: var(--ssb-muted); padding: 0 4px; text-align: right; }
-  .ss-heat thead th { text-align: center; }
+  .ss-heat thead th { text-align: center; font-size: 10px; padding: 0; }
+  .ss-heat tbody th { width: 2.6rem; }
   .ss-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--ssb-lilac); color: var(--ssb-purple); white-space: nowrap; }
   .ss-pill.bad { background: #FBE3E0; color: var(--color-bad); }
   .ss-pill.warn { background: #FDF0D5; color: var(--color-warn); }
@@ -900,6 +901,7 @@
       g.selectAll('rect.hit').data(items).join('rect').attr('x', 0).attr('width', W).attr('y', (d) => y(d.key)).attr('height', y.bandwidth()).attr('fill', 'transparent').on('mousemove', showTip).on('mouseleave', () => tip.style('opacity', 0));
     }
   }
+  function tableState(box, id) { const d = ds(id); skel(box, d.status === 'loading'); const tb = box.querySelector('tbody'); if ((d.status === 'error' || d.status === 'connect') && tb) { tb.replaceChildren(); const tr = el('tr'); const td = el('td', '', T('Gagal memuat', 'Failed to load')); td.colSpan = 12; td.style.color = 'var(--ssb-muted)'; tr.append(td); tb.append(tr); } return d.status === 'ok'; }
   function chartState(box, id) { const d = ds(id); if (d.status === 'ok') { skel(box, false); return true; } if (d.status === 'error' || d.status === 'connect') { skel(box, false); failLine(box); } else { box.replaceChildren(); skel(box, true); } return false; }
 
   // ---------------- tables + excel export ----------------
@@ -1163,7 +1165,7 @@
   const basketRows = () => rows('basket_daily', (r) => ({ d: String(r.date).slice(0, 10), b: r.brand, c: r.channel, o: +r.orders, u: +r.units, l: +r.lines, g: +r.gross, v: +r.revenue, da: +r.discount_amount, dn: +r.discounted_orders, io: +r.identified_orders, ro: +r.returning_orders, rv: +r.returning_revenue }));
   function renderBasket(b, R) {
     const br = basketRows(); const box = $('#card-basket .ss-tablebox'); const note = $('#basket-note');
-    if (!br) { chartState(box, 'basket_daily'); return; }
+    if (!br) { tableState(box, 'basket_daily'); return; }
     skel(box, false);
     const RR = clampTo(R, bounds(br));
     const z = () => ({ o: 0, u: 0, l: 0, g: 0, v: 0, da: 0, dn: 0, io: 0, ro: 0, rv: 0 });
@@ -1589,7 +1591,7 @@
   const clRows = () => rows('cancel_by_location', (r) => ({ l: r.location, c: r.channel, st: r.status, o: +r.orders, v: +r.value, ro: +r.reordered_orders, rv: +r.reordered_value }));
   function renderCancelRecovery(b) {
     const cr = crRows(), ct = ctRows(), cl = clRows(); const tiles = $('#crec-tiles');
-    if (!cr) { tiles.replaceChildren(); chartState($('#card-crec .ss-tablebox'), 'cancel_recovery'); return; }
+    if (!cr) { tiles.replaceChildren(); tableState($('#card-crec .ss-tablebox'), 'cancel_recovery'); return; }
     skel($('#card-crec .ss-tablebox'), false);
     const f = cr.filter((x) => (b === 'All' || x.b === b) && kindOk(x.c));
     const sum = (arr, k) => arr.reduce((a, x) => a + x[k], 0); const o = sum(f, 'o'), v = sum(f, 'v'), ro = sum(f, 'ro'), rv = sum(f, 'rv');
