@@ -1166,14 +1166,25 @@
       }
       spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
     }));
-    // this month against the whole of last month: share reached so far, and where the current pace lands
+    // projection for this month: days already sold + each remaining day estimated from what that weekday sold
+    // on average over the last 8 full weeks (same brand filter, per channel side so the split adds up)
     { const Rm = rangeFor('mtd', B.min, L), Rl = rangeFor('last_month', B.min, L);
+      const mEnd = monthEnd(Rm.s.slice(0, 7));
       const cm = one(sumBy(sr, Rm.s, Rm.e, b)), cl = one(sumBy(sr, Rl.s, Rl.e, b));
-      const dIn = days(Rm.s, Rm.e), dAll = days(Rm.s, monthEnd(Rm.s.slice(0, 7))); const proj = dIn ? cm.v / dIn * dAll : 0;
-      const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', T('Bulan ini vs bulan lalu', 'This month vs last month')), el('span', 'ss-big', pct0(cl.v ? cm.v / cl.v : null)));
+      const histEnd = Rm.e < L ? Rm.e : add(L, -1), histStart = add(histEnd, -55);
+      const hist = sumBy(sr, histStart, histEnd, b, (x) => x.d);
+      const dowAvg = (pick) => { const tot = [0, 0, 0, 0, 0, 0, 0], n = [0, 0, 0, 0, 0, 0, 0]; for (let t = histStart; t <= histEnd; t = add(t, 1)) { const w = D(t).getUTCDay(); const a = hist.get(t); tot[w] += a ? pick(a) : 0; n[w] += 1; } return tot.map((v, i) => (n[i] ? v / n[i] : 0)); };
+      const avPos = dowAvg((a) => a.pos), avOnl = dowAvg((a) => a.onl);
+      let restPos = 0, restOnl = 0; for (let t = add(Rm.e, 1); t <= mEnd; t = add(t, 1)) { const w = D(t).getUTCDay(); restPos += avPos[w]; restOnl += avOnl[w]; }
+      const pPos = cm.pos + restPos, pOnl = cm.onl + restOnl, proj = pPos + pOnl;
+      const dIn = days(Rm.s, Rm.e), dAll = days(Rm.s, mEnd), mon = fmonL(Rm.s.slice(0, 7)).split(' ')[0], lmon = fmonL(Rl.s.slice(0, 7)).split(' ')[0];
+      const t = el('div', 'ss-tile ss-tile-proj'); t.append(el('div', 'ss-lab', T('Proyeksi ', 'Projected ') + mon), el('span', 'ss-big', rp(proj)));
       const sub = el('div', 'ss-sub');
-      sub.append(document.createTextNode(T(`dari total ${fmon(Rl.s.slice(0, 7))} setelah ${dIn} dari ${dAll} hari · proyeksi `, `of ${fmon(Rl.s.slice(0, 7))}'s total after ${dIn} of ${dAll} days · on pace for `) + rp(proj) + ' ('), chgEl(proj, cl.v), document.createTextNode(')'));
-      t.append(sub); gt.append(t); }
+      sub.append(chgEl(proj, cl.v), document.createTextNode(T(` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} dari ${lmon} sudah tercapai setelah ${dIn} dari ${dAll} hari`, ` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} of ${lmon} already reached after ${dIn} of ${dAll} days`)));
+      t.append(sub);
+      if (kind() === 'all') { const split = el('div', 'ss-sub ss-split-line'); split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(pPos) + ' '), chgEl(pPos, cl.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(pOnl) + ' '), chgEl(pOnl, cl.onl)); t.append(split); }
+      t.title = T('Hari yang sudah lewat = penjualan nyata. Sisa hari = rata-rata penjualan hari yang sama (Senin, Selasa, …) selama 8 minggu terakhir.', 'Days already passed = actual sales. Remaining days = the average for that weekday (Monday, Tuesday, …) over the last 8 weeks.');
+      gt.append(t); }
     // daily 60
     const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
     let box = $('#chart-daily'); skel(box, false);
