@@ -36,6 +36,16 @@ Why those dials: the page is read for numbers, not persuasion (ENERGY 1). Sectio
 - Notifikasi (Alerts) as an inbox behind a header button with an unread count, not a banner: alerts accumulate over 14 days and each reader marks their own as read (browser storage), so the page stays calm and nothing is shouted twice. Severity is a coloured dot (red, wood, sage), each item opens its tab. Escape and click-outside close it; the whole thing is keyboard reachable.
 - Alert rules and thresholds live in one dictionary in the sync script so they can be tuned without touching the page.
 
+## Review pass, 25 Oct (what confused readers and what changed)
+
+- Ringkasan opens with Sekilas (fixed periods: yesterday, 7 days, month, last month) above the filters; the period picker now sits directly above the cards it drives. One question per band.
+- One "updated" line, in the header, with the last-order time. The Sync link lives in the alerts panel footer because only one person can use it.
+- Phones: filter segments scroll sideways in one row instead of wrapping; KPI tiles go two-up with the sparkline dropped.
+- Money has one name outside Keuangan: Pendapatan. Keuangan uses Kotor and Diterima.
+- Marketplace cancel reasons are grouped into eight bilingual labels, with the most common raw string kept in a muted column for traceability.
+- "Toko terbaik" ranks real stores only; the per-store table labels ONLINE as the online warehouse and PAMERAN as pop-ups.
+- Wide tables show a soft shadow at the edge that still scrolls, so a clipped column is never mistaken for the last one.
+
 ## Things this page deliberately does not have
 
 Hero section, feature grid, testimonials, pricing, "trusted by" bar, gradients, glows, background patterns, animations, illustrations, generic icons.
