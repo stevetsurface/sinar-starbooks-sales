@@ -45,14 +45,15 @@ def build(out, asof, sales, stock, onorder, names, groups, price, supplier_of, l
         lead, n = lead_by_supplier.get(sup, (None, 0))
         L = lead if (lead and n >= 2) else DEFAULT_LEAD
         cover = (av + oo) / avg if avg else 9999
-        if cover >= L + SELL_AFTER_ARRIVAL: continue
-        urg = 'KRITIS' if cover < 60 else 'SEGERA' if cover < L else 'PANTAU'
+        if cover >= L + 60: continue
+        # relative to this supplier's lead time: KRITIS = runs out before a reorder placed today can land
+        urg = 'KRITIS' if cover < L else 'SEGERA' if cover < L + 30 else 'PANTAU'
         qty = max(0, math.ceil(avg * (L + SELL_AFTER_ARRIVAL) - av - oo))
         code, name = names.get(iid, ('', ''))
         reorder.append([code, name, groups.get(iid, ''), sup or '', round(avg, 2), int(s['u']), int(av), int(oo), round(cover), L, 'diukur' if (lead and n >= 2) else 'asumsi',
                         qty, urg, s['last'].isoformat() if s.get('last') else '', last_po.get(iid, ''), loc_str(iid), round(price.get(iid, 0))])
     rank = {'KRITIS': 0, 'SEGERA': 1, 'PANTAU': 2}
-    reorder.sort(key=lambda r: (rank[r[12]], r[8], -r[5]))
+    reorder.sort(key=lambda r: (rank[r[12]], -r[4], r[8]))
     _w(out, 'reorder.csv', ['item_code', 'item_name', 'group', 'supplier', 'daily_avg_90d', 'units_90d', 'available', 'on_order', 'days_cover',
                            'lead_days', 'lead_source', 'suggested_qty', 'urgency', 'last_sale', 'last_po', 'available_by_location', 'price'], reorder)
 
@@ -141,7 +142,7 @@ def pdf(path, asof, reorder, slow, sup_rows):
     kr = [r for r in reorder if r[12] == 'KRITIS']; sg = [r for r in reorder if r[12] == 'SEGERA']; pv = [r for r in reorder if r[12] == 'PANTAU']
     slow_val = sum(r[6] for r in slow)
     top = ', '.join(r[1][:40] for r in kr[:3])
-    tldr = (f'{len(kr)} judul akan habis sebelum pesanan ulang bisa tiba (KRITIS) dan {len(sg)} judul perlu dipesan minggu ini (SEGERA), '
+    tldr = (f'{len(kr)} judul akan habis sebelum pesanan ulang yang dibuat hari ini bisa tiba (KRITIS) dan {len(sg)} judul perlu dipesan minggu ini (SEGERA), '
             f'berdasarkan kecepatan jual 90 hari dan stok tersedia di toko serta gudang online. '
             + (f'Paling mendesak: {top}. ' if top else '')
             + f'{len(slow)} judul tidak laku atau sangat lambat, senilai {rp(slow_val)} (harga jual): kandidat retur, transfer atau diskon. '
@@ -182,9 +183,9 @@ def pdf(path, asof, reorder, slow, sup_rows):
     story.append(t)
 
     story += [Spacer(1, 8), Paragraph('<b>Cara baca.</b> Laku/hari = unit terjual 90 hari terakhir ÷ 90 (semua kanal; baris kasir tanpa qty dihitung 1). Tersedia = stok tersedia di toko dan gudang online (pameran tidak dihitung). '
-             'Cukup (hari) = (tersedia + dipesan) ÷ laku/hari. KRITIS = cukup kurang dari 60 hari; SEGERA = cukup kurang dari lead time; PANTAU = kurang dari lead time + 30 hari. '
+             'Cukup (hari) = (tersedia + dipesan) ÷ laku/hari. KRITIS = habis sebelum pesanan yang dibuat hari ini bisa tiba (cukup kurang dari lead time); SEGERA = kurang dari lead time + 30 hari; PANTAU = kurang dari lead time + 60 hari. '
              'Saran pesan = kebutuhan selama lead time + 30 hari, dikurangi stok tersedia dan yang sudah dipesan. Lead time "diukur" = median jarak tanggal PO ke tanggal tagihan pembelian di Jubelio (minimal 2 PO); "asumsi" = 90 hari. '
-             'Pemasok = pemasok PO terakhir untuk barang itu di Jubelio. Harga pokok dan syarat kontrak tidak dicantumkan.', SM)]
+             'Pemasok = pemasok PO terakhir untuk barang itu di Jubelio; untuk toko Wonder sebagian besar adalah PT. Sinar Star Books (gudang distribusi), sehingga lead time-nya pendek. Penerbit dan lead time impor ada di sistem Sinar (Accurate), belum di daftar ini. Harga pokok dan syarat kontrak tidak dicantumkan.', SM)]
     doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=12*mm, rightMargin=12*mm, topMargin=12*mm, bottomMargin=12*mm, title=f'Daftar Beli – Data Toko {d}', author='Dashboard Penjualan & Stok')
     doc.build(story)
     print('wrote', os.path.basename(path))
