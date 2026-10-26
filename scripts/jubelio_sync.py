@@ -256,6 +256,67 @@ def alerts_from_data(now):
     write('alerts.csv', hdr, rows)
 
 
+def item_group(code, name):
+    nm = (name or '').upper()
+    if cafe(code, name): return 'Kafe'
+    if re.search(r'KOMIK|MANGA|\bVOL\.?\s*\d|OMNIBUS|GRAPHIC NOVEL', nm): return 'Komik & manga'
+    isbn = bool(re.match(r'^97[89]\d{10}$', code or ''))
+    if isbn and re.search(r'BOARD BOOK|STICKER BOOK|SOUND BOOK|COLOU?RING|PEPPA|BLUEY|DISNEY|MY FIRST|BABY|TODDLER|DOG MAN|WIMPY KID|BAD GUYS', nm): return 'Buku anak'
+    if isbn: return 'Buku umum'
+    return 'Alat tulis & gift'
+
+
+def purchases(since='2025-01-01'):
+    """Purchase orders and bills -> supplier per item, last PO date, measured lead time per supplier.
+    Cached in cache/po.json.gz WITHOUT prices (the repo is public)."""
+    cpath = os.path.join(CACHE, 'po.json.gz')
+    cache = json.load(gzip.open(cpath, 'rt')) if os.path.exists(cpath) else {}
+    pos, page = [], 1
+    while True:
+        r = get(f'/purchase/orders/?page={page}&pageSize=200&sortBy=transaction_date&sortDirection=DESC')
+        data = r.get('data') or []
+        pos += data
+        if len(data) < 200 or any((x.get('transaction_date') or '')[:10] < since for x in data): break
+        page += 1
+    pos = [x for x in pos if (x.get('transaction_date') or '')[:10] >= since]
+    need = [x for x in pos if str(x['purchaseorder_id']) not in cache or cache[str(x['purchaseorder_id'])].get('lm') != x.get('last_modified')]
+    print('purchase orders', len(pos), 'details to fetch', len(need))
+    def fetch(x):
+        try: d = get(f"/purchase/orders/{x['purchaseorder_id']}")
+        except Exception: return x, None
+        return x, [[it.get('item_id'), float(it.get('qty_in_base') or it.get('qty') or 0)] for it in d.get('items') or []]
+    with ThreadPoolExecutor(6) as ex:
+        for x, items in ex.map(fetch, need):
+            if items is None: continue
+            cache[str(x['purchaseorder_id'])] = {'lm': x.get('last_modified'), 's': (x.get('supplier_name') or '').strip(), 'd': (x.get('transaction_date') or '')[:10], 'it': items}
+    keep = {str(x['purchaseorder_id']) for x in pos}
+    cache = {k: v for k, v in cache.items() if k in keep}
+    json.dump(cache, gzip.open(cpath, 'wt'))
+    # bills -> first bill date per PO
+    first_bill, page = {}, 1
+    while True:
+        r = get(f'/purchase/bills/?page={page}&pageSize=200&sortBy=transaction_date&sortDirection=DESC')
+        data = r.get('data') or []
+        for b in data:
+            po = b.get('purchaseorder_id'); d = (b.get('transaction_date') or '')[:10]
+            if po and d and (str(po) not in first_bill or d < first_bill[str(po)]): first_bill[str(po)] = d
+        if len(data) < 200 or any((b.get('transaction_date') or '')[:10] < since for b in data): break
+        page += 1
+    supplier_of, last_po, lead, po_count = {}, {}, defaultdict(list), defaultdict(int)
+    yr_ago = (datetime.now(WIB).date() - timedelta(days=365)).isoformat()
+    for k, v in sorted(cache.items(), key=lambda kv: kv[1]['d']):
+        for iid, q in v['it']:
+            supplier_of[iid] = v['s']; last_po[iid] = v['d']
+        if v['d'] >= yr_ago: po_count[v['s']] += 1
+        if k in first_bill:
+            days = (datetime.fromisoformat(first_bill[k]) - datetime.fromisoformat(v['d'])).days
+            if 5 <= days <= 240: lead[v['s']].append(days)  # same-day bills mean the PO was raised at receipt: not a lead time
+    import statistics
+    lead_by = {s: (round(statistics.median(v)), len(v)) for s, v in lead.items()}
+    print('suppliers', len(po_count), 'with measured lead time', sum(1 for v in lead_by.values() if v[1] >= 2))
+    return supplier_of, last_po, lead_by, dict(po_count)
+
+
 def write(name, header, rows):
     with open(os.path.join(OUT, name), 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f); w.writerow(header); w.writerows(rows)
@@ -330,14 +391,7 @@ def main():
                 master[v['item_id']] = (v.get('item_code') or g.get('item_code') or '', clean(v.get('item_name') or g.get('item_name') or ''))
                 if g.get('is_bundle') or v.get('is_bundle'): bundles.add(v['item_id'])
 
-    def group(code, name):
-        nm = (name or '').upper()
-        if cafe(code, name): return 'Kafe'
-        if re.search(r'KOMIK|MANGA|\bVOL\.?\s*\d|OMNIBUS|GRAPHIC NOVEL', nm): return 'Komik & manga'
-        isbn = bool(re.match(r'^97[89]\d{10}$', code or ''))
-        if isbn and re.search(r'BOARD BOOK|STICKER BOOK|SOUND BOOK|COLOU?RING|PEPPA|BLUEY|DISNEY|MY FIRST|BABY|TODDLER|DOG MAN|WIMPY KID|BAD GUYS', nm): return 'Buku anak'
-        if isbn: return 'Buku umum'
-        return 'Alat tulis & gift'
+    group = item_group
 
     byid = {str(o['salesorder_id']): o for o in recent}
     F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}
@@ -467,7 +521,7 @@ def main():
 
 def all_stocks(ids):
     """POST /inventory/items/all-stocks/ in chunks -> (stock[(item_id, location_name)] = (on_hand, reserved, available), brands[item_id])."""
-    stock, brands, locname = {}, {}, {}
+    stock, brands, locname, onorder = {}, {}, {}, defaultdict(float)
     ids = list(ids)
     for i in range(0, len(ids), 200):  # Jubelio caps ids at 200 per call
         r = http('POST', BASE + '/inventory/items/all-stocks/', {'ids': ids[i:i + 200]}, token=TOKEN)
@@ -482,7 +536,8 @@ def all_stocks(ids):
                 oh = float(ls.get('on_hand') or 0); rs = float(ls.get('reserved') or 0)
                 av = float(ls['available']) if ls.get('available') is not None else oh - rs
                 stock[(iid, loc)] = (oh, rs, av)
-    return stock, brands
+                onorder[iid] += float(ls.get('on_order') or 0)
+    return stock, brands, onorder
 
 
 def transfer_workbook(recent, det, price, master, bundles, now):
@@ -511,13 +566,45 @@ def transfer_workbook(recent, det, price, master, bundles, now):
                 online[iid] += u
     stores = sorted(stores)
     ids = set(price) | {iid for (_, iid) in pos} | set(online)
-    stock, brands = all_stocks(ids)
+    stock, brands, onorder = all_stocks(ids)
     print('all-stocks', len(ids), 'items,', len({l for _, l in stock}), 'locations, stores', stores)
     out = os.path.join(OUT, 'transfer_stok_toko_offline.xlsx')
     res = tw.build(out, stores, months, pos, online, last, stock, names, brands, bundles, start, end, asof)
     print('wrote transfer_stok_toko_offline.xlsx', res['transfer_rows'], 'transfers,', res['restock_rows'], 'restock')
     write('transfer_summary.csv', ['store', 'sku_out_sold', 'sku_out_sold2', 'sku_transfer', 'sku_full', 'sku_high', 'qty_transfer', 'sku_restock', 'window_start', 'window_end', 'generated_at'],
           [[st] + [p['sold1'], p['sold2'], p['transfer'], p['full'], p['high'], p['qty'], p['restock']] + [start.isoformat(), end.isoformat(), now.strftime('%Y-%m-%dT%H:%M:%S+07:00')] for st, p in sorted(res['stores'].items())])
+    try:
+        buy_list_feed(recent, det, stock, onorder, names, price, now, tw.is_store_loc)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print('buy list skipped:', e, file=sys.stderr)
+
+
+def buy_list_feed(recent, det, stock, onorder, names, price, now, is_store_loc):
+    import buy_list
+    asof = now.date(); since = asof - timedelta(days=90)
+    sales = {}
+    for o in recent:
+        if is_bad(o): continue
+        d = det.get(str(o['salesorder_id']))
+        if not d: continue
+        day = wib(o['transaction_date']).date()
+        if day < since: continue
+        for iid, code, name, qty, amt, cx in d['items']:
+            if cx or skip_item(code, name) or amt <= 0: continue
+            a = sales.setdefault(iid, {'u': 0.0, 'v': 0.0, 'last': day})
+            a['u'] += qty if qty > 0 else 1; a['v'] += amt
+            if day > a['last']: a['last'] = day
+            names.setdefault(iid, (code or '', clean(name)))
+    groups = {iid: item_group(c, n) for iid, (c, n) in names.items()}
+    try:
+        supplier_of, last_po, lead_by, po_count = purchases()
+    except Exception as e:
+        print('purchase orders unavailable, suppliers left blank:', e, file=sys.stderr)
+        supplier_of, last_po, lead_by, po_count = {}, {}, {}, {}
+    sellable = lambda loc: loc == 'ONLINE' or is_store_loc(loc)
+    res = buy_list.build(OUT, asof, sales, stock, onorder, names, groups, price, supplier_of, last_po, lead_by, po_count, sellable)
+    print('buy list', res)
 
 
 if __name__ == '__main__':

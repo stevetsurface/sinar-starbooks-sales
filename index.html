@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -508,6 +508,11 @@
         <div class="ss-tablebox" data-source="titles_daily items"><table class="ss-table" id="tbl-rising"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
+    <div class="ss-card" id="card-suppliers">
+      <div class="ss-card-h"><h2><span class="id">Per pemasok</span><span class="en">By supplier</span><button class="ss-help" data-goto="guide-buylist" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="suppliers">Excel</button></span></div>
+      <p class="ss-note"><span class="id">90 hari terakhir. Pemasok = pemasok pesanan pembelian (PO) terakhir untuk barang itu di Jubelio. Lead time = median jarak tanggal PO ke tanggal tagihan pembelian. Harga pokok tidak ditampilkan. Tidak ikut filter merek dan periode.</span><span class="en">Last 90 days. Supplier = the supplier on the item's most recent purchase order in Jubelio. Lead time = median days from PO date to purchase bill date. Cost prices are not shown. Not affected by the brand and period filters.</span></p>
+      <div class="ss-tablebox" data-source="suppliers"><table class="ss-table" id="tbl-suppliers"><thead></thead><tbody></tbody></table></div>
+    </div>
     <div class="ss-card" id="card-top">
       <div class="ss-card-h"><h2><span class="id">Judul terlaris</span><span class="en">Best-selling titles</span></h2>
         <span class="ss-card-tools"><div class="ss-seg ss-topcat" role="group" aria-label="Jenis barang / Item type"><button data-cat="all"><span class="id">Semua</span><span class="en">All</span></button><button data-cat="books"><span class="id">Buku</span><span class="en">Books</span></button><button data-cat="gift"><span class="id">Gift &amp; alat tulis</span><span class="en">Gift &amp; stationery</span></button></div><div class="ss-seg ss-topsort"><button data-sort="revenue"><span class="id">Rupiah</span><span class="en">Revenue</span></button><button data-sort="qty"><span class="id">Unit</span><span class="en">Units</span></button></div><input class="ss-search" id="top-search" placeholder="Cari / Search"><button class="ss-xl" data-export="top">Excel</button></span></div>
@@ -558,6 +563,16 @@
       <div class="ss-card-h"><h2><span class="id">File transfer stok (format toko)</span><span class="en">Stock transfer file (store format)</span></h2><span class="ss-card-tools"><a class="ss-xl ss-dl" id="transfer-dl" href="data/transfer_stok_toko_offline.xlsx" download><span class="id">Unduh Excel</span><span class="en">Download Excel</span></a></span></div>
       <p class="ss-note"><span class="id">Transfer_Stok_Toko_Offline.xlsx seperti yang biasa dipakai tim toko: Ringkasan per toko, Rekomendasi Transfer (stok habis di toko tujuan tapi laku di sana, sampai 3 sumber), Daftar Transfer per Rute untuk dokumen transfer di Jubelio, dan Perlu Restock. Saran qty = ½ × penjualan POS 3 bulan. Dibuat ulang otomatis setiap pagi.</span><span class="en">Transfer_Stok_Toko_Offline.xlsx as the store team uses it: per-store summary, transfer recommendations (out of stock at the destination but selling there, up to 3 sources), a per-route list for Jubelio transfer documents, and a restock list. Suggested qty = ½ × 3-month POS sales. Regenerated automatically every morning.</span></p>
       <p class="ss-note" id="transfer-info" data-source="transfer_summary">–</p>
+    </div>
+    <div class="ss-card" id="card-reorder">
+      <div class="ss-card-h"><h2><span class="id">Perlu dipesan ulang</span><span class="en">Reorder before it runs out</span><button class="ss-help" data-goto="guide-buylist" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><div class="ss-seg ss-urg" role="group" aria-label="Urgensi / Urgency"><button data-urg="KRITIS">Kritis</button><button data-urg="SEGERA">Segera</button><button data-urg="PANTAU">Pantau</button><button data-urg="all"><span class="id">Semua</span><span class="en">All</span></button></div><a class="ss-xl ss-dl" href="data/daftar_beli_data.pdf" target="_blank" rel="noopener">PDF</a><button class="ss-xl" data-export="reorder">Excel</button></span></div>
+      <p class="ss-note" id="reorder-note">–</p>
+      <div class="ss-tablebox" data-source="reorder"><table class="ss-table" id="tbl-reorder"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-card" id="card-slow">
+      <div class="ss-card-h"><h2><span class="id">Lambat laku: retur, transfer atau diskon</span><span class="en">Slow movers: return, transfer or mark down</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="slow">Excel</button></span></div>
+      <p class="ss-note" id="slow-note">–</p>
+      <div class="ss-tablebox" data-source="slow_movers"><table class="ss-table" id="tbl-slow"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="ss-card" id="card-stockloc">
       <div class="ss-card-h"><h2><span class="id">Situasi stok per lokasi</span><span class="en">Stock situation by location</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-stock">–</span><button class="ss-xl" data-export="stockloc">Excel</button></span></div>
@@ -685,6 +700,22 @@
           <p class="en">In the <i>Revenue trend</i> chart, choose <b>Store vs online</b> to see both stacked per day.</p>
           <p class="id">Filter ini berlaku di Ringkasan, Penjualan &amp; toko, dan Keuangan. Belum berlaku untuk data per judul (tab Produk).</p>
           <p class="en">The filter applies to Overview, Sales &amp; stores and Finance. It doesn't apply to title-level data (Titles tab) yet.</p>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-buylist">
+        <h2><span class="id">Daftar beli &amp; feed untuk Booky Scout</span><span class="en">Buy list &amp; feed for Booky Scout</span></h2>
+        <div class="ss-guide">
+          <p class="id">Sinkron pagi menulis bagian data dari daftar beli mingguan. <b>Perlu dipesan ulang</b>: judul yang laku minimal 6 unit dalam 90 hari dan stoknya (tersedia + sudah dipesan) habis sebelum pesanan ulang bisa tiba. KRITIS = cukup kurang dari 60 hari; SEGERA = kurang dari lead time; PANTAU = kurang dari lead time + 30 hari. Saran pesan menutup lead time + 30 hari jualan. Lead time diukur per pemasok dari PO ke tagihan pembelian (minimal 2 PO), selain itu 90 hari. <b>Lambat laku</b>: stok ≥3 tanpa penjualan 90 hari, atau ≤2 unit dengan stok ≥15.</p>
+          <p class="en">The morning sync writes the data half of the weekly buy list. <b>Reorder</b>: titles selling at least 6 units in 90 days whose stock (available + on order) runs out before a reorder can land. KRITIS = under 60 days of cover; SEGERA = under the lead time; PANTAU = under lead time + 30 days. Suggested quantity covers the lead time plus 30 days of selling. Lead time is measured per supplier from PO to purchase bill (at least 2 POs), otherwise 90 days. <b>Slow movers</b>: stock ≥3 with no sale in 90 days, or ≤2 units with stock ≥15.</p>
+          <p><span class="id">Tautan tetap, diperbarui tiap pagi (dibaca Booky Scout):</span><span class="en">Fixed links, refreshed every morning (read by Booky Scout):</span></p>
+          <ul>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/reorder.csv" target="_blank" rel="noopener">reorder.csv</a></li>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/slow_movers.csv" target="_blank" rel="noopener">slow_movers.csv</a></li>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/suppliers.csv" target="_blank" rel="noopener">suppliers.csv</a></li>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/catalog.csv" target="_blank" rel="noopener">catalog.csv</a> <span class="id">(semua yang kami jual atau punya stok, per lokasi)</span><span class="en">(everything we carry or have in stock, by location)</span></li>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/daftar_beli_data.pdf" target="_blank" rel="noopener">daftar_beli_data.pdf</a></li>
+            <li><a href="https://stevetsurface.github.io/sinar-starbooks-sales/data/snapshots.csv" target="_blank" rel="noopener">snapshots.csv</a> <span class="id">(waktu pembaruan)</span><span class="en">(update time)</span></li>
+          </ul>
         </div>
       </div>
       <div class="ss-card" id="guide-toko">
@@ -978,7 +1009,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -1001,6 +1032,7 @@
   $$('.ss-gran button').forEach((b) => b.addEventListener('click', () => dash.setParams({ gran: b.dataset.gran })));
   $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
   $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
+  $$('.ss-urg button').forEach((b) => b.addEventListener('click', () => { S.urg = b.dataset.urg; render(); }));
   $('#heat-loc').addEventListener('change', (e) => { S.heatLoc = e.target.value || ''; render(); });
   $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
@@ -1331,6 +1363,7 @@
 
   // ---------------- PRODUK ----------------
   function renderProduk(b) {
+    renderSuppliers();
     b = b || brand();
     const tr = titleRows(), im = itemMap(); const pt = $('#prod-tiles');
     if (!tr || !im) { pt.replaceChildren(); chartState($('#chart-groups'), 'titles_daily'); return; }
@@ -1470,7 +1503,7 @@
       `${int(sum('sku_transfer'))} SKUs to transfer (${int(sum('qty_transfer'))} pcs, ${int(sum('sku_high'))} high priority) · ${int(sum('sku_restock'))} SKUs need restock with no source · POS sales ${fdy(g.window_start)} – ${fdy(g.window_end)} · generated ${fwib(g.generated_at)}`);
   }
   function renderStock() {
-    renderTransferFile();
+    renderTransferFile(); renderBuyList();
     const st = $('#stock-status'); const ss = ds('stock_summary');
     if (ss.status === 'ok') {
       const s = ss.data[0];
@@ -1585,6 +1618,61 @@
     [/late|terlambat|delay|lama/i, ['Pengiriman terlambat', 'Late delivery']],
   ];
   const reasonGroup = (r) => { const t = String(r || '').trim(); if (!t || t === 'false') return T('Tidak disebut', 'Not stated'); for (const [re, lab] of REASON_GROUPS) if (re.test(t)) return T(...lab); return T('Lainnya', 'Other'); };
+
+  // ---------------- DAFTAR BELI (data half) ----------------
+  const URG = { KRITIS: ['Kritis', 'Critical'], SEGERA: ['Segera', 'This week'], PANTAU: ['Pantau', 'This month'] };
+  function renderBuyList() {
+    const ro = rows('reorder'), sl = rows('slow_movers'); const n = $('#reorder-note'), sn = $('#slow-note');
+    if (!S.urg) S.urg = 'KRITIS';
+    $$('.ss-urg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.urg === S.urg)));
+    if (!ro) { const d = ds('reorder'); n.textContent = d.status === 'loading' ? '…' : T('Daftar belum tersedia (menunggu sinkronisasi berikutnya).', 'Not available yet (waiting for the next sync).'); tableState($('#card-reorder .ss-tablebox'), 'reorder'); }
+    else {
+      const cnt = (u) => ro.filter((r) => r.urgency === u).length;
+      n.textContent = T(`${int(cnt('KRITIS'))} kritis · ${int(cnt('SEGERA'))} segera · ${int(cnt('PANTAU'))} pantau. Laku = rata-rata 90 hari semua kanal; tersedia = toko + gudang online. Lead time per pemasok bila terukur, selain itu 90 hari.`, `${int(cnt('KRITIS'))} critical · ${int(cnt('SEGERA'))} this week · ${int(cnt('PANTAU'))} this month. Sold = 90-day average, all channels; available = stores + online warehouse. Lead time per supplier when measured, otherwise 90 days.`);
+      table('tbl-reorder', [
+        { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+        { h: ['Pemasok', 'Supplier'], muted: 1, f: (r) => r.supplier || '–' },
+        { h: ['Laku/hari', 'Sold/day'], num: 1, f: (r) => num(+r.daily_avg_90d), x: (r) => +r.daily_avg_90d },
+        { h: ['Tersedia', 'Available'], num: 1, f: (r) => int(r.available), x: (r) => +r.available },
+        { h: ['Dipesan', 'On order'], num: 1, f: (r) => int(r.on_order), x: (r) => +r.on_order },
+        { h: ['Cukup (hari)', 'Cover (days)'], num: 1, f: (r) => int(r.days_cover), x: (r) => +r.days_cover, cls: (r) => (r.urgency === 'KRITIS' ? 'ss-flag' : '') },
+        { h: ['Lead time', 'Lead time'], num: 1, f: (r) => r.lead_days + T(' hr', ' d') + (r.lead_source === 'diukur' ? '' : '*'), x: (r) => +r.lead_days },
+        { h: ['Saran pesan', 'Suggested qty'], num: 1, f: (r) => int(r.suggested_qty), x: (r) => +r.suggested_qty },
+        { h: ['Urgensi', 'Urgency'], f: (r) => T(...(URG[r.urgency] || [r.urgency, r.urgency])) },
+        { h: ['Lokasi stok', 'Stock by location'], muted: 1, f: (r) => r.available_by_location || '–' },
+        { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
+      ], ro.filter((r) => S.urg === 'all' || r.urgency === S.urg), 'reorder');
+    }
+    if (!sl) { tableState($('#card-slow .ss-tablebox'), 'slow_movers'); sn.textContent = ''; return; }
+    const val = sl.reduce((a, r) => a + +r.retail_value, 0);
+    sn.textContent = T(`${int(sl.length)} judul, ${rp(val)} harga jual. Stok ≥3 tanpa penjualan 90 hari, atau ≤2 unit terjual dengan stok ≥15. Cek dulu daftar transfer antar toko sebelum retur.`, `${int(sl.length)} titles, ${rp(val)} at retail. Stock ≥3 with no sale in 90 days, or ≤2 sold with stock ≥15. Check the transfer list before returning anything.`);
+    table('tbl-slow', [
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      { h: ['Pemasok', 'Supplier'], muted: 1, f: (r) => r.supplier || '–' },
+      { h: ['Stok', 'Stock'], num: 1, f: (r) => int(r.available), x: (r) => +r.available },
+      { h: ['Laku 90 hr', 'Sold 90d'], num: 1, f: (r) => int(r.units_90d), x: (r) => +r.units_90d },
+      { h: ['Nilai jual', 'Retail value'], num: 1, f: (r) => rp(+r.retail_value), x: (r) => +r.retail_value },
+      { h: ['Penjualan terakhir', 'Last sale'], f: (r) => (r.last_sale && r.last_sale[0] !== '>' ? fdy(r.last_sale) : T('lebih dari 90 hari', 'over 90 days')) },
+      { h: ['Lokasi stok', 'Stock by location'], muted: 1, f: (r) => r.available_by_location || '–' },
+      { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
+    ], sl, 'slow');
+  }
+  function renderSuppliers() {
+    const su = rows('suppliers'); const box = $('#card-suppliers .ss-tablebox');
+    if (!su) { tableState(box, 'suppliers'); return; }
+    table('tbl-suppliers', [
+      { h: ['Pemasok', 'Supplier'], name: 1, f: (r) => r.supplier },
+      { h: ['Judul laku', 'Titles sold'], num: 1, f: (r) => int(r.titles_sold_90d), x: (r) => +r.titles_sold_90d },
+      { h: ['Unit 90 hr', 'Units 90d'], num: 1, f: (r) => int(r.units_90d), x: (r) => +r.units_90d },
+      { h: ['Pendapatan', 'Revenue'], num: 1, f: (r) => rp(+r.revenue_90d), x: (r) => +r.revenue_90d },
+      { h: ['Sell-through', 'Sell-through'], num: 1, f: (r) => (r.sell_through_90d !== '' ? pct0(+r.sell_through_90d) : '–'), x: (r) => (r.sell_through_90d !== '' ? +r.sell_through_90d : '') },
+      { h: ['Stok (nilai jual)', 'Stock (retail)'], num: 1, f: (r) => rp(+r.stock_value_retail), x: (r) => +r.stock_value_retail },
+      { h: ['Stok lambat', 'Slow stock'], num: 1, f: (r) => rp(+r.slow_value_retail), x: (r) => +r.slow_value_retail },
+      { h: ['Kritis / segera', 'Critical / this week'], num: 1, f: (r) => `${int(r.reorder_kritis)} / ${int(r.reorder_segera)}`, x: (r) => +r.reorder_kritis },
+      { h: ['Lead time', 'Lead time'], num: 1, f: (r) => (r.lead_days_median !== '' ? `${r.lead_days_median} ${T('hr', 'd')} (${r.lead_samples} PO)` : T('belum terukur', 'not measured')), x: (r) => (r.lead_days_median !== '' ? +r.lead_days_median : '') },
+      { h: ['PO terakhir', 'Last PO'], f: (r) => (r.last_po ? fdy(r.last_po) : '–'), x: (r) => r.last_po },
+    ], su, 'suppliers');
+  }
 
   // ---------------- RAPOR TOKO ----------------
   const storeRows = () => rows('store_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, o: +r.orders, u: +r.units, ln: +r.lines, io: +r.identified_orders, dn: +r.discounted_orders, da: +r.discount_amount, v: +r.revenue }));
