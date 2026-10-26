@@ -7332,7 +7332,7 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-24,Wonder Bookstore,Shopee,BALI-TSM,3,384582,0
 2026-10-24,Wonder Bookstore,Shopee,HUBLIFE,3,645080,1
 2026-10-24,Wonder Bookstore,Shopee,JKT-TSM,4,383976,0
-2026-10-24,Wonder Bookstore,Shopee,ONLINE,14,2818850,4
+2026-10-24,Wonder Bookstore,Shopee,ONLINE,13,2668116,5
 2026-10-24,Wonder Bookstore,Shopee,PIM,12,2478407,5
 2026-10-24,Wonder Bookstore,TikTok Shop,JKT-TSM,1,195800,0
 2026-10-24,Wonder Bookstore,Tokopedia,ASHTA,2,610897,0
@@ -7350,13 +7350,13 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-25,Wonder Bookstore,In-store POS,HUBLIFE,14,2129900,0
 2026-10-25,Wonder Bookstore,In-store POS,JKT-TSM,16,2989500,1
 2026-10-25,Wonder Bookstore,In-store POS,PIM,49,13186620,0
-2026-10-25,Wonder Bookstore,Shopee,ASHTA,29,5865229,3
+2026-10-25,Wonder Bookstore,Shopee,ASHTA,27,5565465,5
 2026-10-25,Wonder Bookstore,Shopee,BALI-BERAWA,15,3184405,1
-2026-10-25,Wonder Bookstore,Shopee,BALI-TSM,13,4209876,2
-2026-10-25,Wonder Bookstore,Shopee,HUBLIFE,20,3878580,2
-2026-10-25,Wonder Bookstore,Shopee,JKT-TSM,16,4061431,1
+2026-10-25,Wonder Bookstore,Shopee,BALI-TSM,12,3976501,3
+2026-10-25,Wonder Bookstore,Shopee,HUBLIFE,18,3632126,4
+2026-10-25,Wonder Bookstore,Shopee,JKT-TSM,15,3785995,2
 2026-10-25,Wonder Bookstore,Shopee,ONLINE,48,11163199,2
-2026-10-25,Wonder Bookstore,Shopee,PIM,40,9790955,7
+2026-10-25,Wonder Bookstore,Shopee,PIM,38,9459566,9
 2026-10-25,Wonder Bookstore,TikTok Shop,HUBLIFE,0,0,1
 2026-10-25,Wonder Bookstore,Tokopedia,ASHTA,1,518600,0
 2026-10-25,Wonder Bookstore,Tokopedia,BALI-BERAWA,1,139460,0
@@ -7364,11 +7364,21 @@ date,brand,channel,location,orders,revenue,canceled
 2026-10-25,Wonder Bookstore,Tokopedia,JKT-TSM,1,172710,0
 2026-10-25,Wonder Bookstore,Tokopedia,ONLINE,2,805546,0
 2026-10-25,Wonder Bookstore,Tokopedia,PIM,5,2879746,0
-2026-10-26,Wonder Bookstore,In-store POS,BALI-BERAWA,2,0,0
-2026-10-26,Wonder Bookstore,Shopee,ASHTA,1,132428,0
-2026-10-26,Wonder Bookstore,Shopee,BALI-BERAWA,2,280916,0
-2026-10-26,Wonder Bookstore,Shopee,BALI-TSM,1,52780,0
-2026-10-26,Wonder Bookstore,Shopee,JKT-TSM,1,296085,0
-2026-10-26,Wonder Bookstore,Shopee,ONLINE,1,168371,1
-2026-10-26,Wonder Bookstore,Shopee,PIM,2,442196,0
+2026-10-26,Kikkerland,Tokopedia,ONLINE,1,172710,0
+2026-10-26,Sinar Starbooks,Shopee,ONLINE,3,1203560,0
+2026-10-26,Wonder Bookstore,In-store POS,ASHTA,14,2664500,0
+2026-10-26,Wonder Bookstore,In-store POS,BALI-BERAWA,16,957800,0
+2026-10-26,Wonder Bookstore,In-store POS,BALI-TSM,2,555000,0
+2026-10-26,Wonder Bookstore,In-store POS,JKT-TSM,3,332520,0
+2026-10-26,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,34,3357300,0
+2026-10-26,Wonder Bookstore,In-store POS,PIM,7,3324040,0
+2026-10-26,Wonder Bookstore,Shopee,ASHTA,10,2319209,0
+2026-10-26,Wonder Bookstore,Shopee,BALI-BERAWA,9,1508560,0
+2026-10-26,Wonder Bookstore,Shopee,BALI-TSM,4,738835,1
+2026-10-26,Wonder Bookstore,Shopee,HUBLIFE,7,951621,0
+2026-10-26,Wonder Bookstore,Shopee,JKT-TSM,8,1662588,1
+2026-10-26,Wonder Bookstore,Shopee,ONLINE,14,2386497,2
+2026-10-26,Wonder Bookstore,Shopee,PIM,13,2687869,0
 2026-10-26,Wonder Bookstore,TikTok Shop,BALI-BERAWA,1,226800,0
+2026-10-26,Wonder Bookstore,TikTok Shop,HUBLIFE,1,268800,0
+2026-10-26,Wonder Bookstore,Tokopedia,PIM,3,1046400,0

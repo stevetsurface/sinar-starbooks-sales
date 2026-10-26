@@ -1,17 +1,17 @@
 brand,channel,status,reason,orders,value
-Wonder Bookstore,Shopee,CANCELED,Unpaid Order,635,150736800
-Wonder Bookstore,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",264,66385000
-Wonder Bookstore,Shopee,CANCELED,Seller did not Ship,217,45797400
+Wonder Bookstore,Shopee,CANCELED,Unpaid Order,640,152045800
+Wonder Bookstore,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",266,67214400
+Wonder Bookstore,Shopee,CANCELED,Seller did not Ship,219,46241000
 Wonder Bookstore,Shopee,CANCELED,Others / change of mind,160,43865200
 Wonder Bookstore,Shopee,CANCELED,Need to Modify Order,125,35329400
 Wonder Bookstore,Tokopedia,CANCELED,Tidak perlu lagi,103,24103000
 Wonder Bookstore,Shopee,RETURNED,false,89,29232400
 Sinar Starbooks,Shopee,CANCELED,Unpaid Order,88,42620000
+Wonder Bookstore,Shopee,CANCELED,Others,72,18056600
 Wonder Bookstore,Shopee,CANCELED,Need to change delivery address,71,18664000
-Wonder Bookstore,Shopee,CANCELED,Others,70,17806000
 Sinar Starbooks,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",63,50791000
 Wonder Bookstore,Shopee,CANCELED,Need to Change Delivery Address,54,17540200
-Wonder Bookstore,Shopee,CANCELED,Don't Want to Buy Anymore,48,12734000
+Wonder Bookstore,Shopee,CANCELED,Don't Want to Buy Anymore,49,12915800
 Sinar Starbooks,Tokopedia,CANCELED,Tidak perlu lagi,46,15715000
 Wonder Bookstore,Tokopedia,CANCELED,Tidak disebut,43,12460600
 Sinar Starbooks,Shopee,CANCELED,Seller did not Ship,37,19006000
