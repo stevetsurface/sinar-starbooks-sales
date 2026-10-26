@@ -92,7 +92,7 @@
     params() { return params; },
     setParams(o) { params = Object.assign({}, params, o); try { localStorage.setItem('ssb-dash-params', JSON.stringify(params)); } catch (e) {} fire(); },
     resetParams() { params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: params.lang }; fire(); },
-    setLink(name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} },
+    setLink(name) { try { history.replaceState(null, '', '#/' + name); } catch (e) {} },
     refresh() {},
   };
   window.addEventListener('resize', () => { clearTimeout(window.__ssbR); window.__ssbR = setTimeout(fire, 150); });
@@ -1051,7 +1051,7 @@
     dash.setParams({ period: 'custom', start: s, end: e });
   }));
   sIn.addEventListener('blur', () => render()); eIn.addEventListener('blur', () => render());
-  const showTab = (t) => { S.tab = t; dash.setLink(t); render(); };
+  const showTab = (t) => { const changed = S.tab !== t; S.tab = t; dash.setLink(t); render(); if (changed) window.scrollTo(0, 0); };
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
   $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
   // alerts inbox: read state lives in this browser only
@@ -1805,9 +1805,10 @@
   }
 
   dash.onData(render);
-  const named = location.hash.slice(1);
-  if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) showTab(named);
-  else if (named === 'moving') showTab('stock');
+  const named = location.hash.replace(/^#\/?/, ''); // accepts old "#tab" links and new "#/tab" ones
+  if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
+  else if (named === 'moving') { S.tab = 'stock'; dash.setLink('stock'); render(); }
+  if (named) { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); }
 })();
 </script>
 
