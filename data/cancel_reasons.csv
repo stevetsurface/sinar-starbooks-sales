@@ -1,16 +1,16 @@
 brand,channel,status,reason,orders,value
-Wonder Bookstore,Shopee,CANCELED,Unpaid Order,640,152045800
-Wonder Bookstore,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",266,67214400
-Wonder Bookstore,Shopee,CANCELED,Seller did not Ship,219,46241000
-Wonder Bookstore,Shopee,CANCELED,Others / change of mind,160,43865200
-Wonder Bookstore,Shopee,CANCELED,Need to Modify Order,125,35329400
-Wonder Bookstore,Tokopedia,CANCELED,Tidak perlu lagi,103,24103000
-Wonder Bookstore,Shopee,RETURNED,false,89,29232400
-Sinar Starbooks,Shopee,CANCELED,Unpaid Order,88,42620000
+Wonder Bookstore,Shopee,CANCELED,Unpaid Order,633,150818800
+Wonder Bookstore,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",263,66923000
+Wonder Bookstore,Shopee,CANCELED,Seller did not Ship,221,46842600
+Wonder Bookstore,Shopee,CANCELED,Others / change of mind,157,43336000
+Wonder Bookstore,Shopee,CANCELED,Need to Modify Order,124,35100800
+Wonder Bookstore,Tokopedia,CANCELED,Tidak perlu lagi,100,23312600
+Sinar Starbooks,Shopee,CANCELED,Unpaid Order,90,43563000
+Wonder Bookstore,Shopee,RETURNED,false,89,29609200
 Wonder Bookstore,Shopee,CANCELED,Others,72,18056600
-Wonder Bookstore,Shopee,CANCELED,Need to change delivery address,71,18664000
-Sinar Starbooks,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",63,50791000
-Wonder Bookstore,Shopee,CANCELED,Need to Change Delivery Address,54,17540200
+Wonder Bookstore,Shopee,CANCELED,Need to change delivery address,72,18940800
+Sinar Starbooks,Shopee,CANCELED,"Modify existing order (colour, size, address, voucher, etc.)",64,51106000
+Wonder Bookstore,Shopee,CANCELED,Need to Change Delivery Address,52,16572600
 Wonder Bookstore,Shopee,CANCELED,Don't Want to Buy Anymore,49,12915800
 Sinar Starbooks,Tokopedia,CANCELED,Tidak perlu lagi,46,15715000
 Wonder Bookstore,Tokopedia,CANCELED,Tidak disebut,43,12460600
@@ -21,33 +21,32 @@ Wonder Bookstore,Tokopedia,CANCELED,Otomatis dibatalkan karena melewati batas wa
 Sinar Starbooks,Shopee,CANCELED,Need to Modify Order,29,14331000
 Sinar Starbooks,Shopee,CANCELED,Others,28,17096000
 Wonder Bookstore,Shopee,CANCELED,Need to input / Change Voucher Code,27,8448800
-Wonder Bookstore,Shopee,CANCELED,Found Cheaper Elsewhere,20,5998400
 Wonder Bookstore,Shopee,CANCELED,Out of Stock,20,4472600
 Sinar Starbooks,Shopee,CANCELED,Don't Want to Buy Anymore,20,11972000
 Sinar Starbooks,Shopee,RETURNED,false,19,26037000
+Wonder Bookstore,Shopee,CANCELED,Found Cheaper Elsewhere,19,5609600
 Sinar Starbooks,Shopee,CANCELED,Need to input / Change Voucher Code,19,8852000
-Sinar Starbooks,Blibli,CANCELED,Pembayaran Tidak Dilakukan,18,0
 Wonder Bookstore,Tokopedia,CANCELED,Ada harga yang lebih baik,18,6886200
+Sinar Starbooks,Blibli,CANCELED,Pembayaran Tidak Dilakukan,17,0
 Sinar Starbooks,Shopee,CANCELED,Other,17,9548000
 Sinar Starbooks,Tokopedia,CANCELED,Tidak disebut,16,4508000
 Sinar Starbooks,Blibli,CANCELED,Tidak disebut,15,3496740
 Wonder Bookstore,Shopee,CANCELED,Payment Procedure too Troublesome,15,3117000
 Wonder Bookstore,Tokopedia,CANCELED,Informasi pengiriman salah,14,6017200
+Wonder Bookstore,Shopee,CANCELED,Other,13,4755600
 Sinar Starbooks,Shopee,CANCELED,Need to change delivery address,13,6741000
 Wonder Bookstore,Tokopedia,CANCELED,Pesanan dibuat secara tidak sengaja,12,2876400
-Wonder Bookstore,Shopee,CANCELED,Other,12,4538800
 Wonder Bookstore,TikTok Shop,CANCELED,No longer needed,11,2732800
 Wonder Bookstore,Tokopedia,CANCELED,Biaya pengiriman mahal,11,2970800
 Kikkerland,Tokopedia,CANCELED,Tidak disebut,11,3050600
 Sinar Starbooks,Tokopedia,CANCELED,Pesanan dibatalkan karena pembeli terlambat membayar,10,1817000
 Sinar Starbooks,TikTok Shop,RETURNED,Pengiriman paket gagal,8,1538000
-Wonder Bookstore,TikTok Shop,CANCELED,Need to change payment method,7,1635400
 Wonder Bookstore,TikTok Shop,CANCELED,Customer overdue to pay,7,1882600
 Kikkerland,Tokopedia,CANCELED,Tidak perlu lagi,6,1178800
+Wonder Bookstore,TikTok Shop,CANCELED,Need to change payment method,6,1371600
 Wonder Bookstore,TikTok Shop,CANCELED,Pesanan dibatalkan karena pembeli terlambat membayar,6,1368800
 Kikkerland,Tokopedia,CANCELED,Pesanan dibatalkan karena pembeli terlambat membayar,5,950000
 Wonder Bookstore,TikTok Shop,CANCELED,Automatically canceled due to collection time out,5,1055000
-Wonder Bookstore,Shopee,CANCELED,Seller is not responsive to my inquiries,4,554200
 Sinar Starbooks,Tokopedia,RETURNED,Produk tidak sesuai dengan deskripsi,4,2753000
 Sinar Starbooks,Shopee,CANCELED,Found Cheaper Elsewhere,4,1220000
 Sinar Starbooks,Shopee,CANCELED,Need to Change Delivery Address,4,1636000
@@ -68,6 +67,7 @@ Sinar Starbooks,TikTok Shop,RETURNED,Berubah pikiran,3,693000
 Kikkerland,TikTok Shop,CANCELED,Customer overdue to pay,3,290400
 Wonder Bookstore,In-store POS,CANCELED,Metode pembayaran tidak tersedia,3,267800
 Wonder Bookstore,TikTok Shop,RETURNED,Pengiriman paket gagal,3,1182400
+Wonder Bookstore,Shopee,CANCELED,Seller is not responsive to my inquiries,3,391400
 Kikkerland,TikTok Shop,CANCELED,Tidak perlu lagi,2,502600
 Wonder Bookstore,TikTok Shop,CANCELED,Better price available,2,521600
 Wonder Bookstore,Shopee,RETURNED,Tidak disebut,2,323600
@@ -83,7 +83,6 @@ Sinar Starbooks,TikTok Shop,RETURNED,Produk yang dikirim salah,2,552000
 Sinar Starbooks,TikTok Shop,CANCELED,Ongkir mahal,2,668000
 Sinar Starbooks,Lazada,CANCELED,Memutuskan untuk beli produk lain,2,392920
 Sinar Starbooks,Lazada,CANCELED,Pemesanan ganda,2,523010
-Wonder Bookstore,TikTok Shop,RETURNED,Change of mind,1,399600
 Wonder Bookstore,Tokopedia,CANCELED,Kesalahan penetapan harga,1,225800
 Wonder Bookstore,Tokopedia,CANCELED,No longer needed,1,301800
 Sinar Starbooks,Tokopedia,RETURNED,Kemasan atau produk rusak,1,725000
@@ -121,4 +120,3 @@ Sinar Starbooks,Lazada,CANCELED,"Waktu pengiriman terlalu lama
 Wonder Bookstore,Internal / B2B,CANCELED,Ada kesibukan lain yang sifatnya mendadak,1,6660000
 Kikkerland,TikTok Shop,CANCELED,Pesanan dibatalkan karena pembeli terlambat membayar,1,206800
 Wonder Bookstore,In-store POS,CANCELED,Tidak disebut,1,95000
-Wonder Bookstore,Shopee,REQUEST_CANCEL,false,1,454600
