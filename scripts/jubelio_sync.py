@@ -317,6 +317,38 @@ def purchases(since='2025-01-01'):
     return supplier_of, last_po, lead_by, dict(po_count)
 
 
+SCOUT_SHEET = os.environ.get('SCOUT_SHEET_CSV') or 'https://docs.google.com/spreadsheets/d/1dKDvrd-9HdAj4EMxLiV4T3Ahk9kLe91b1uDXweS7VIw/export?format=csv'
+
+
+def scout_picks():
+    """Booky Scout writes its weekly picks to a Google Sheet; keep the latest week and add our own stock
+    and 90-day sales per ISBN from catalog.csv, so the dashboard shows each pick next to what we already carry."""
+    try:
+        with urllib.request.urlopen(SCOUT_SHEET, timeout=60) as r:
+            text = r.read().decode('utf-8-sig')
+    except urllib.error.HTTPError as e:
+        print(f'scout sheet not readable ({e.code}); set it to "anyone with the link can view". Keeping the previous file.', file=sys.stderr)
+        return
+    rows = [r for r in csv.DictReader(io.StringIO(text)) if (r.get('title') or '').strip()]
+    status = 'ok' if rows else 'empty'
+    latest = max((r.get('week_of') or '').strip() for r in rows) if rows else ''
+    rows = [r for r in rows if (r.get('week_of') or '').strip() == latest]
+    cat = {}
+    cpath = os.path.join(OUT, 'catalog.csv')
+    if os.path.exists(cpath):
+        for c in csv.DictReader(open(cpath, encoding='utf-8')):
+            cat[re.sub(r'\D', '', c['item_code'] or '')] = c
+    out = []
+    for r in rows:
+        isbn = re.sub(r'\D', '', r.get('isbn') or '')
+        c = cat.get(isbn) if isbn else None
+        out.append([(r.get(k) or '').strip() for k in ['week_of', 'side', 'rank', 'urgency', 'title', 'author', 'publisher', 'isbn', 'why', 'trending_in', 'early_buy', 'confidence', 'source_url']]
+                   + (['ya', c['available'], c['units_90d'], c['available_by_location']] if c else ['tidak' if isbn else '', '', '', '']))
+    write('scout_picks.csv', ['week_of', 'side', 'rank', 'urgency', 'title', 'author', 'publisher', 'isbn', 'why', 'trending_in', 'early_buy', 'confidence', 'source_url',
+                              'in_catalog', 'available', 'units_90d', 'available_by_location'], out)
+    print('scout picks', status, latest, len(out))
+
+
 def write(name, header, rows):
     with open(os.path.join(OUT, name), 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f); w.writerow(header); w.writerows(rows)
@@ -512,6 +544,10 @@ def main():
     except Exception as e:  # never let the workbook break the data sync
         import traceback; traceback.print_exc()
         print('transfer workbook skipped:', e, file=sys.stderr)
+    try:
+        scout_picks()
+    except Exception as e:
+        print('scout picks skipped:', e, file=sys.stderr)
     try:
         alerts_from_data(now)
     except Exception as e:

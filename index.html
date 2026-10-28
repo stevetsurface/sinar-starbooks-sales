@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["scout_picks", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -507,6 +507,11 @@
         <p class="ss-note"><span class="id">Kenaikan unit terbesar vs periode sebelumnya: pastikan stok aman.</span><span class="en">Biggest unit increase vs the period before: make sure stock keeps up.</span></p>
         <div class="ss-tablebox" data-source="titles_daily items"><table class="ss-table" id="tbl-rising"><thead></thead><tbody></tbody></table></div>
       </div>
+    </div>
+    <div class="ss-card" id="card-scout">
+      <div class="ss-card-h"><h2><span class="id">Rekomendasi Booky Scout</span><span class="en">Booky Scout picks</span></h2><span class="ss-card-tools"><div class="ss-seg ss-scoutside" role="group" aria-label="Sisi / Side"><button data-side="all"><span class="id">Semua</span><span class="en">All</span></button><button data-side="Distribusi"><span class="id">Distribusi</span><span class="en">Distribution</span></button><button data-side="Retail">Retail</button></div><a class="ss-xl ss-dl" href="https://docs.google.com/document/d/1Nkm7-bHYfcQ641Mis97AXReQfCPBzRvdXCOi3OnL9Ro/edit" target="_blank" rel="noopener"><span class="id">Laporan lengkap</span><span class="en">Full report</span> ↗</a><a class="ss-xl ss-dl" href="https://drive.google.com/drive/folders/1kOnRQp7k4dyqCzdsl1_6T_DCvII50_2A" target="_blank" rel="noopener">PDF ↗</a><button class="ss-xl" data-export="scout">Excel</button></span></div>
+      <p class="ss-note" id="scout-note">–</p>
+      <div class="ss-tablebox" data-source="scout_picks"><table class="ss-table" id="tbl-scout"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="ss-card" id="card-suppliers">
       <div class="ss-card-h"><h2><span class="id">Per pemasok</span><span class="en">By supplier</span><button class="ss-help" data-goto="guide-buylist" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="suppliers">Excel</button></span></div>
@@ -1009,7 +1014,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -1033,6 +1038,7 @@
   $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
   $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
   $$('.ss-urg button').forEach((b) => b.addEventListener('click', () => { S.urg = b.dataset.urg; render(); }));
+  $$('.ss-scoutside button').forEach((b) => b.addEventListener('click', () => { S.side = b.dataset.side; render(); }));
   $('#heat-loc').addEventListener('change', (e) => { S.heatLoc = e.target.value || ''; render(); });
   $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
@@ -1363,7 +1369,7 @@
 
   // ---------------- PRODUK ----------------
   function renderProduk(b) {
-    renderSuppliers();
+    renderScout(); renderSuppliers();
     b = b || brand();
     const tr = titleRows(), im = itemMap(); const pt = $('#prod-tiles');
     if (!tr || !im) { pt.replaceChildren(); chartState($('#chart-groups'), 'titles_daily'); return; }
@@ -1656,6 +1662,37 @@
       { h: ['Lokasi stok', 'Stock by location'], muted: 1, f: (r) => r.available_by_location || '–' },
       { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
     ], sl, 'slow');
+  }
+  function renderScout() {
+    const sp = rows('scout_picks'); const note = $('#scout-note'); const box = $('#card-scout .ss-tablebox');
+    if (!S.side) S.side = 'all';
+    $$('.ss-scoutside button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.side === S.side)));
+    if (!sp || !sp.length) {
+      const d = ds('scout_picks');
+      note.textContent = d.status === 'loading' ? '…' : T('Belum ada rekomendasi di dashboard. Booky Scout menulis daftar mingguan setiap Senin ke Google Sheet "Booky Scout - Rekomendasi Mingguan"; kartu ini terisi pada sinkron pagi berikutnya. Laporan lengkap dan PDF tetap ada di tautan di kanan atas.', 'No picks on the dashboard yet. Booky Scout writes its weekly list every Monday to the Google Sheet "Booky Scout - Rekomendasi Mingguan"; this card fills on the next morning sync. The full report and PDF are at the links top right.');
+      table('tbl-scout', [{ h: ['Rekomendasi', 'Picks'], f: () => '' }], [], 'scout'); skel(box, false); return;
+    }
+    const wk = sp[0].week_of;
+    const isDist = (r) => /^dist/i.test(r.side || '');
+    const shown = sp.filter((r) => S.side === 'all' || (S.side === 'Distribusi' ? isDist(r) : !isDist(r)));
+    const early = sp.filter((r) => /^(ya|yes|y|true|1)$/i.test(r.early_buy || '')).length, notCarried = sp.filter((r) => r.in_catalog === 'tidak').length;
+    note.textContent = T(`Minggu ${wk ? fdy(wk) : '–'} · ${int(sp.length)} rekomendasi (${int(sp.filter(isDist).length)} distribusi, ${int(sp.length - sp.filter(isDist).length)} retail) · ${int(early)} beli lebih awal · ${int(notCarried)} belum kita jual. Stok kita dan laku 90 hari dicocokkan lewat ISBN. Tren dan alasan dari Booky Scout; angka penjualan dari Jubelio.`,
+      `Week of ${wk ? fdy(wk) : '–'} · ${int(sp.length)} picks (${int(sp.filter(isDist).length)} distribution, ${int(sp.length - sp.filter(isDist).length)} retail) · ${int(early)} early buys · ${int(notCarried)} we don't carry yet. Our stock and 90-day sales matched by ISBN. Trends and reasons from Booky Scout; sales figures from Jubelio.`);
+    const link = (r) => { if (!r.source_url) return r.why || ''; const sp2 = el('span'); sp2.append(document.createTextNode((r.why || '') + ' ')); const a = el('a', '', T('sumber ↗', 'source ↗')); a.href = r.source_url; a.target = '_blank'; a.rel = 'noopener'; sp2.append(a); return sp2; };
+    const titleCell = (r) => { const d = el('div'); d.append(document.createTextNode(r.title)); if (r.author) { const a = el('div', 'ss-sub', r.author); a.style.fontWeight = '400'; d.append(a); } return d; };
+    table('tbl-scout', [
+      { h: ['#', '#'], num: 1, f: (r) => r.rank, x: (r) => +r.rank || '' },
+      { h: ['Urgensi', 'Urgency'], f: (r) => T(...(URG[(r.urgency || '').toUpperCase()] || [r.urgency, r.urgency])), cls: (r) => (/kritis/i.test(r.urgency) ? 'ss-flag' : '') },
+      { h: ['Sisi', 'Side'], muted: 1, f: (r) => (isDist(r) ? T('Distribusi', 'Distribution') : 'Retail') },
+      { h: ['Judul', 'Title'], name: 1, f: titleCell, x: (r) => r.title + (r.author ? ' – ' + r.author : '') },
+      { h: ['Penerbit', 'Publisher'], muted: 1, f: (r) => r.publisher || '–' },
+      { h: ['Tren', 'Trending'], f: (r) => (r.trending_in || '–') + (/^(ya|yes|y|true|1)$/i.test(r.early_buy || '') ? T(' · beli awal', ' · early buy') : '') },
+      { h: ['Keyakinan', 'Confidence'], f: (r) => r.confidence || '–' },
+      { h: ['Stok kita', 'Our stock'], num: 1, f: (r) => (r.in_catalog === 'ya' ? int(r.available) : r.in_catalog === 'tidak' ? T('belum dijual', 'not carried') : '–'), x: (r) => (r.in_catalog === 'ya' ? +r.available : '') },
+      { h: ['Laku 90 hr', 'Sold 90d'], num: 1, f: (r) => (r.in_catalog === 'ya' ? int(r.units_90d) : '–'), x: (r) => (r.in_catalog === 'ya' ? +r.units_90d : '') },
+      { h: ['Alasan', 'Why'], muted: 1, f: link, x: (r) => (r.why || '') + (r.source_url ? ' ' + r.source_url : '') },
+      { h: ['ISBN', 'ISBN'], muted: 1, f: (r) => r.isbn || '–' },
+    ], shown, 'scout');
   }
   function renderSuppliers() {
     const su = rows('suppliers'); const box = $('#card-suppliers .ss-tablebox');
