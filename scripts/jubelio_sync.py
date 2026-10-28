@@ -374,6 +374,13 @@ def main():
         k = (wib(o['transaction_date']).date().isoformat(), brand(o.get('store_name')), chan(o.get('channel_name')), o.get('location_name') or '-')
         if is_bad(o): D[k][2] += 1
         else: D[k][0] += 1; D[k][1] += float(o.get('grand_total') or 0)
+    # revenue per marketplace shop (store_name), for targets set per shop (e.g. "Shopee Wonder Hublife")
+    SH = defaultdict(lambda: [0, 0.0])
+    for o in orders:
+        if is_bad(o) or chan(o.get('channel_name')) == 'In-store POS': continue
+        k = (wib(o['transaction_date']).date().isoformat(), (o.get('store_name') or '-').strip(), chan(o.get('channel_name')))
+        SH[k][0] += 1; SH[k][1] += float(o.get('grand_total') or 0)
+    write('shop_daily.csv', ['date', 'shop', 'channel', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in sorted(SH.items())])
     write('sales_daily_detail.csv', ['date', 'brand', 'channel', 'location', 'orders', 'revenue', 'canceled'], [list(k) + [v[0], round(v[1]), v[2]] for k, v in sorted(D.items())])
 
     since = (now - timedelta(days=90)).date().isoformat()
