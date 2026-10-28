@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["scout_picks", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "scout_picks", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -433,6 +433,12 @@
       <div class="ss-tile" id="t-aov"><div class="ss-lab"><span class="id">Rata-rata per pesanan</span><span class="en">Avg order</span></div><span class="ss-big dash-skeleton">–</span><div class="ss-sub"></div></div>
       <div class="ss-tile" id="t-can"><div class="ss-lab"><span class="id">Batal &amp; retur</span><span class="en">Cancelled &amp; returned</span></div><span class="ss-big dash-skeleton">–</span><div class="ss-sub"></div></div>
     </div>
+    <div class="ss-card" id="card-target">
+      <div class="ss-card-h"><h2><span class="id">Target vs aktual</span><span class="en">Target vs actual</span><button class="ss-help" data-goto="guide-target" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="target">Excel</button></span></div>
+      <div class="ss-tiles" id="target-tiles" data-source="targets sales_daily_detail"></div>
+      <p class="ss-note" id="target-note">–</p>
+      <div class="ss-tablebox" data-source="targets"><table class="ss-table" id="tbl-target"><thead></thead><tbody></tbody></table></div>
+    </div>
     <div class="ss-card" id="card-trend">
       <div class="ss-card-h">
         <h2><span class="id">Tren pendapatan</span><span class="en">Revenue trend</span></h2>
@@ -705,6 +711,13 @@
           <p class="en">In the <i>Revenue trend</i> chart, choose <b>Store vs online</b> to see both stacked per day.</p>
           <p class="id">Filter ini berlaku di Ringkasan, Penjualan &amp; toko, dan Keuangan. Belum berlaku untuk data per judul (tab Produk).</p>
           <p class="en">The filter applies to Overview, Sales &amp; stores and Finance. It doesn't apply to title-level data (Titles tab) yet.</p>
+        </div>
+      </div>
+      <div class="ss-card" id="guide-target">
+        <h2><span class="id">Target vs aktual</span><span class="en">Target vs actual</span></h2>
+        <div class="ss-guide">
+          <p class="id">Target bulanan per toko dari file <b>Target Wonder Bookstore 2026</b>. Aktual dihitung dari Jubelio untuk merek Wonder Bookstore: <b>Toko</b> = penjualan kasir di toko itu (target kopi Berawa digabung ke kasir Berawa), <b>Shopee</b> = pesanan Shopee yang dikirim dari stok toko itu. Baris <b>ST</b> di file (misalnya PIM ST) belum diketahui padanannya di Jubelio, jadi ditampilkan tanpa aktual. <b>Seharusnya</b> = bagian bulan yang sudah lewat. Hijau = di atas laju, kuning = sedikit di bawah, merah = jauh di bawah. <b>Proyeksi</b> = aktual sampai kemarin + perkiraan sisa hari dari rata-rata hari yang sama 8 minggu terakhir. Jika target berubah, kirim file baru; dashboard memuatnya ulang.</p>
+          <p class="en">Monthly targets per store from the <b>Target Wonder Bookstore 2026</b> file. Actuals come from Jubelio for the Wonder Bookstore brand: <b>Store</b> = till sales at that store (Berawa's coffee target is added to the Berawa till), <b>Shopee</b> = Shopee orders shipped from that store's stock. The file's <b>ST</b> rows (for example PIM ST) have no known Jubelio equivalent yet, so they show without an actual. <b>On pace</b> = the share of the month already passed. Green = ahead of pace, amber = slightly behind, red = well behind. <b>Projected</b> = actuals through yesterday plus the remaining days estimated from the same weekday's average over the last 8 weeks. If the targets change, send the new file and the dashboard reloads it.</p>
         </div>
       </div>
       <div class="ss-card" id="guide-buylist">
@@ -1014,7 +1027,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -1223,6 +1236,15 @@
       if (kind() === 'all') { const split = el('div', 'ss-sub ss-split-line'); split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(pPos) + ' '), chgEl(pPos, cl.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(pOnl) + ' '), chgEl(pOnl, cl.onl)); t.append(split); }
       t.title = T('Hari yang sudah lewat = penjualan nyata. Sisa hari = rata-rata penjualan hari yang sama (Senin, Selasa, …) selama 8 minggu terakhir.', 'Days already passed = actual sales. Remaining days = the average for that weekday (Monday, Tuesday, …) over the last 8 weeks.');
       gt.append(t); }
+    { const tc = targetCalc(); if (tc && tc.lines.length) {
+        const exp = tc.dIn / tc.dAll, sh = pctOf(tc.A, tc.T);
+        const t = el('div', 'ss-tile'); const big = el('span', 'ss-big', pct0(sh)); const pc = paceCls(sh, exp); if (pc) big.classList.add(pc);
+        t.append(el('div', 'ss-lab', T('Target ', 'Target ') + fmonL(tc.m).split(' ')[0]), big);
+        t.append(el('div', 'ss-sub', T(`tercapai, seharusnya ${pct0(exp)} · proyeksi ${pct0(pctOf(tc.P, tc.T))} dari ${rp(tc.T)}`, `achieved, on pace would be ${pct0(exp)} · projected ${pct0(pctOf(tc.P, tc.T))} of ${rp(tc.T)}`)));
+        const pl = tc.byLine('pos'), shp = tc.byLine('shopee'); const split = el('div', 'ss-sub ss-split-line');
+        split.append(el('b', '', T('Toko ', 'Stores ')), document.createTextNode(pct0(pctOf(pl.a, pl.t)) + ' · '), el('b', '', 'Shopee '), document.createTextNode(pct0(pctOf(shp.a, shp.t))));
+        t.append(split); t.title = T('Wonder Bookstore saja; Tokopedia, TikTok dan gudang online tidak punya target. Rincian di Penjualan & toko.', 'Wonder Bookstore only; Tokopedia, TikTok and the online warehouse have no targets. Detail on Sales & stores.');
+        gt.append(t); } }
     // daily 60
     const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
     let box = $('#chart-daily'); skel(box, false);
@@ -1285,6 +1307,7 @@
 
   // ---------------- PENJUALAN ----------------
   function renderSales(b) {
+    renderTargets();
     const sr = salesRows(); const series = seriesFor(b);
     const tiles = { rev: $('#t-rev'), ord: $('#t-ord'), aov: $('#t-aov'), can: $('#t-can') };
     if (!sr) { Object.values(tiles).forEach((t) => { skel(t.querySelector('.ss-big'), true); t.querySelector('.ss-sub').textContent = ''; }); chartState($('#chart-trend'), 'sales_daily_detail'); return; }
@@ -1625,6 +1648,74 @@
   ];
   const reasonGroup = (r) => { const t = String(r || '').trim(); if (!t || t === 'false') return T('Tidak disebut', 'Not stated'); for (const [re, lab] of REASON_GROUPS) if (re.test(t)) return T(...lab); return T('Lainnya', 'Other'); };
 
+  // ---------------- TARGET ----------------
+  // Targets come from "Target Wonder Bookstore 2026.xlsx" (tools/import_targets.py -> data/targets.csv).
+  // Actuals: Wonder Bookstore brand only. pos = till sales at the store (Berawa's coffee target is added to its pos line,
+  // since the coffee bar rings through the same till); shopee = Shopee orders shipped from that store; st = "(ST)" rows,
+  // not yet mapped to a Jubelio channel, so shown without an actual and left out of the percentages.
+  const tgtRows = () => rows('targets', (r) => ({ m: r.month, l: r.location, ln: r.line, t: +r.target }));
+  const TLINE = { pos: ['Toko', 'Store'], shopee: ['Shopee', 'Shopee'], st: ['ST (belum dipetakan)', 'ST (not mapped)'] };
+  let TC = null, TCkey = '';
+  function targetCalc() {
+    const tr = tgtRows(), sr = salesRows(); if (!tr || !sr || !B) return null;
+    const L = B.max; const k0 = L + '|' + sr.length + '|' + tr.length; if (TC && TCkey === k0) return TC;
+    const m = L.slice(0, 7), ms = m + '-01', me = monthEnd(m);
+    const e = ms === L ? L : add(L, -1);               // actuals through yesterday; today is projected like the other days
+    const dIn = days(ms, e), dAll = days(ms, me);
+    const histEnd = add(L, -1), histStart = add(histEnd, -55);
+    const lineOf = (x) => (x.c === 'In-store POS' ? 'pos' : x.c === 'Shopee' ? 'shopee' : null);
+    const mtd = {}, ytd = {}, hist = {};
+    for (const x of sr) {
+      if (x.b !== 'Wonder Bookstore') continue; const ln = lineOf(x); if (!ln) continue; const k = x.l + '|' + ln;
+      if (x.d >= ms && x.d <= e) mtd[k] = (mtd[k] || 0) + x.v;
+      if (x.d >= m.slice(0, 4) + '-01-01' && x.d <= e) ytd[k] = (ytd[k] || 0) + x.v;
+      if (x.d >= histStart && x.d <= histEnd) { const h = hist[k] || (hist[k] = {}); h[x.d] = (h[x.d] || 0) + x.v; }
+    }
+    const proj = (k) => { const h = hist[k] || {}, tot = [0, 0, 0, 0, 0, 0, 0], n = [0, 0, 0, 0, 0, 0, 0]; for (let t = histStart; t <= histEnd; t = add(t, 1)) { const w = D(t).getUTCDay(); tot[w] += h[t] || 0; n[w]++; } let rest = 0; for (let t = add(e, 1); t <= me; t = add(t, 1)) { const w = D(t).getUTCDay(); rest += n[w] ? tot[w] / n[w] : 0; } return (mtd[k] || 0) + rest; };
+    const tm = {}, ty = {};
+    for (const r of tr) { const ln = r.ln === 'coffee' ? 'pos' : r.ln; const k = r.l + '|' + ln; if (r.m === m) tm[k] = (tm[k] || 0) + r.t; if (r.m < m && r.m.slice(0, 4) === m.slice(0, 4)) ty[k] = (ty[k] || 0) + r.t; }
+    const lines = Object.keys(tm).map((k) => { const [l, ln] = k.split('|'); const mapped = ln !== 'st'; const yT = (ty[k] || 0) + tm[k] * dIn / dAll;
+      return { l, ln, t: tm[k], a: mapped ? mtd[k] || 0 : null, p: mapped ? proj(k) : null, yT, yA: mapped ? ytd[k] || 0 : null, berawaCoffee: l === 'BALI-BERAWA' && ln === 'pos' }; })
+      .sort((a, z) => z.t - a.t);
+    const sum = (f, pick) => lines.filter(f).reduce((s2, x) => s2 + (pick(x) || 0), 0);
+    const mapped = (x) => x.ln !== 'st';
+    TC = { m, e, dIn, dAll, lines, T: sum(mapped, (x) => x.t), A: sum(mapped, (x) => x.a), P: sum(mapped, (x) => x.p), unmappedT: sum((x) => !mapped(x), (x) => x.t),
+      byLine: (ln) => ({ t: sum((x) => x.ln === ln, (x) => x.t), a: sum((x) => x.ln === ln, (x) => x.a), p: sum((x) => x.ln === ln, (x) => x.p) }),
+      byStore: (l) => ({ t: sum((x) => x.l === l && mapped(x), (x) => x.t), a: sum((x) => x.l === l && mapped(x), (x) => x.a), p: sum((x) => x.l === l && mapped(x), (x) => x.p), st: sum((x) => x.l === l && !mapped(x), (x) => x.t) }) };
+    TCkey = k0; return TC;
+  }
+  const pctOf = (a, t) => (t ? a / t : null);
+  const paceCls = (share, expected) => (share == null ? '' : share >= expected ? 'ss-up' : share >= expected * 0.9 ? 'ss-warn' : 'ss-down');
+  function renderTargets() {
+    const box = $('#tbl-target') && $('#card-target .ss-tablebox'); const note = $('#target-note'); const tiles = $('#target-tiles');
+    if (!box) return;
+    const tc = targetCalc();
+    if (!tc) { const d = ds('targets'); tableState(box, 'targets'); tiles.replaceChildren(); note.textContent = d.status === 'error' ? T('Target belum dimuat.', 'Targets not loaded.') : '…'; return; }
+    if (!tc.lines.length) { tiles.replaceChildren(); note.textContent = T(`Belum ada target untuk ${fmonL(tc.m)}.`, `No targets for ${fmonL(tc.m)}.`); table('tbl-target', [{ h: ['Target', 'Target'], f: () => '' }], [], 'target'); return; }
+    const exp = tc.dIn / tc.dAll, mon = fmonL(tc.m);
+    const mk = (lab, big, cls, sub) => { const t = el('div', 'ss-tile'); const b = el('span', 'ss-big', big); if (cls) b.classList.add(cls); t.append(el('div', 'ss-lab', lab), b, el('div', 'ss-sub', sub)); return t; };
+    const pl = tc.byLine('pos'), sh = tc.byLine('shopee');
+    tiles.replaceChildren(
+      mk(T('Tercapai ', 'Achieved ') + mon, pct0(pctOf(tc.A, tc.T)), paceCls(pctOf(tc.A, tc.T), exp), `${rp(tc.A)} ${T('dari', 'of')} ${rp(tc.T)} · ${T('seharusnya', 'on pace would be')} ${pct0(exp)} (${tc.dIn}/${tc.dAll} ${T('hari', 'days')})`),
+      mk(T('Proyeksi akhir bulan', 'Projected month end'), pct0(pctOf(tc.P, tc.T)), tc.P >= tc.T ? 'ss-up' : 'ss-down', `${rp(tc.P)} · ${tc.P >= tc.T ? T('lebih ', 'above by ') + rp(tc.P - tc.T) : T('kurang ', 'short by ') + rp(tc.T - tc.P)}`),
+      mk(T('Toko (kasir)', 'Stores (till)'), pct0(pctOf(pl.a, pl.t)), paceCls(pctOf(pl.a, pl.t), exp), `${T('proyeksi', 'projected')} ${pct0(pctOf(pl.p, pl.t))} ${T('dari', 'of')} ${rp(pl.t)}`),
+      mk('Shopee', pct0(pctOf(sh.a, sh.t)), paceCls(pctOf(sh.a, sh.t), exp), `${T('proyeksi', 'projected')} ${pct0(pctOf(sh.p, sh.t))} ${T('dari', 'of')} ${rp(sh.t)}`),
+    );
+    note.textContent = T(`${mon}, aktual sampai ${fdy(tc.e)}. Target dari file "Target Wonder Bookstore 2026". Aktual = merek Wonder Bookstore: kasir di toko itu, dan Shopee yang dikirim dari toko itu. Target kopi Berawa digabung dengan kasir Berawa. Baris ST (${rp(tc.unmappedT)}) belum dipetakan ke kanal Jubelio dan tidak dihitung dalam persen. Tokopedia, TikTok dan gudang online tidak punya target. Proyeksi: hari tersisa diperkirakan dari rata-rata hari yang sama 8 minggu terakhir.`,
+      `${mon}, actuals through ${fdy(tc.e)}. Targets from the "Target Wonder Bookstore 2026" file. Actuals = Wonder Bookstore brand: the store's till, and Shopee orders shipped from that store. Berawa's coffee target is added to the Berawa till. ST rows (${rp(tc.unmappedT)}) are not yet mapped to a Jubelio channel and are left out of the percentages. Tokopedia, TikTok and the online warehouse have no targets. Projection: remaining days estimated from the same weekday's average over the last 8 weeks.`);
+    table('tbl-target', [
+      { h: ['Toko', 'Store'], name: 1, f: (r) => r.l },
+      { h: ['Jalur', 'Line'], f: (r) => T(...TLINE[r.ln]) + (r.berawaCoffee ? T(' + kopi', ' + coffee') : '') },
+      { h: ['Target bulan', 'Month target'], num: 1, f: (r) => rp(r.t), x: (r) => Math.round(r.t) },
+      { h: ['Aktual', 'Actual'], num: 1, f: (r) => (r.a == null ? '–' : rp(r.a)), x: (r) => (r.a == null ? '' : Math.round(r.a)) },
+      { h: ['Tercapai', 'Achieved'], num: 1, f: (r) => (r.a == null ? '–' : pct0(pctOf(r.a, r.t))), x: (r) => (r.a == null ? '' : +pctOf(r.a, r.t).toFixed(4)), cls: (r) => (r.a == null ? '' : paceCls(pctOf(r.a, r.t), exp)) },
+      { h: ['Seharusnya', 'On pace'], num: 1, f: () => pct0(exp), x: () => +exp.toFixed(4) },
+      { h: ['Proyeksi', 'Projected'], num: 1, f: (r) => (r.p == null ? '–' : rp(r.p)), x: (r) => (r.p == null ? '' : Math.round(r.p)) },
+      { h: ['Proyeksi vs target', 'Projected vs target'], num: 1, f: (r) => (r.p == null ? '–' : pct0(pctOf(r.p, r.t))), x: (r) => (r.p == null ? '' : +pctOf(r.p, r.t).toFixed(4)), cls: (r) => (r.p == null ? '' : r.p >= r.t ? 'ss-up' : 'ss-down') },
+      { h: ['Tahun ini', 'Year to date'], num: 1, f: (r) => (r.yA == null ? '–' : pct0(pctOf(r.yA, r.yT))), x: (r) => (r.yA == null ? '' : +pctOf(r.yA, r.yT).toFixed(4)) },
+    ], tc.lines, 'target');
+  }
+
   // ---------------- DAFTAR BELI (data half) ----------------
   const URG = { KRITIS: ['Kritis', 'Critical'], SEGERA: ['Segera', 'This week'], PANTAU: ['Pantau', 'This month'] };
   function renderBuyList() {
@@ -1741,6 +1832,10 @@
     const ss0 = days(R.s, R.e) >= 14 ? R.s : [add(R.e, -13), B.min].sort()[1];
     const vs = (cv, pv, lower) => (p ? [chgEl(cv, pv, lower), document.createTextNode(' vs ' + T(...R.label))] : []);
     box.replaceChildren(
+      ...(() => { const tc = targetCalc(); if (!tc) return []; const s0 = tc.byStore(S.store); if (!s0.t) return []; const sh = pctOf(s0.a, s0.t), exp = tc.dIn / tc.dAll;
+        const t = el('div', 'ss-tile'); const big = el('span', 'ss-big', pct0(sh)); const pc = paceCls(sh, exp); if (pc) big.classList.add(pc);
+        t.append(el('div', 'ss-lab', T('Target ', 'Target ') + fmonL(tc.m).split(' ')[0]), big, el('div', 'ss-sub', T(`${rp(s0.a)} dari ${rp(s0.t)} (kasir + Shopee) · seharusnya ${pct0(exp)} · proyeksi ${pct0(pctOf(s0.p, s0.t))}`, `${rp(s0.a)} of ${rp(s0.t)} (till + Shopee) · on pace ${pct0(exp)} · projected ${pct0(pctOf(s0.p, s0.t))}`) + (s0.st ? T(` · ST ${rp(s0.st)} belum dipetakan`, ` · ST ${rp(s0.st)} not mapped`) : '')));
+        return [t]; })(),
       tile(T('Pendapatan kasir', 'POS revenue'), rp(m.rev), 'rev', vs(m.rev, p && p.pos), dailyStore(ss0, R.e, (x) => x.v)),
       tile(T('Transaksi (struk)', 'Tickets'), int(m.tix), 'tix', vs(m.tix, p && p.po), dailyStore(ss0, R.e, (x) => x.o)),
       tile(T('Rata-rata per struk', 'Average ticket'), m.avg != null ? rp(m.avg) : '–', 'avg', vs(m.avg, p && p.po ? p.pos / p.po : null)),
@@ -1769,6 +1864,7 @@
       { h: ['Stok mati', 'Dead stock'], num: 1, f: (r) => pct0(r.deadShare), x: (r) => (r.deadShare != null ? +r.deadShare.toFixed(4) : ''), cls: sel },
       { h: ['Oversold', 'Oversold'], num: 1, f: (r) => int(r.over), x: (r) => r.over, cls: sel },
       { h: ['Transfer masuk', 'Transfers in'], num: 1, f: (r) => int(r.tin), x: (r) => r.tin, cls: sel },
+      { h: ['% target', '% target'], num: 1, f: (r) => { const tc = targetCalc(); const s0 = tc && tc.byStore(r.st); return s0 && s0.t ? pct0(pctOf(s0.a, s0.t)) : '–'; }, x: (r) => { const tc = targetCalc(); const s0 = tc && tc.byStore(r.st); return s0 && s0.t ? +pctOf(s0.a, s0.t).toFixed(4) : ''; }, cls: sel },
     ], stores.map((st) => all[st]).sort((a, z) => z.rev - a.rev), 'stores');
   }
 
