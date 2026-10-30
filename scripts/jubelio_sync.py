@@ -433,7 +433,7 @@ def main():
     group = item_group
 
     byid = {str(o['salesorder_id']): o for o in recent}
-    F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}
+    F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}; G = defaultdict(float)
     for k, d in det.items():
         o = byid.get(k)
         if not o: continue
@@ -451,6 +451,7 @@ def main():
             if cx or skip_item(code, name) and not cafe(code, name): continue
             T[(day, code, b)][0] += qty if qty > 0 else (1 if amt > 0 else 0); T[(day, code, b)][1] += amt  # POS lines carry qty 0: count the line
             ITEM.setdefault(code, (clean(name), group(code, name), price.get(iid, 0)))
+            G[(day, b, c, (o.get('location_name') or '-').strip(), group(code, name))] += amt
     write('finance_daily.csv', ['date', 'brand', 'channel', 'orders', 'gross', 'discounts', 'marketplace_fees', 'shipping', 'net', 'canceled_orders', 'canceled_value'], [list(k) + [v[0]] + [round(x) for x in v[1:6]] + [v[6], round(v[7])] for k, v in sorted(F.items())])
     write('cancel_reasons.csv', ['brand', 'channel', 'status', 'reason', 'orders', 'value'], [list(k) + [v[0], round(v[1])] for k, v in sorted(CR.items(), key=lambda kv: -kv[1][0])])
     CA = defaultdict(lambda: [0, 0, 0, 0.0, 0.0])
@@ -459,6 +460,8 @@ def main():
         if v[0] > 1: a[1] += 1; a[2] += v[0]; a[4] += v[1]
     write('customers_90d.csv', ['brand', 'channel', 'customers', 'repeat_customers', 'repeat_orders', 'revenue', 'repeat_revenue'], [list(k) + [a[0], a[1], a[2], round(a[3]), round(a[4])] for k, a in CA.items()])
     write('titles_daily.csv', ['date', 'item_code', 'brand', 'qty', 'revenue'], [list(k) + [round(v[0], 2), round(v[1])] for k, v in sorted(T.items())])
+    # line value per product group per location, for targets split by group (PIM's stationery "ST" line)
+    write('group_daily.csv', ['date', 'brand', 'channel', 'location', 'group', 'revenue'], [list(k) + [round(v)] for k, v in sorted(G.items())])
     write('items.csv', ['item_code', 'item_name', 'group', 'price'], [[c, n, g, round(p)] for c, (n, g, p) in ITEM.items()])
     write('basket_daily.csv', BASKET_HEADER, basket_rows(recent, det))
     rec, locr, tit = cancel_recovery(recent, det)
