@@ -5,6 +5,9 @@ on:
   workflow_dispatch: {}
 permissions:
   contents: write
+concurrency:
+  group: daily-sync   # a second run waits for the first instead of racing it to push
+  cancel-in-progress: false
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -26,4 +29,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add data cache
           git diff --cached --quiet || git commit -m "Jubelio data $(date -u +%Y-%m-%d)"
+          git pull --rebase   # code pushed while the sync ran
           git push
