@@ -46,7 +46,7 @@
   #ss-root [data-fresh="old"]::before { background: #D9534F !important; }
   @media (max-width: 600px) {
     #ss-root .ss-seg button, #ss-root .ss-xl, #ss-root .ss-sync-btn { min-height: 44px; box-sizing: border-box; }
-    #ss-root .ss-ctl select, #ss-root .ss-ctl input { height: 44px; }
+    #ss-root .ss-ctl select, #ss-root .ss-ctl input, #ss-root .ss-search { height: 44px; }
     #ss-root .ss-help { width: 44px; height: 44px; font-size: 14px; }
     #ss-root .ss-tabs button { flex: 1 0 auto; min-height: 48px; padding: 0 14px; scroll-snap-align: start; }
     /* bottom tab bar: the pattern phone users already know; the header row would scroll away */
@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "group_daily", "scout_picks", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "group_daily", "scout_picks", "clearance", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -155,6 +155,8 @@
   .ss-ctl .ss-range { color: var(--ssb-muted); }
   .ss-step button { min-width: 36px; font-size: 18px; line-height: 1; padding: 0 10px; }
   .ss-step button:disabled { opacity: .35; cursor: default; }
+  .ss-rules { margin: .25rem 0 .75rem; padding-left: 1.25rem; }
+  .ss-rules li { margin: .15rem 0; }
   .ss-upd { font-size: 12px; color: var(--ssb-muted); display: inline-flex; align-items: center; gap: .4rem; }
   .ss-upd::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--ssb-gold); }
   .ss-ctl .ss-upd { margin-left: auto; }
@@ -338,6 +340,7 @@
       <button data-tab="toko"><span class="id">Rapor toko</span><span class="en">Store scorecard</span></button>
       <button data-tab="produk"><span class="id">Produk</span><span class="en">Titles</span></button>
       <button data-tab="reseller">Reseller</button>
+      <button data-tab="lists"><span class="id">Daftar reseller</span><span class="en">Reseller lists</span></button>
       <button data-tab="stock"><span class="id">Stok</span><span class="en">Stock</span></button>
       <button data-tab="finance"><span class="id">Keuangan</span><span class="en">Finance</span></button>
       <button data-tab="panduan"><span class="id">Panduan</span><span class="en">Guide</span></button>
@@ -564,6 +567,23 @@
         <p class="ss-note"><span class="id">Semua akun, diurutkan menurut total Jan 2025 – Okt 2026.</span><span class="en">All accounts, sorted by total Jan 2025 – Oct 2026.</span></p>
         <div class="ss-tablebox" data-source="resellers"><table class="ss-table" id="tbl-accounts"><thead></thead><tbody></tbody></table></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ================= DAFTAR RESELLER ================= -->
+  <section id="lists" class="ss" hidden>
+    <div class="ss-status"><p class="id">Apa yang kita tawarkan ke reseller minggu ini. Unduh Excel lalu kirim lewat WhatsApp. Siapa yang perlu dihubungi ada di tab Reseller.</p><p class="en">What we offer resellers this week. Download the Excel and send it on WhatsApp. Who to contact is on the Reseller tab.</p></div>
+    <div class="ss-tiles" id="clr-tiles" data-source="clearance"></div>
+    <div class="ss-card" id="card-clearance">
+      <div class="ss-card-h"><h2><span class="id">Clearance: stok toko yang tidak laku</span><span class="en">Clearance: store stock that isn't selling</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-stock">–</span><div class="ss-seg ss-clrcat" role="group" aria-label="Kategori / Category"><button data-cat="all"><span class="id">Semua</span><span class="en">All</span></button><button data-cat="Buku umum"><span class="id">Buku umum</span><span class="en">General books</span></button><button data-cat="Buku anak"><span class="id">Buku anak</span><span class="en">Children's</span></button><button data-cat="Komik &amp; manga"><span class="id">Komik &amp; manga</span><span class="en">Comics &amp; manga</span></button><button data-cat="Alat tulis &amp; gift"><span class="id">Alat tulis &amp; gift</span><span class="en">Stationery &amp; gift</span></button></div><input class="ss-search" id="clr-search" placeholder="Cari / Search"><button class="ss-xl" data-export="clearance"><span class="id">Excel untuk reseller</span><span class="en">Excel for resellers</span></button><button class="ss-xl" data-export="clearint"><span class="id">Excel per toko (internal)</span><span class="en">Excel by store (internal)</span></button></span></div>
+      <div class="ss-note">
+        <p class="id"><b>Aturan</b></p>
+        <ol class="ss-rules id"><li>Tidak terjual sama sekali di toko maupun online dalam 90 hari.</li><li>Hanya toko yang memegang minimal 3 eksemplar. Toko dengan 1–2 eksemplar menyimpannya untuk pembeli langsung.</li><li>Harga retail saja. Judul tanpa harga retail di Jubelio tidak masuk.</li><li>Voucher dan paper bag tidak masuk.</li><li>Diperbarui tiap pagi. File yang dikirim berlaku 7 hari dari tanggalnya.</li><li>Pindahkan atau tahan stok di gudang pusat sebelum dikirim, supaya toko tidak menjual eksemplar yang sama.</li></ol>
+        <p class="en"><b>Rules</b></p>
+        <ol class="ss-rules en"><li>No sale at any store or online shop in 90 days.</li><li>Only stores holding at least 3 copies. A store with 1–2 copies keeps them for walk-in customers.</li><li>Retail price only. Titles with no retail price in Jubelio are left out.</li><li>Vouchers and paper bags are left out.</li><li>Refreshed every morning. A file you send is valid for 7 days from its date.</li><li>Move or hold the stock at the central warehouse before shipping, so a store doesn't sell the same copy.</li></ol>
+        <p id="clr-note">–</p>
+      </div>
+      <div class="ss-tablebox" data-source="clearance"><table class="ss-table" id="tbl-clearance"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
 
@@ -1027,7 +1047,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -1057,6 +1077,8 @@
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
   $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
   $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
+  $$('.ss-clrcat button').forEach((b) => b.addEventListener('click', () => { S.clrCat = b.dataset.cat; render(); }));
+  $('#clr-search').addEventListener('input', (e) => { S.clrQ = e.target.value; renderLists(); });
   const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
   preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
   const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
@@ -1762,6 +1784,31 @@
       { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
     ], sl, 'slow');
   }
+  function renderLists() {
+    const cl = rows('clearance'); const tl = $('#clr-tiles'), note = $('#clr-note');
+    $$('.ss-clrcat button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.cat === (S.clrCat || 'all'))));
+    if (!cl) { tl.replaceChildren(); note.textContent = ''; tableState($('#card-clearance .ss-tablebox'), 'clearance'); return; }
+    const q = (S.clrQ || '').trim().toLowerCase();
+    const data = cl.filter((r) => (!S.clrCat || S.clrCat === 'all' || r.group === S.clrCat) && (!q || (r.item_name + ' ' + r.item_code).toLowerCase().includes(q)));
+    const sum = (a, f) => a.reduce((s, r) => s + f(r), 0);
+    const mk = (lab, v, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+    tl.replaceChildren(
+      mk(T('Judul', 'Titles'), int(data.length), data.length !== cl.length ? T('dari ', 'of ') + int(cl.length) : ''),
+      mk(T('Eksemplar ditawarkan', 'Copies offered'), int(sum(data, (r) => +r.offer_qty))),
+      mk(T('Nilai harga retail', 'Retail value'), rp(sum(data, (r) => +r.offer_qty * +r.price))),
+    );
+    note.textContent = data.length ? T('Diurutkan menurut nilai retail. Klik judul kolom untuk mengurutkan ulang.', 'Sorted by retail value. Click a column header to re-sort.') : '';
+    const base = [
+      { h: ['Kode / ISBN', 'Code / ISBN'], f: (r) => r.item_code },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      { h: ['Kategori', 'Category'], f: (r) => r.group },
+      { h: ['Harga retail', 'Retail price'], num: 1, f: (r) => rp(+r.price), x: (r) => +r.price },
+      { h: ['Stok tersedia', 'Copies available'], num: 1, f: (r) => int(r.offer_qty), x: (r) => +r.offer_qty },
+    ];
+    const internal = [...base, { h: ['Per toko', 'By store'], muted: 1, f: (r) => r.offer_by_location }, { h: ['Pemasok', 'Supplier'], muted: 1, f: (r) => r.supplier || '–' }];
+    table('tbl-clearance', internal, data, 'clearint');
+    EXPORTS.clearance = { name: 'tbl-clearance', cols: base, data: EXPORTS.clearint.data };
+  }
   function renderScout() {
     const sp = rows('scout_picks'); const note = $('#scout-note'); const box = $('#card-scout .ss-tablebox');
     if (!S.side) S.side = 'all';
@@ -1921,7 +1968,7 @@
     $$('.ss-brands button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.brand === b)));
     $$('.ss-kind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === kind())));
     $$('.ss-tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === S.tab)));
-    ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
+    ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
     const usesBrand = ['ringkasan', 'sales', 'toko', 'produk', 'finance'].includes(S.tab), usesPeriod = usesBrand;
     { const gl = $('#card-glance'), filt = $('#filters'), sec = document.getElementById('ringkasan');
       if (S.tab === 'ringkasan') { if (gl.nextElementSibling !== filt) filt.parentNode.insertBefore(gl, filt); gl.classList.add('ss-glance-top'); }
@@ -1941,13 +1988,13 @@
       $('#range-text').textContent = `${days(R.s, R.e)} ${T('hari', 'days')}` + (R.cs ? ` · ${T('dibanding', 'vs')} ${fd(R.cs)}${R.cs !== R.ce ? ' – ' + fd(R.ce) : ''}` : '') + (R.partial ? T(' · hari ini belum lengkap', ' · today is partial') : '');
     }
     renderHeader(b);
-    const fn = { ringkasan: renderRingkasan, sales: renderSales, toko: renderToko, produk: renderProduk, reseller: renderReseller, stock: renderStock, finance: (bb) => { renderFinance(bb); renderCancelRecovery(bb); } }[S.tab];
-    if (fn && (B || S.tab === 'reseller' || S.tab === 'stock')) fn(b);
+    const fn = { ringkasan: renderRingkasan, sales: renderSales, toko: renderToko, produk: renderProduk, reseller: renderReseller, lists: renderLists, stock: renderStock, finance: (bb) => { renderFinance(bb); renderCancelRecovery(bb); } }[S.tab];
+    if (fn && (B || S.tab === 'reseller' || S.tab === 'lists' || S.tab === 'stock')) fn(b);
   }
 
   dash.onData(render);
   const named = location.hash.replace(/^#\/?/, ''); // accepts old "#tab" links and new "#/tab" ones
-  if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
+  if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
   else if (named === 'moving') { S.tab = 'stock'; dash.setLink('stock'); render(); }
   if (named) { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); }
 })();

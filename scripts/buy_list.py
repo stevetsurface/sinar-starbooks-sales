@@ -8,7 +8,7 @@ Writes to data/:
   daftar_beli_data.pdf  the same lists as an Indonesian A4 report
 Buy prices from purchase orders are never written out: the repo and site are public.
 """
-import csv, math, os, statistics
+import csv, math, os, re, statistics
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -21,6 +21,24 @@ def _w(out, name, header, rows):
     with open(os.path.join(out, name), 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f); w.writerow(header); w.writerows(rows)
     print('wrote', name, len(rows))
+
+
+CLEARANCE_MIN_QTY = 3      # copies at one store before that store's stock goes on the reseller clearance list
+NOT_FOR_RESELLERS = re.compile(r'VOUCHER|PAPER ?BAG')  # store vouchers and shopping bags carry stock but are not merchandise
+CLEARANCE_HEADER = ['item_code', 'item_name', 'group', 'supplier', 'price', 'offer_qty', 'offer_by_location', 'available']
+
+
+def clearance(cat):
+    """Reseller clearance list from catalog rows: titles with no sale anywhere in 90 days, offering only the stores
+    holding at least CLEARANCE_MIN_QTY copies. Titles without a retail price are left out (resellers order at retail)."""
+    out = []
+    for code, name, grp, sup, price, avail, locs, _, u90, _ in cat:
+        if int(u90) or not int(price) or NOT_FOR_RESELLERS.search(name.upper()): continue
+        offer = [(l, float(q)) for l, q in (p.rsplit(' ', 1) for p in locs.split('; ') if p) if float(q) >= CLEARANCE_MIN_QTY]
+        if not offer: continue
+        n = sum(q for _, q in offer)
+        out.append([code, name, grp, sup, int(price), int(n), '; '.join(f'{l} {int(q)}' for l, q in offer), int(avail)])
+    return sorted(out, key=lambda r: (-r[5] * r[4], r[1]))
 
 
 def build(out, asof, sales, stock, onorder, names, groups, price, supplier_of, last_po, lead_by_supplier, po_count, is_sellable):
@@ -106,6 +124,7 @@ def build(out, asof, sales, stock, onorder, names, groups, price, supplier_of, l
                     int(s['u']) if s else 0, s['last'].isoformat() if s and s.get('last') else ''])
     cat.sort(key=lambda r: (-r[8], -r[5]))
     _w(out, 'catalog.csv', ['item_code', 'item_name', 'group', 'supplier', 'price', 'available', 'available_by_location', 'on_order', 'units_90d', 'last_sale'], cat)
+    _w(out, 'clearance.csv', CLEARANCE_HEADER, clearance(cat))
 
     pdf(os.path.join(out, 'daftar_beli_data.pdf'), asof, reorder, slow, sup_rows)
     return dict(reorder=len(reorder), kritis=sum(1 for r in reorder if r[12] == 'KRITIS'), slow=len(slow), suppliers=len(sup_rows), catalog=len(cat))
