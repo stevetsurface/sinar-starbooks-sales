@@ -29,5 +29,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add data cache
           git diff --cached --quiet || git commit -m "Jubelio data $(date -u +%Y-%m-%d)"
-          git pull --rebase   # code pushed while the sync ran
+          git pull --rebase -X theirs   # code pushed while the sync ran; on a data clash this run's fresher files win
           git push
