@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "group_daily", "scout_picks", "clearance", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -573,6 +573,18 @@
   <!-- ================= DAFTAR RESELLER ================= -->
   <section id="lists" class="ss" hidden>
     <div class="ss-status"><p class="id">Apa yang kita tawarkan ke reseller minggu ini. Unduh Excel lalu kirim lewat WhatsApp. Siapa yang perlu dihubungi ada di tab Reseller.</p><p class="en">What we offer resellers this week. Download the Excel and send it on WhatsApp. Who to contact is on the Reseller tab.</p></div>
+    <div class="ss-tiles" id="rdy-tiles" data-source="ready_stock"></div>
+    <div class="ss-card" id="card-ready">
+      <div class="ss-card-h"><h2><span class="id">Ready stock: siap kirim dari gudang dan toko</span><span class="en">Ready stock: ships now from the warehouse and stores</span></h2><span class="ss-card-tools"><span class="ss-upd" id="rdy-upd" data-source="ready_stock">–</span><div class="ss-seg ss-rdycat" role="group" aria-label="Kategori / Category"><button data-cat="all"><span class="id">Semua</span><span class="en">All</span></button><button data-cat="Buku umum"><span class="id">Buku umum</span><span class="en">General books</span></button><button data-cat="Buku anak"><span class="id">Buku anak</span><span class="en">Children's</span></button><button data-cat="Komik &amp; manga"><span class="id">Komik &amp; manga</span><span class="en">Comics &amp; manga</span></button><button data-cat="Alat tulis &amp; gift"><span class="id">Alat tulis &amp; gift</span><span class="en">Stationery &amp; gift</span></button></div><input class="ss-search" id="rdy-search" placeholder="Cari / Search"><button class="ss-xl" data-export="ready"><span class="id">Excel untuk reseller</span><span class="en">Excel for resellers</span></button><button class="ss-xl" data-export="readyint"><span class="id">Excel per lokasi (internal)</span><span class="en">Excel by location (internal)</span></button></span></div>
+      <div class="ss-note">
+        <p class="id"><b>Aturan</b></p>
+        <ol class="ss-rules id"><li>Stok gudang pusat dihitung penuh. Tiap toko Wonder menyimpan 2 eksemplar per judul untuk rak; sisanya ikut ditawarkan.</li><li>Minimal 3 eksemplar tersedia per judul.</li><li>Harga retail saja. Judul tanpa harga retail di Accurate tidak masuk.</li><li>Tidak masuk: terbitan Gramedia, stok sekolah, voucher, paper bag, kemasan, gift wrap dan paket buku promo.</li><li>Dari snapshot gudang Accurate di Drive, tanggalnya tertulis di atas. File yang dikirim berlaku 7 hari dari tanggal itu.</li><li>Kirim dari gudang pusat dulu. Ambil dari toko hanya kalau gudang tidak cukup.</li></ol>
+        <p class="en"><b>Rules</b></p>
+        <ol class="ss-rules en"><li>Central warehouse stock counts in full. Each Wonder store keeps 2 copies of a title for its shelf; the rest is offered.</li><li>At least 3 copies available per title.</li><li>Retail price only. Titles with no retail price in Accurate are left out.</li><li>Left out: Gramedia-published titles, school stock, vouchers, paper bags, packing, gift wrap and promo book bundles.</li><li>From the Accurate warehouse snapshot on Drive, dated above. A file you send is valid for 7 days from that date.</li><li>Ship from the central warehouse first. Pull from a store only when the warehouse is short.</li></ol>
+        <p id="rdy-note">–</p>
+      </div>
+      <div class="ss-tablebox" data-source="ready_stock"><table class="ss-table" id="tbl-ready"><thead></thead><tbody></tbody></table></div>
+    </div>
     <div class="ss-tiles" id="clr-tiles" data-source="clearance"></div>
     <div class="ss-card" id="card-clearance">
       <div class="ss-card-h"><h2><span class="id">Clearance: stok toko yang tidak laku</span><span class="en">Clearance: store stock that isn't selling</span></h2><span class="ss-card-tools"><span class="ss-upd ss-upd-stock">–</span><div class="ss-seg ss-clrcat" role="group" aria-label="Kategori / Category"><button data-cat="all"><span class="id">Semua</span><span class="en">All</span></button><button data-cat="Buku umum"><span class="id">Buku umum</span><span class="en">General books</span></button><button data-cat="Buku anak"><span class="id">Buku anak</span><span class="en">Children's</span></button><button data-cat="Komik &amp; manga"><span class="id">Komik &amp; manga</span><span class="en">Comics &amp; manga</span></button><button data-cat="Alat tulis &amp; gift"><span class="id">Alat tulis &amp; gift</span><span class="en">Stationery &amp; gift</span></button></div><input class="ss-search" id="clr-search" placeholder="Cari / Search"><button class="ss-xl" data-export="clearance"><span class="id">Excel untuk reseller</span><span class="en">Excel for resellers</span></button><button class="ss-xl" data-export="clearint"><span class="id">Excel per toko (internal)</span><span class="en">Excel by store (internal)</span></button></span></div>
@@ -1047,7 +1059,7 @@
       ['xl/worksheets/sheet1.xml', sheet],
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
@@ -1079,6 +1091,8 @@
   $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
   $$('.ss-clrcat button').forEach((b) => b.addEventListener('click', () => { S.clrCat = b.dataset.cat; render(); }));
   $('#clr-search').addEventListener('input', (e) => { S.clrQ = e.target.value; renderLists(); });
+  $$('.ss-rdycat button').forEach((b) => b.addEventListener('click', () => { S.rdyCat = b.dataset.cat; render(); }));
+  $('#rdy-search').addEventListener('input', (e) => { S.rdyQ = e.target.value; renderLists(); });
   const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
   preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
   const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
@@ -1161,7 +1175,7 @@
     const txt = (r) => (r.updated_at ? T('Diperbarui ', 'Updated ') + fwib(r.updated_at) : '–');
     const ago = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); if (m < 60) return T(m + ' menit lalu', m + ' min ago'); const h = Math.round(m / 60); if (h < 48) return T(h + ' jam lalu', h + ' h ago'); return T(Math.round(h / 24) + ' hari lalu', Math.round(h / 24) + ' days ago'); };
     const fresh = s.updated_at ? ((Date.now() - Date.parse(s.updated_at)) / 36e5 < 36 ? 'ok' : (Date.now() - Date.parse(s.updated_at)) / 36e5 < 72 ? 'stale' : 'old') : '';
-    $$('.ss-upd, .ss-sync-txt').forEach((x) => { if (fresh) x.setAttribute('data-fresh', fresh); else x.removeAttribute('data-fresh'); x.title = fresh === 'ok' ? T('Data segar: sinkron terakhir kurang dari 36 jam lalu', 'Fresh: last sync under 36 h ago') : fresh === 'stale' ? T('Data agak lama: sinkron terakhir 1,5–3 hari lalu', 'Getting stale: last sync 1.5–3 days ago') : fresh === 'old' ? T('Data lama: sinkron terakhir lebih dari 3 hari lalu', 'Old: last sync more than 3 days ago') : ''; });
+    $$('.ss-upd:not(#rdy-upd), .ss-sync-txt').forEach((x) => { if (fresh) x.setAttribute('data-fresh', fresh); else x.removeAttribute('data-fresh'); x.title = fresh === 'ok' ? T('Data segar: sinkron terakhir kurang dari 36 jam lalu', 'Fresh: last sync under 36 h ago') : fresh === 'stale' ? T('Data agak lama: sinkron terakhir 1,5–3 hari lalu', 'Getting stale: last sync 1.5–3 days ago') : fresh === 'old' ? T('Data lama: sinkron terakhir lebih dari 3 hari lalu', 'Old: last sync more than 3 days ago') : ''; });
     $('#upd-top').textContent = s.updated_at
       ? T('Data Jubelio diperbarui ', 'Jubelio data updated ') + fwib(s.updated_at) + ' (' + ago(s.updated_at) + ')' + (s.last_order_at ? T(' · pesanan terakhir ', ' · last order ') + fwib(s.last_order_at).split(', ')[1] : '') + T(' · otomatis tiap hari 04:00 WIB', ' · auto-sync daily 04:00 WIB')
       : T('Waktu pembaruan belum diketahui', 'Update time unknown');
@@ -1784,7 +1798,36 @@
       { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
     ], sl, 'slow');
   }
+  function renderReady() {
+    const rs = rows('ready_stock'); const tl = $('#rdy-tiles'), note = $('#rdy-note'), upd = $('#rdy-upd');
+    $$('.ss-rdycat button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.cat === (S.rdyCat || 'all'))));
+    if (!rs) { tl.replaceChildren(); note.textContent = ''; upd.textContent = '–'; tableState($('#card-ready .ss-tablebox'), 'ready_stock'); return; }
+    const asof = rs.length ? rs[0].as_of : '', age = asof ? Math.floor((Date.now() - Date.parse(asof + 'T00:00:00+07:00')) / 864e5) : 0;
+    upd.textContent = asof ? T('Gudang per ', 'Warehouse as of ') + new Date(asof + 'T00:00:00').toLocaleDateString(T('id-ID', 'en-GB'), { day: 'numeric', month: 'short', year: 'numeric' }) : '–';
+    upd.setAttribute('data-fresh', age <= 2 ? 'ok' : age <= 7 ? 'stale' : 'old');
+    const q = (S.rdyQ || '').trim().toLowerCase();
+    const data = rs.filter((r) => (!S.rdyCat || S.rdyCat === 'all' || r.group === S.rdyCat) && (!q || (r.item_name + ' ' + r.item_code).toLowerCase().includes(q)));
+    const sum = (a, f) => a.reduce((s, r) => s + f(r), 0);
+    const mk = (lab, v, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+    tl.replaceChildren(
+      mk(T('Judul siap kirim', 'Titles ready'), int(data.length), data.length !== rs.length ? T('dari ', 'of ') + int(rs.length) : ''),
+      mk(T('Eksemplar ditawarkan', 'Copies offered'), int(sum(data, (r) => +r.offer_qty)), int(sum(data, (r) => +r.centre)) + T(' di gudang pusat', ' at the central warehouse')),
+      mk(T('Nilai harga retail', 'Retail value'), rp(sum(data, (r) => +r.offer_qty * +r.price))),
+    );
+    note.textContent = (age > 7 ? T('Snapshot gudang sudah ' + age + ' hari. Jalankan ulang dengan file Accurate terbaru sebelum dikirim. ', 'The warehouse snapshot is ' + age + ' days old. Rerun with the latest Accurate file before sending. ') : '') + (data.length ? T('Diurutkan menurut nilai retail. Klik judul kolom untuk mengurutkan ulang.', 'Sorted by retail value. Click a column header to re-sort.') : '');
+    const base = [
+      { h: ['Kode / ISBN', 'Code / ISBN'], f: (r) => r.item_code },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      { h: ['Kategori', 'Category'], f: (r) => r.category || r.group },
+      { h: ['Harga retail', 'Retail price'], num: 1, f: (r) => rp(+r.price), x: (r) => +r.price },
+      { h: ['Stok tersedia', 'Copies available'], num: 1, f: (r) => int(r.offer_qty), x: (r) => +r.offer_qty },
+    ];
+    const internal = [...base, { h: ['Gudang pusat', 'Central warehouse'], num: 1, f: (r) => int(r.centre), x: (r) => +r.centre }, { h: ['Per lokasi', 'By location'], muted: 1, f: (r) => r.offer_by_location }, { h: ['Pemasok', 'Supplier'], muted: 1, f: (r) => r.supplier || '–' }];
+    table('tbl-ready', internal, data, 'readyint');
+    EXPORTS.ready = { name: 'tbl-ready', cols: base, data: EXPORTS.readyint.data };
+  }
   function renderLists() {
+    renderReady();
     const cl = rows('clearance'); const tl = $('#clr-tiles'), note = $('#clr-note');
     $$('.ss-clrcat button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.cat === (S.clrCat || 'all'))));
     if (!cl) { tl.replaceChildren(); note.textContent = ''; tableState($('#card-clearance .ss-tablebox'), 'clearance'); return; }
