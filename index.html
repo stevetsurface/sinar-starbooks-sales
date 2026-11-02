@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "preorder", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -597,6 +597,18 @@
       </div>
       <div class="ss-tablebox" data-source="clearance"><table class="ss-table" id="tbl-clearance"><thead></thead><tbody></tbody></table></div>
     </div>
+    <div class="ss-tiles" id="pre-tiles" data-source="preorder"></div>
+    <div class="ss-card" id="card-preorder">
+      <div class="ss-card-h"><h2><span class="id">Pre-order: judul baru, dipesan bersama</span><span class="en">Pre-order: new titles, ordered together</span></h2><span class="ss-card-tools"><span class="ss-upd" id="pre-upd" data-source="preorder">–</span><div class="ss-seg ss-prestate" role="group" aria-label="Tampilkan / Show"><button data-state="all"><span class="id">Semua</span><span class="en">All</span></button><button data-state="asked"><span class="id">Ada permintaan</span><span class="en">Requested</span></button><button data-state="ready"><span class="id">Siap dipesan</span><span class="en">Ready to order</span></button></div><input class="ss-search" id="pre-search" placeholder="Cari / Search"><button class="ss-xl" data-export="preorder"><span class="id">Excel untuk reseller</span><span class="en">Excel for resellers</span></button><button class="ss-xl" data-export="preint"><span class="id">Excel dengan permintaan (internal)</span><span class="en">Excel with requests (internal)</span></button></span></div>
+      <div class="ss-note">
+        <p class="id"><b>Aturan</b></p>
+        <ol class="ss-rules id"><li>Tutup pesanan tiap tanggal 20. Permintaan yang masuk setelahnya ikut putaran bulan berikutnya.</li><li>Judul dipesan ke penerbit kalau total permintaan semua reseller mencapai 5 eksemplar, atau minimum penerbit kalau lebih tinggi.</li><li>Kurang dari minimum saat tutup: reseller dikabari dalam 3 hari, lalu judul dibatalkan atau ikut putaran berikutnya.</li><li>Harga retail saja. Judul yang belum berharga tertulis "harga menyusul"; harga dikonfirmasi sebelum tagihan.</li><li>Tidak ada pembayaran saat memesan. Bayar saat stok siap.</li><li>Sumber: file Pre-order Sinar Starbooks.xlsx di Drive (diisi tim), file judul baru dari penerbit di folder Email Publihser (terbit dalam 9 bulan) dan Booky Scout. Judul yang sudah ada di Ready stock tidak masuk. Diperbarui pukul 10:20 dan 15:20.</li></ol>
+        <p class="en"><b>Rules</b></p>
+        <ol class="ss-rules en"><li>Orders close on the 20th of each month. Requests after that go into next month's round.</li><li>A title is ordered from the publisher once requests from all resellers reach 5 copies, or the publisher minimum if higher.</li><li>Short of the minimum at cut-off: resellers hear from us within 3 days, and the title is cancelled or carried into the next round.</li><li>Retail price only. Titles without a price yet show "price to follow"; the price is confirmed before the invoice.</li><li>No payment when ordering. Pay when stock is ready.</li><li>Sources: Pre-order Sinar Starbooks.xlsx on Drive (filled in by the team), publishers' new-title files in the Email Publihser folder (on sale within 9 months) and Booky Scout. Titles already on Ready stock are left out. Refreshed at 10:20 and 15:20.</li></ol>
+        <p id="pre-note">–</p>
+      </div>
+      <div class="ss-tablebox" data-source="preorder"><table class="ss-table" id="tbl-preorder"><thead></thead><tbody></tbody></table></div>
+    </div>
   </section>
 
   <!-- ================= STOK ================= -->
@@ -1066,24 +1078,32 @@
       ...sheets.map(([, x], i) => ['xl/worksheets/sheet' + (i + 1) + '.xml', x]),
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   // Reseller-facing files carry the Sinar Star Books header, an order column and a terms sheet; contact details as on the reseller site.
   const SSB_CONTACT = 'WhatsApp +62 811-8069-559 · info@sinarstarbook.com · +62 21 4404188';
   const LIST_DATE = {
     ready: () => ((rows('ready_stock') || [])[0] || {}).as_of,
+    preorder: () => ((rows('preorder') || [])[0] || {}).as_of,
     clearance: () => { const k = (rows('snapshots') || []).find((r) => r.source === 'stock'); return k && k.updated_at ? new Date(Date.parse(k.updated_at) + 7 * 3600e3).toISOString().slice(0, 10) : ''; },
   };
   function resellerBrand(key, nm) {
     const d = LIST_DATE[key]() || new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
-    const until = new Date(Date.parse(d + 'T00:00:00Z') + 7 * 864e5).toISOString().slice(0, 10);
+    const pre = key === 'preorder';  // a pre-order file runs until the round closes on the 20th, a stock file for 7 days
+    const until = pre ? preCutoff(d) : new Date(Date.parse(d + 'T00:00:00Z') + 7 * 864e5).toISOString().slice(0, 10);
     const fd = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(T('id-ID', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' });
-    const stock = T('Stok per ', 'Stock as of ') + fd(d);
+    const stock = pre ? T('Daftar per ', 'List as of ') + fd(d) : T('Stok per ', 'Stock as of ') + fd(d);
     return {
-      top: [['PT Sinar Star Books', 2], [nm + ' · ' + stock + ' · ' + T('berlaku sampai ', 'valid until ') + fd(until), 3], [T('Semua harga adalah harga retail. Minimum order Rp 3.000.000. Pesan dulu, bayar saat stok siap. Ketentuan lengkap di sheet Ketentuan.', 'All prices are retail prices. Rp 3,000,000 minimum order. Order first, pay when stock is ready. Full terms on the Terms sheet.'), 4], [SSB_CONTACT, 4]],
+      top: [['PT Sinar Star Books', 2], [nm + ' · ' + stock + ' · ' + (pre ? T('tutup pesanan ', 'orders close ') : T('berlaku sampai ', 'valid until ')) + fd(until), 3], [T('Semua harga adalah harga retail. Minimum order Rp 3.000.000. Pesan dulu, bayar saat stok siap. Ketentuan lengkap di sheet Ketentuan.', 'All prices are retail prices. Rp 3,000,000 minimum order. Order first, pay when stock is ready. Full terms on the Terms sheet.'), 4], [SSB_CONTACT, 4]],
       terms: { name: T('Ketentuan', 'Terms'), rows: [
         [T('Harga', 'Prices'), T('Semua harga adalah harga retail.', 'All prices are retail prices.')],
-        [T('Stok', 'Stock'), stock + T('. Stok bisa berubah; kami konfirmasi ketersediaan sebelum mengirim tagihan.', '. Stock can change; we confirm availability before sending the invoice.')],
-        [T('Berlaku', 'Valid'), T('File ini berlaku sampai ' + fd(until) + '. Setelah itu, minta daftar terbaru.', 'This file is valid until ' + fd(until) + '. After that, ask for the latest list.')],
+        ...(pre ? [
+          [T('Tutup pesanan', 'Orders close'), T('Tanggal ' + fd(until) + '. Permintaan setelah itu ikut putaran bulan berikutnya.', fd(until) + '. Requests after that go into the next round.')],
+          [T('Minimum', 'Minimum'), T('Judul dipesan ke penerbit kalau total permintaan semua reseller mencapai angka di kolom Minimum. Kalau kurang, kami kabari dalam 3 hari.', 'A title is ordered once requests from all resellers reach the number in the Minimum column. If it falls short, we let you know within 3 days.')],
+          [T('Harga menyusul', 'Price to follow'), T('"Harga menyusul" berarti harga retail belum ditetapkan; kami konfirmasi sebelum mengirim tagihan.', '"Price to follow" means the retail price isn\'t set yet; we confirm it before sending the invoice.')],
+        ] : [
+          [T('Stok', 'Stock'), stock + T('. Stok bisa berubah; kami konfirmasi ketersediaan sebelum mengirim tagihan.', '. Stock can change; we confirm availability before sending the invoice.')],
+          [T('Berlaku', 'Valid'), T('File ini berlaku sampai ' + fd(until) + '. Setelah itu, minta daftar terbaru.', 'This file is valid until ' + fd(until) + '. After that, ask for the latest list.')],
+        ]),
         [T('Minimum order', 'Minimum order'), T('Rp 3.000.000 per pesanan.', 'Rp 3,000,000 per order.')],
         [T('Pembayaran', 'Payment'), T('Tidak ada pembayaran saat memesan. Pesan dulu, bayar saat stok siap.', 'No payment when you order. Order first, pay when stock is ready.')],
         [T('Reseller baru', 'New resellers'), T('Deposit pendaftaran Rp 1.000.000 yang menjadi kredit belanja Anda.', 'A Rp 1,000,000 registration deposit that becomes your store credit.')],
@@ -1126,6 +1146,8 @@
   $('#clr-search').addEventListener('input', (e) => { S.clrQ = e.target.value; renderLists(); });
   $$('.ss-rdycat button').forEach((b) => b.addEventListener('click', () => { S.rdyCat = b.dataset.cat; render(); }));
   $('#rdy-search').addEventListener('input', (e) => { S.rdyQ = e.target.value; renderLists(); });
+  $$('.ss-prestate button').forEach((b) => b.addEventListener('click', () => { S.preState = b.dataset.state; renderLists(); }));
+  $('#pre-search').addEventListener('input', (e) => { S.preQ = e.target.value; renderLists(); });
   const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
   preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
   const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
@@ -1859,8 +1881,53 @@
     table('tbl-ready', internal, data, 'readyint');
     EXPORTS.ready = { name: 'tbl-ready', cols: base, data: EXPORTS.readyint.data };
   }
+  // Orders close on the 20th: up to the 20th the round closes this month, after it next month.
+  function preCutoff(iso) { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1 + (d > 20 ? 1 : 0), 20)); return t.toISOString().slice(0, 10); }
+  function renderPreorder() {
+    const pr = rows('preorder'); const tl = $('#pre-tiles'), note = $('#pre-note'), upd = $('#pre-upd');
+    $$('.ss-prestate button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.state === (S.preState || 'all'))));
+    if (!pr) { tl.replaceChildren(); note.textContent = ''; upd.textContent = '–'; tableState($('#card-preorder .ss-tablebox'), 'preorder'); return; }
+    const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), cut = preCutoff(today);
+    const fd = (iso, o) => new Date(iso + 'T00:00:00').toLocaleDateString(T('id-ID', 'en-GB'), o || { day: 'numeric', month: 'short', year: 'numeric' });
+    const daysLeft = Math.round((Date.parse(cut) - Date.parse(today)) / 864e5);
+    const asof = pr.length ? pr[0].as_of : '';
+    upd.textContent = asof ? T('Daftar per ', 'List as of ') + fd(asof) : '–';
+    const req = (r) => (r.requested === '' ? 0 : +r.requested), ready = (r) => req(r) >= +r.min_qty;
+    const q = (S.preQ || '').trim().toLowerCase(), st = S.preState || 'all';
+    const data = pr.filter((r) => (st === 'all' || (st === 'asked' ? req(r) > 0 : ready(r))) && (!q || (r.title + ' ' + r.author + ' ' + r.isbn + ' ' + r.publisher).toLowerCase().includes(q)));
+    const sum = (a, f) => a.reduce((s, r) => s + f(r), 0);
+    const mk = (lab, v, sub) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big', v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+    tl.replaceChildren(
+      mk(T('Tutup pesanan', 'Orders close'), fd(cut, { day: 'numeric', month: 'short' }), daysLeft === 0 ? T('hari ini', 'today') : T(daysLeft + ' hari lagi', 'in ' + daysLeft + ' days')),
+      mk(T('Judul dibuka', 'Titles open'), int(data.length), data.length !== pr.length ? T('dari ', 'of ') + int(pr.length) : ''),
+      mk(T('Siap dipesan', 'Ready to order'), int(data.filter(ready).length), T('sudah capai minimum', 'reached the minimum')),
+      mk(T('Eksemplar diminta', 'Copies requested'), int(sum(data, req))),
+    );
+    note.textContent = !pr.length ? T('Belum ada judul. Isi file Pre-order Sinar Starbooks.xlsx di Drive atau simpan file judul baru dari penerbit di folder Email Publihser.', 'No titles yet. Fill in Pre-order Sinar Starbooks.xlsx on Drive or save a publisher\'s new-title file in the Email Publihser folder.')
+      : data.length ? T('Judul dari tim dulu, lalu yang paling dekat ke minimum, lalu menurut tanggal terbit.', 'Team titles first, then those closest to the minimum, then by on-sale date.') : '';
+    const base = [
+      { h: ['ISBN', 'ISBN'], f: (r) => r.isbn },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.title },
+      { h: ['Pengarang', 'Author'], muted: 1, f: (r) => r.author || '–' },
+      { h: ['Penerbit', 'Publisher'], muted: 1, f: (r) => r.publisher || '–' },
+      { h: ['Format', 'Format'], f: (r) => r.format || '–' },
+      { h: ['Terbit', 'On sale'], f: (r) => (r.on_sale ? fd(r.on_sale) : '–'), x: (r) => r.on_sale },
+      { h: ['Harga retail', 'Retail price'], num: 1, f: (r) => (r.price ? rp(+r.price) : T('harga menyusul', 'price to follow')), x: (r) => (r.price ? +r.price : T('harga menyusul', 'price to follow')) },
+      { h: ['Minimum', 'Minimum'], num: 1, f: (r) => int(r.min_qty), x: (r) => +r.min_qty },
+    ];
+    const internal = [...base,
+      { h: ['Diminta', 'Requested'], num: 1, f: (r) => (r.requested === '' ? '–' : int(r.requested)), x: (r) => req(r) },
+      { h: ['Kurang', 'Short by'], num: 1, f: (r) => (ready(r) ? T('cukup', 'enough') : int(+r.min_qty - req(r))), x: (r) => Math.max(0, +r.min_qty - req(r)) },
+      { h: ['Harga penerbit', 'Publisher price'], muted: 1, f: (r) => r.list_price || '–' },
+      { h: ['Status', 'Status'], f: (r) => ({ Buka: T('Buka', 'Open'), Dipesan: T('Dipesan', 'Ordered') }[r.status] || r.status) },
+      { h: ['Sumber', 'Source'], muted: 1, f: (r) => r.source },
+    ];
+    table('tbl-preorder', internal, data, 'preint');
+    EXPORTS.preorder = { name: 'tbl-preorder', cols: base, data: EXPORTS.preint.data };
+  }
   function renderLists() {
     renderReady();
+    renderPreorder();
     const cl = rows('clearance'); const tl = $('#clr-tiles'), note = $('#clr-note');
     $$('.ss-clrcat button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.cat === (S.clrCat || 'all'))));
     if (!cl) { tl.replaceChildren(); note.textContent = ''; tableState($('#card-clearance .ss-tablebox'), 'clearance'); return; }
