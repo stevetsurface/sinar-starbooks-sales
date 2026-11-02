@@ -37,6 +37,11 @@
   .ss-gate .ss-gate-err { display: none; margin-top: 10px; font-size: 12px; color: #B3261E; font-weight: 700; }
   .ss-gate.ss-err .ss-gate-err { display: block; }
   .ss-gate.ss-hidden { display: none; }
+  .ss-gate select { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; height: 38px; padding: 0 8px; border-radius: 10px; border: 1px solid #D9D2C2; background: #F3EFE6; color: #0F2D24; }
+  .ss-who { z-index: 9998; }
+  .ss-who :is(input, select, button) { height: 44px; }
+  .ss-who-btn { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  @media (max-width: 767px) { .ss-bell { min-height: 44px; } }
   /* keyboard focus: gold ring on the lilac/white surfaces, white ring on the purple header */
   #ss-root :is(button, a, select, input, [tabindex]):focus-visible, .ss-gate :is(button, input):focus-visible { outline: 3px solid var(--ssb-gold, #C89B5A); outline-offset: 2px; }
   #ss-root .ss-top :is(button, a):focus-visible { outline-color: #fff; }
@@ -308,6 +313,28 @@
     <div class="ss-gate-err">Username atau password salah / wrong username or password</div>
   </form>
 </div>
+<div class="ss-gate ss-who ss-hidden" id="ss-who" role="dialog" aria-modal="true" aria-labelledby="ss-who-h">
+  <form id="ss-who-form" autocomplete="off">
+    <h2 id="ss-who-h">Siapa Anda? / Who are you?</h2>
+    <p>Sekali per perangkat, supaya kami tahu bagian dashboard mana yang dipakai dan oleh siapa. / Once per device, so we can see which parts of the dashboard get used, and by whom.</p>
+    <label for="ss-who-n">Nama / Name</label><input id="ss-who-n" type="text" autocomplete="name" maxlength="40" required>
+    <label for="ss-who-r">Bagian / Team</label><select id="ss-who-r" required>
+      <option value="">Pilih / Choose</option>
+      <option value="Manajemen">Manajemen / Management</option>
+      <option value="Keuangan">Keuangan / Finance</option>
+      <option value="Toko ASHTA">Tim toko ASHTA / ASHTA store team</option>
+      <option value="Toko BALI-BERAWA">Tim toko BALI-BERAWA / BALI-BERAWA store team</option>
+      <option value="Toko BALI-TSM">Tim toko BALI-TSM / BALI-TSM store team</option>
+      <option value="Toko HUBLIFE">Tim toko HUBLIFE / HUBLIFE store team</option>
+      <option value="Toko JKT-TSM">Tim toko JKT-TSM / JKT-TSM store team</option>
+      <option value="Toko PIM">Tim toko PIM / PIM store team</option>
+      <option value="Reseller / distribusi">Tim reseller &amp; distribusi / Reseller &amp; distribution team</option>
+      <option value="Merchandiser">Merchandiser</option>
+      <option value="Lainnya">Lainnya / Other</option>
+    </select>
+    <button type="submit">Lanjut / Continue</button>
+  </form>
+</div>
 <script>
 (function () {
   var H = '4e5842b6b6c9a8002c474f417afbe4b4e49a826493c4b4562531ae198df51822', KEY = 'ss_dash_auth';
@@ -341,6 +368,7 @@
       <div class="ss-sync" data-source="snapshots">
         <span class="ss-sync-txt" id="upd-top">–</span>
       </div>
+      <button type="button" class="ss-bell ss-who-btn" id="who-btn" hidden title="Ganti nama / Change name"></button>
       <button type="button" class="ss-bell" id="bell" aria-expanded="false" aria-controls="inbox"><span class="id">Notifikasi</span><span class="en">Alerts</span><span class="ss-bell-n" id="bell-n" hidden>0</span></button>
       <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
     </div>
@@ -1150,6 +1178,7 @@
     const stamp = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
     const file = (brand ? 'Sinar_Star_Books_' : '') + nm.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + stamp + '.xlsx';
     if (!dl) { b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); return; }
+    track('Download Excel', { list: key, rows: data.length, tab: S.tab });
     try { await dl.save({ filename: file, data: blob }); } catch (e) { if (e && e.code === 'unavailable') b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); }
   });
 
@@ -1186,7 +1215,52 @@
     dash.setParams({ period: 'custom', start: s, end: e });
   }));
   sIn.addEventListener('blur', () => render()); eIn.addEventListener('blur', () => render());
-  const showTab = (t) => { const changed = S.tab !== t; S.tab = t; dash.setLink(t); render(); if (changed) window.scrollTo(0, 0); };
+  // ---------------- usage: who opens what ----------------
+  // Everyone shares one login, so each device names its user once (stored here only) and events go to Mixpanel's HTTP API.
+  // MP_TOKEN is Mixpanel's public project token: it can only send events in, not read anything out.
+  const MP_TOKEN = '';
+  const MP = 'https://api-js.mixpanel.com';
+  const WHO_KEY = 'ssb-who';
+  const who = () => { try { return JSON.parse(localStorage.getItem(WHO_KEY) || 'null'); } catch (e) { return null; } };
+  const slug = (n) => n.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+  const mpSend = (path, payload) => {
+    if (!MP_TOKEN) return;
+    const body = 'data=' + encodeURIComponent(JSON.stringify([payload]));
+    const blob = new Blob([body], { type: 'application/x-www-form-urlencoded' });
+    if (!(navigator.sendBeacon && navigator.sendBeacon(MP + path, blob))) fetch(MP + path, { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).catch(() => {});
+  };
+  function track(event, props) {
+    const w = who(); if (!w) return;
+    mpSend('/track/?ip=1', { event, properties: { token: MP_TOKEN, distinct_id: w.id, time: Date.now(), $insert_id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10), name: w.name, role: w.role, device: matchMedia('(max-width: 767px)').matches ? 'phone' : 'desktop', lang: lang(), env: location.hostname.endsWith('github.io') ? 'live' : 'test', ...props } });
+  }
+  const whoBtn = $('#who-btn'), whoBox = document.getElementById('ss-who');
+  const showWho = () => { const w = who(); whoBtn.hidden = !w; if (w) { whoBtn.textContent = w.name; whoBtn.title = T('Ganti nama', 'Change name') + ' (' + w.role + ')'; } };
+  const askWho = () => { const w = who() || {}; document.getElementById('ss-who-n').value = w.name || ''; document.getElementById('ss-who-r').value = w.role || ''; whoBox.classList.remove('ss-hidden'); document.getElementById('ss-who-n').focus(); };
+  document.getElementById('ss-who-form').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const name = document.getElementById('ss-who-n').value.trim().replace(/\s+/g, ' '), role = document.getElementById('ss-who-r').value;
+    if (!name || !role || !slug(name)) return;
+    const first = !who(), w = { id: slug(name), name, role };
+    try { localStorage.setItem(WHO_KEY, JSON.stringify(w)); } catch (e) {}
+    whoBox.classList.add('ss-hidden'); showWho();
+    mpSend('/engage/', { $token: MP_TOKEN, $distinct_id: w.id, $set: { $name: name, role } });
+    if (first) track('Open dashboard', { tab: S.tab });
+  });
+  whoBtn.addEventListener('click', askWho);
+  const dashRoot = document.getElementById('ss-root');
+  dashRoot.addEventListener('click', (ev) => {
+    const seg = ev.target.closest('.ss-seg button');
+    if (seg && !seg.closest('.ss-tabs')) {
+      const group = seg.parentElement, control = [...group.classList].find((c) => c !== 'ss-seg') || 'ss-seg';
+      track('Use control', { control, value: Object.values(seg.dataset)[0] || seg.textContent.trim(), tab: S.tab });
+    }
+    const a = ev.target.closest('a.ss-dl'); if (a) track('Download file', { file: a.getAttribute('href'), tab: S.tab });
+    const it = ev.target.closest('.ss-inbox-item'); if (it) track('Open alert', { alert: it.textContent.trim().slice(0, 80) });
+    if (ev.target.closest('#bell') && $('#inbox').hidden) track('Open alerts');
+  }, true);
+  dashRoot.addEventListener('change', (ev) => { const q = ev.target.closest('.ss-search'); if (q && q.value.trim()) track('Search', { box: q.id, query: q.value.trim().slice(0, 60), tab: S.tab }); });
+  showWho();
+  const showTab = (t) => { const changed = S.tab !== t; S.tab = t; dash.setLink(t); render(); if (changed) { window.scrollTo(0, 0); track('View tab', { tab: t }); } };
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
   $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
   // alerts inbox: read state lives in this browser only
@@ -2216,6 +2290,7 @@
   if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
   else if (named === 'moving') { S.tab = 'stock'; dash.setLink('stock'); render(); }
   if (named) { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); }
+  if (who()) track('Open dashboard', { tab: S.tab }); else askWho();
 })();
 </script>
 
