@@ -1045,32 +1045,65 @@
     const e = new DataView(new ArrayBuffer(22)); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csize, true); e.setUint32(16, offset, true);
     return new Blob([...parts, ...central, new Uint8Array(e.buffer)]);
   }
-  function xlsx(sheetName, header, data) {
-    const rowsXml = [header, ...data].map((r, ri) => '<row r="' + (ri + 1) + '">' + r.map((v, ci) => { const ref = colName(ci) + (ri + 1); const st = ri === 0 ? ' s="1"' : ''; if (typeof v === 'number' && isFinite(v)) return '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>'; return '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(v ?? '') + '</t></is></c>'; }).join('') + '</row>').join('');
-    const widths = header.map((h, i) => Math.min(60, Math.max(10, ...[h, ...data.slice(0, 200).map((r) => r[i])].map((v) => String(v ?? '').length + 2))));
-    const sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>' + rowsXml + '</sheetData><autoFilter ref="A1:' + colName(header.length - 1) + (data.length + 1) + '"/></worksheet>';
-    const sn = xmlEsc(sheetName.slice(0, 31).replace(/[\\/?*\[\]:]/g, ' '));
+  const xCell = (v, ref, s) => { const st = s ? ' s="' + s + '"' : ''; if (typeof v === 'number' && isFinite(v)) return '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>'; return '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(v ?? '') + '</t></is></c>'; };
+  const xRow = (r, ri, s) => '<row r="' + ri + '">' + r.map((v, ci) => xCell(v, colName(ci) + ri, typeof s === 'function' ? s(ci) : s)).join('') + '</row>';
+  const xSheet = (pane, widths, rowsXml, extra) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + (pane ? '<sheetViews><sheetView workbookViewId="0"><pane ySplit="' + pane + '" topLeftCell="A' + (pane + 1) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : '') + '<cols>' + widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>' + rowsXml + '</sheetData>' + (extra || '') + '</worksheet>';
+  // brand (reseller files only): {top: [[text, style], ...] above the table, terms: {name, rows: [[label, text], ...]} as a second sheet}
+  // styles: 1 table header, 2 title, 3 bold, 4 muted, 5 wrapped text
+  function xlsx(sheetName, header, data, brand) {
+    const top = brand ? [...brand.top, ['']] : [], h = top.length + 1, lastCol = colName(header.length - 1), lastRow = h + data.length;
+    const rowsXml = top.map(([t, st], i) => xRow([t], i + 1, st)).join('') + xRow(header, h, 1) + data.map((r, i) => xRow(r, h + 1 + i, 0)).join('');
+    const widths = header.map((hd, i) => Math.min(60, Math.max(10, ...[hd, ...data.slice(0, 200).map((r) => r[i])].map((v) => String(v ?? '').length + 2))));
+    const sheets = [[sheetName, xSheet(h, widths, rowsXml, '<autoFilter ref="A' + h + ':' + lastCol + lastRow + '"/>')]];
+    if (brand && brand.terms) sheets.push([brand.terms.name, xSheet(0, [24, 90], brand.terms.rows.map((r, i) => xRow(r, i + 1, (ci) => (ci ? 5 : 3))).join(''))]);
+    const sn = (n) => xmlEsc(n.slice(0, 31).replace(/[\\/?*\[\]:]/g, ' '));
     return zip([
-      ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+      ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + sheets.map((_, i) => '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('') + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
       ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-      ['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="' + sn + '" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' + sn + '\'!$A$1:$' + colName(header.length - 1) + '$' + (data.length + 1) + '</definedName></definedNames></workbook>'],
-      ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
-      ['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF5B2A86"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/></cellXfs></styleSheet>'],
-      ['xl/worksheets/sheet1.xml', sheet],
+      ['xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map(([n], i) => '<sheet name="' + sn(n) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>').join('') + '</sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'' + sn(sheetName) + '\'!$A$' + h + ':$' + lastCol + '$' + lastRow + '</definedName></definedNames></workbook>'],
+      ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((_, i) => '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>').join('') + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+      ['xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF5B2A86"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF595959"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF5B2A86"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="6"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/><xf fontId="2" applyFont="1"/><xf fontId="3" applyFont="1" applyAlignment="1"><alignment vertical="top"/></xf><xf fontId="4" applyFont="1"/><xf applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs></styleSheet>'],
+      ...sheets.map(([, x], i) => ['xl/worksheets/sheet' + (i + 1) + '.xml', x]),
     ]);
   }
   const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  // Reseller-facing files carry the Sinar Star Books header, an order column and a terms sheet; contact details as on the reseller site.
+  const SSB_CONTACT = 'WhatsApp +62 811-8069-559 · info@sinarstarbook.com · +62 21 4404188';
+  const LIST_DATE = {
+    ready: () => ((rows('ready_stock') || [])[0] || {}).as_of,
+    clearance: () => { const k = (rows('snapshots') || []).find((r) => r.source === 'stock'); return k && k.updated_at ? new Date(Date.parse(k.updated_at) + 7 * 3600e3).toISOString().slice(0, 10) : ''; },
+  };
+  function resellerBrand(key, nm) {
+    const d = LIST_DATE[key]() || new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+    const until = new Date(Date.parse(d + 'T00:00:00Z') + 7 * 864e5).toISOString().slice(0, 10);
+    const fd = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(T('id-ID', 'en-GB'), { day: 'numeric', month: 'long', year: 'numeric' });
+    const stock = T('Stok per ', 'Stock as of ') + fd(d);
+    return {
+      top: [['PT Sinar Star Books', 2], [nm + ' · ' + stock + ' · ' + T('berlaku sampai ', 'valid until ') + fd(until), 3], [T('Semua harga adalah harga retail. Minimum order Rp 3.000.000. Pesan dulu, bayar saat stok siap. Ketentuan lengkap di sheet Ketentuan.', 'All prices are retail prices. Rp 3,000,000 minimum order. Order first, pay when stock is ready. Full terms on the Terms sheet.'), 4], [SSB_CONTACT, 4]],
+      terms: { name: T('Ketentuan', 'Terms'), rows: [
+        [T('Harga', 'Prices'), T('Semua harga adalah harga retail.', 'All prices are retail prices.')],
+        [T('Stok', 'Stock'), stock + T('. Stok bisa berubah; kami konfirmasi ketersediaan sebelum mengirim tagihan.', '. Stock can change; we confirm availability before sending the invoice.')],
+        [T('Berlaku', 'Valid'), T('File ini berlaku sampai ' + fd(until) + '. Setelah itu, minta daftar terbaru.', 'This file is valid until ' + fd(until) + '. After that, ask for the latest list.')],
+        [T('Minimum order', 'Minimum order'), T('Rp 3.000.000 per pesanan.', 'Rp 3,000,000 per order.')],
+        [T('Pembayaran', 'Payment'), T('Tidak ada pembayaran saat memesan. Pesan dulu, bayar saat stok siap.', 'No payment when you order. Order first, pay when stock is ready.')],
+        [T('Reseller baru', 'New resellers'), T('Deposit pendaftaran Rp 1.000.000 yang menjadi kredit belanja Anda.', 'A Rp 1,000,000 registration deposit that becomes your store credit.')],
+        [T('Cara memesan', 'How to order'), T('Isi kolom Jumlah pesan, lalu kirim file ini kembali lewat WhatsApp atau email.', 'Fill in the Order qty column, then send this file back by WhatsApp or email.')],
+        [T('Kontak', 'Contact'), SSB_CONTACT],
+      ] },
+    };
+  }
   let dl = null;
   document.querySelector('#ss-root').addEventListener('click', async (ev) => {
     const b = ev.target.closest('.ss-xl'); if (!b) return;
     const key = b.dataset.export, ex = EXPORTS[key]; if (!ex) return;
     if (!dl) dl = await claude.use('downloads');
     const nm = T(...(EXPORT_NAMES[key] || [key, key]));
-    const header = ex.cols.map((c) => T(...c.h));
-    const data = ex.data.map((r) => ex.cols.map((c) => { const v = c.x ? c.x(r) : c.f(r); return v instanceof Node ? v.textContent : v; }));
-    const blob = xlsx(nm, header, data);
+    const brand = LIST_DATE[key] ? resellerBrand(key, nm) : null;
+    const header = [...ex.cols.map((c) => T(...c.h)), ...(brand ? [T('Jumlah pesan', 'Order qty')] : [])];
+    const data = ex.data.map((r) => [...ex.cols.map((c) => { const v = c.x ? c.x(r) : c.f(r); return v instanceof Node ? v.textContent : v; }), ...(brand ? [''] : [])]);
+    const blob = xlsx(nm, header, data, brand);
     const stamp = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
-    const file = nm.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + stamp + '.xlsx';
+    const file = (brand ? 'Sinar_Star_Books_' : '') + nm.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + stamp + '.xlsx';
     if (!dl) { b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); return; }
     try { await dl.save({ filename: file, data: blob }); } catch (e) { if (e && e.code === 'unavailable') b.textContent = T('Unduh tidak tersedia', 'Download unavailable'); }
   });
