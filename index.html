@@ -60,7 +60,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "preorder", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "preorder", "book_meta", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -285,6 +285,12 @@
   .ss-guide p { margin: 8px 0 0; }
   .ss-guide ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
   .ss-guide b { color: var(--ssb-deep); }
+  .ss-book { display: flex; gap: 10px; align-items: flex-start; min-width: 220px; }
+  .ss-cover { flex: none; width: 36px; height: 54px; object-fit: cover; border-radius: 3px; background: var(--ssb-line, #E6E0D2); }
+  .ss-book-t { min-width: 0; }
+  .ss-syn summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--ssb-purple); margin-top: 2px; }
+  .ss-syn p { margin: 4px 0 0; font-size: 12px; font-weight: 400; line-height: 1.45; color: var(--ssb-muted); max-width: 52ch; white-space: normal; }
+  @media (pointer: coarse) { .ss-syn summary { display: inline-flex; align-items: center; min-height: 44px; } }
   .ss-help { font: inherit; font-size: 11px; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--ssb-line-2); background: #fff; color: var(--ssb-purple); cursor: pointer; padding: 0; margin-left: 6px; vertical-align: middle; }
 </style>
 
@@ -1019,10 +1025,11 @@
 
   // ---------------- tables + excel export ----------------
   const EXPORTS = {};
-  // cols: [{h:[id,en], f:(r)=>value for display, x:(r)=>raw value for excel, num, cls, name}]
+  // cols: [{h:[id,en], f:(r)=>value for display, x:(r)=>raw value for excel, num, cls, name, xo: excel only, not shown}]
   const SORTS = {}; // per-table column sort chosen by clicking a header; survives re-renders
-  function table(id, cols, data, exportName) {
+  function table(id, allCols, data, exportName) {
     const t = $('#' + id); if (!t) return;
+    const cols = allCols.filter((c) => !c.xo);
     const thead = t.querySelector('thead'), tbody = t.querySelector('tbody');
     const cell = (c, r) => { const v = c.x ? c.x(r) : c.f(r); return v instanceof Node ? v.textContent : v; };
     const num = (v) => { if (typeof v === 'number') return isFinite(v) ? v : null; const n = parseFloat(String(v ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')); return isNaN(n) ? null : n; };
@@ -1035,11 +1042,11 @@
     cols.forEach((c, i) => {
       const st = SORTS[id]; const th = el('th', [c.num ? 'num' : '', 'ss-sortable', st && st.i === i ? 'ss-sort-' + st.dir : ''].filter(Boolean).join(' '), T(...c.h));
       th.title = T('Klik untuk mengurutkan', 'Click to sort'); th.setAttribute('aria-sort', st && st.i === i ? (st.dir === 'desc' ? 'descending' : 'ascending') : 'none');
-      th.addEventListener('click', () => { const cur = SORTS[id]; SORTS[id] = cur && cur.i === i ? (cur.dir === 'desc' ? { i, dir: 'asc' } : null) : { i, dir: c.num ? 'desc' : 'asc' }; if (SORTS[id] === null) delete SORTS[id]; table(id, cols, data, exportName); });
+      th.addEventListener('click', () => { const cur = SORTS[id]; SORTS[id] = cur && cur.i === i ? (cur.dir === 'desc' ? { i, dir: 'asc' } : null) : { i, dir: c.num ? 'desc' : 'asc' }; if (SORTS[id] === null) delete SORTS[id]; table(id, allCols, data, exportName); });
       thead.firstChild.append(th);
     });
     body(sorted());
-    if (exportName) EXPORTS[exportName] = { name: id, cols, data: sorted() };
+    if (exportName) EXPORTS[exportName] = { name: id, cols: allCols, data: sorted() };
   }
   const xmlEsc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
   const colName = (i) => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
@@ -1872,7 +1879,7 @@
     note.textContent = (age > 7 ? T('Snapshot gudang sudah ' + age + ' hari. Jalankan ulang dengan file Accurate terbaru sebelum dikirim. ', 'The warehouse snapshot is ' + age + ' days old. Rerun with the latest Accurate file before sending. ') : '') + (data.length ? T('Diurutkan menurut nilai retail. Klik judul kolom untuk mengurutkan ulang.', 'Sorted by retail value. Click a column header to re-sort.') : '');
     const base = [
       { h: ['Kode / ISBN', 'Code / ISBN'], f: (r) => r.item_code },
-      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      ...bookCols((r) => r.item_code, (r) => r.item_name),
       { h: ['Kategori', 'Category'], f: (r) => r.category || r.group },
       { h: ['Harga retail', 'Retail price'], num: 1, f: (r) => rp(+r.price), x: (r) => +r.price },
       { h: ['Stok tersedia', 'Copies available'], num: 1, f: (r) => int(r.offer_qty), x: (r) => +r.offer_qty },
@@ -1881,6 +1888,22 @@
     table('tbl-ready', internal, data, 'readyint');
     EXPORTS.ready = { name: 'tbl-ready', cols: base, data: EXPORTS.readyint.data };
   }
+  // Covers and synopses by ISBN (scripts/book_meta.py); the title cell shows the cover and a synopsis toggle,
+  // the Excel files get the cover link and the synopsis as their own columns.
+  let metaRows = null, metaMap = new Map();
+  const bookMeta = (isbn) => { const m = rows('book_meta'); if (m !== metaRows) { metaRows = m; metaMap = new Map((m || []).map((r) => [r.isbn, r])); } return metaMap.get(isbn) || {}; };
+  const bookCols = (isbnOf, titleOf) => [
+    { h: ['Judul', 'Title'], name: 1, x: titleOf, f: (r) => {
+      const m = bookMeta(isbnOf(r)), w = el('div', 'ss-book');
+      const img = el('img', 'ss-cover'); img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+      if (m.cover) { img.src = m.cover; img.onerror = () => img.removeAttribute('src'); }
+      const tx = el('div', 'ss-book-t'); tx.append(el('span', '', titleOf(r)));
+      if (m.synopsis) { const d = el('details', 'ss-syn'); d.append(el('summary', '', T('Sinopsis', 'Synopsis')), el('p', '', m.synopsis)); tx.append(d); }
+      w.append(img, tx); return w;
+    } },
+    { xo: 1, h: ['Sampul (link)', 'Cover (link)'], f: (r) => bookMeta(isbnOf(r)).cover || '' },
+    { xo: 1, h: ['Sinopsis', 'Synopsis'], f: (r) => bookMeta(isbnOf(r)).synopsis || '' },
+  ];
   // Orders close on the 20th: up to the 20th the round closes this month, after it next month.
   function preCutoff(iso) { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1 + (d > 20 ? 1 : 0), 20)); return t.toISOString().slice(0, 10); }
   function renderPreorder() {
@@ -1907,7 +1930,7 @@
       : data.length ? T('Judul dari tim dulu, lalu yang paling dekat ke minimum, lalu menurut tanggal terbit.', 'Team titles first, then those closest to the minimum, then by on-sale date.') : '';
     const base = [
       { h: ['ISBN', 'ISBN'], f: (r) => r.isbn },
-      { h: ['Judul', 'Title'], name: 1, f: (r) => r.title },
+      ...bookCols((r) => r.isbn, (r) => r.title),
       { h: ['Pengarang', 'Author'], muted: 1, f: (r) => r.author || '–' },
       { h: ['Penerbit', 'Publisher'], muted: 1, f: (r) => r.publisher || '–' },
       { h: ['Format', 'Format'], f: (r) => r.format || '–' },
@@ -1943,7 +1966,7 @@
     note.textContent = data.length ? T('Diurutkan menurut nilai retail. Klik judul kolom untuk mengurutkan ulang.', 'Sorted by retail value. Click a column header to re-sort.') : '';
     const base = [
       { h: ['Kode / ISBN', 'Code / ISBN'], f: (r) => r.item_code },
-      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      ...bookCols((r) => r.item_code, (r) => r.item_name),
       { h: ['Kategori', 'Category'], f: (r) => r.group },
       { h: ['Harga retail', 'Retail price'], num: 1, f: (r) => rp(+r.price), x: (r) => +r.price },
       { h: ['Stok tersedia', 'Copies available'], num: 1, f: (r) => int(r.offer_qty), x: (r) => +r.offer_qty },

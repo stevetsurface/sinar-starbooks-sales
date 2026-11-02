@@ -23,6 +23,11 @@ jobs:
           JUBELIO_EMAIL: ${{ secrets.JUBELIO_EMAIL }}
           JUBELIO_PASSWORD: ${{ secrets.JUBELIO_PASSWORD }}
         run: python scripts/jubelio_sync.py
+      - name: Covers and synopses for the reseller lists
+        continue-on-error: true   # a lookup outage must not stop the data commit
+        env:
+          GOOGLE_BOOKS_KEY: ${{ secrets.GOOGLE_BOOKS_KEY }}
+        run: python scripts/book_meta.py
       - name: Commit data
         run: |
           git config user.name "jubelio-sync-bot"
