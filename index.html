@@ -65,7 +65,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "preorder", "book_meta", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["targets", "shop_location_daily", "cafe_daily", "preorder", "book_meta", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -196,6 +196,15 @@
   #tbl-month td:first-child { white-space: nowrap; }
   .ss-table tfoot td { font-weight: 800; border-top: 1px solid var(--ssb-line-2); border-bottom: 0; color: var(--ssb-deep); }
   .ss-seg button:disabled { opacity: .4; cursor: not-allowed; }
+  .ss-replab { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ssb-ink-2); }
+  .ss-rep tr.ss-rep-store td { font-weight: 800; color: var(--ssb-deep); border-bottom: 1px solid var(--ssb-line-2); }
+  .ss-rep tr.ss-rep-store td:first-child { padding-top: 14px; }
+  .ss-rep tr.ss-rep-line td:first-child { padding-left: 18px; }
+  .ss-rep tr.ss-rep-off td { color: var(--ssb-muted); }
+  .ss-rep tr.ss-rep-total td { font-weight: 800; color: var(--ssb-deep); border-top: 2px solid var(--ssb-line-2); background: var(--ssb-lilac); }
+  .ss-rep td:first-child { white-space: nowrap; }
+  #tbl-rep td.ss-up { color: var(--color-ok); } #tbl-rep td.ss-down { color: var(--color-bad); } #tbl-rep td.ss-warn { color: var(--color-warn); }
+  @media (pointer: coarse) { #rep-month { height: 44px; } }
   @media (max-width: 600px) {
     #ss-root .ss-filters .ss-seg { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     #ss-root .ss-filters .ss-seg::-webkit-scrollbar { display: none; }
@@ -530,6 +539,11 @@
   <!-- ================= PRODUK ================= -->
   <!-- ================= RAPOR TOKO ================= -->
   <section id="toko" class="ss" hidden>
+    <div class="ss-card" id="card-monthrep">
+      <div class="ss-card-h"><h2><span class="id">Laporan bulanan toko</span><span class="en">Monthly store report</span></h2><span class="ss-card-tools"><label class="ss-replab"><span class="id">Bulan</span><span class="en">Month</span> <select class="ss-heatloc" id="rep-month" aria-label="Bulan / Month"></select></label><div class="ss-seg ss-repmulti" role="group" aria-label="Penjualan Multi / Multi sales"><button data-multi="1"><span class="id">Dengan Multi</span><span class="en">With Multi</span></button><button data-multi="0"><span class="id">Tanpa Multi</span><span class="en">Without Multi</span></button></div><button class="ss-xl" data-export="monthrep">Excel</button></span></div>
+      <p class="ss-note" id="rep-note">–</p>
+      <div class="ss-tablebox ss-month-box" data-source="sales_daily_detail shop_location_daily targets"><table class="ss-table ss-rep" id="tbl-rep"><thead></thead><tbody></tbody></table></div>
+    </div>
     <div class="ss-card" id="card-toko">
       <div class="ss-card-h"><h2><span class="id">Rapor toko</span><span class="en">Store scorecard</span><button class="ss-help" data-goto="guide-toko" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><div class="ss-seg ss-stores" role="group" aria-label="Toko / Store"></div></span></div>
       <p class="ss-note" id="toko-note">–</p>
@@ -1131,7 +1145,7 @@
       ...sheets.map(([, x], i) => ['xl/worksheets/sheet' + (i + 1) + '.xml', x]),
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], month: ['Penjualan per lokasi bulan ini', 'Sales by location this month'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], month: ['Penjualan per lokasi bulan ini', 'Sales by location this month'], monthrep: ['Laporan bulanan toko', 'Monthly store report'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   // Reseller-facing files carry the Sinar Star Books header, an order column and a terms sheet; contact details as on the reseller site.
   const SSB_CONTACT = 'WhatsApp +62 811-8069-559 · info@sinarstarbook.com · +62 21 4404188';
   const LIST_DATE = {
@@ -1202,6 +1216,8 @@
   $('#rdy-search').addEventListener('input', (e) => { S.rdyQ = e.target.value; renderLists(); });
   $$('.ss-prestate button').forEach((b) => b.addEventListener('click', () => { S.preState = b.dataset.state; renderLists(); }));
   $('#pre-search').addEventListener('input', (e) => { S.preQ = e.target.value; renderLists(); });
+  $('#rep-month').addEventListener('change', (e) => { S.repMonth = e.target.value; renderMonthReport(); });
+  $$('.ss-repmulti button').forEach((b) => b.addEventListener('click', () => { S.repMulti = b.dataset.multi; renderMonthReport(); }));
   const preset = $('.ss-preset'), sIn = $('.ss-start'), eIn = $('.ss-end');
   preset.addEventListener('change', () => { if (preset.value === 'custom') { const r = range(); dash.setParams({ period: 'custom', start: r ? r.s : null, end: r ? r.e : null }); } else dash.setParams({ period: preset.value, gran: null }); });
   const dateChange = () => { const ok = (x) => x.value && x.validity.valid && x.value >= '2025-01-01'; if (!ok(sIn) || !ok(eIn)) return; let s = sIn.value, e = eIn.value; if (s > e) [s, e] = [e, s]; dash.setParams({ period: 'custom', start: s, end: e, gran: null }); };
@@ -2151,6 +2167,7 @@
   const storeRows = () => rows('store_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, o: +r.orders, u: +r.units, ln: +r.lines, io: +r.identified_orders, dn: +r.discounted_orders, da: +r.discount_amount, v: +r.revenue }));
   const isStoreLoc = (l) => !!l && l !== 'ONLINE' && l !== '-' && !/^(PAMERAN|SAMPLE|TRANSIT)/i.test(l);
   function renderToko() {
+    renderMonthReport();
     const sr = salesRows(); const box = $('#toko-tiles'); const note = $('#toko-note');
     if (!sr) { box.replaceChildren(); return; }
     const R = range();
@@ -2211,6 +2228,68 @@
       { h: ['Transfer masuk', 'Transfers in'], num: 1, f: (r) => int(r.tin), x: (r) => r.tin, cls: sel },
       { h: ['% target', '% target'], num: 1, f: (r) => { const tc = targetCalc(); const s0 = tc && tc.byStore(r.st); return s0 && s0.t ? pct0(pctOf(s0.a, s0.t)) : '–'; }, x: (r) => { const tc = targetCalc(); const s0 = tc && tc.byStore(r.st); return s0 && s0.t ? +pctOf(s0.a, s0.t).toFixed(4) : ''; }, cls: sel },
     ], stores.map((st) => all[st]).sort((a, z) => z.rev - a.rev), 'stores');
+  }
+
+  // ---------------- LAPORAN BULANAN TOKO (the stores' own month report) ----------------
+  // Wonder Bookstore stores, one month: till (café, and stationery where it has its own target, split out), the store's own
+  // Shopee shop, and the official shops' orders shipped from the store ("Multi"), against the month's targets.
+  const slRows = () => rows('shop_location_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, sh: r.shop, c: r.channel, st: r.status, o: +r.orders, v: +r.revenue }));
+  const cafeRows = () => rows('cafe_daily', (r) => ({ d: String(r.date).slice(0, 10), l: r.location, o: +r.tickets, v: +r.revenue }));
+  const REP_BAD = new Set(['CANCELED', 'REQUEST_CANCEL', 'RETURNED']);
+  const shopBrand = (sh) => (/SINAR|WOE-70018/i.test(sh) ? 'Sinar Starbooks' : /KIKKERLAND/i.test(sh) ? 'Kikkerland' : 'Wonder Bookstore');
+  const shopLine = (sh, c) => (/OFFICIAL SHOP/i.test(sh) ? 'shopee_multi' : c === 'Shopee' ? 'shopee' : c === 'Tokopedia' || c === 'TikTok Shop' ? 'toko_multi' : 'other_multi');
+  const REPLINE = { pos: ['Toko (kasir)', 'Store (till)'], st: ['Alat tulis (ST)', 'Stationery (ST)'], cafe: ['Kafe (di luar total)', 'Café (not in total)'], shopee: ['Shopee toko', "Store's Shopee"], shopee_multi: ['Shopee - Multi', 'Shopee - Multi'], toko_multi: ['Tokopedia - Multi', 'Tokopedia - Multi'], other_multi: ['Lainnya - Multi', 'Other - Multi'] };
+  const REPORDER = ['pos', 'st', 'shopee', 'shopee_multi', 'toko_multi', 'other_multi', 'cafe'];
+  const isMulti = (ln) => ln.endsWith('_multi');
+  function renderMonthReport() {
+    const sr = salesRows(), sl = slRows(), tr = tgtRows(); const box = $('#card-monthrep .ss-tablebox'), note = $('#rep-note'), sel = $('#rep-month');
+    if (!sr || !tr) { tableState(box, 'sales_daily_detail'); return; }
+    skel(box, false);
+    const L = B.max, cur = L.slice(0, 7);
+    const months = []; for (let m = cur; m >= B.min.slice(0, 7) && months.length < 12; m = iso(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7) - 2, 1))).slice(0, 7)) months.push(m);
+    if (!months.includes(S.repMonth)) S.repMonth = cur;
+    const want = months.join('|'); if (sel.dataset.m !== want + lang()) { sel.replaceChildren(...months.map((m) => { const o = el('option', '', fmonL(m)); o.value = m; return o; })); sel.dataset.m = want + lang(); }
+    sel.value = S.repMonth;
+    const multi = S.repMulti !== '0';
+    $$('.ss-repmulti button').forEach((x) => x.setAttribute('aria-pressed', String((x.dataset.multi === '1') === multi)));
+    const m = S.repMonth, s = m + '-01', e = m === cur ? (s === L ? L : add(L, -1)) : monthEnd(m);
+    const gr = rows('group_daily', (r) => ({ d: String(r.date).slice(0, 10), b: r.brand, c: r.channel, l: r.location, g: r.group, v: +r.revenue }));
+    const kf = cafeRows(); const split = gr && bounds(gr).min <= s;   // café and stationery split need the 90-day line data
+    const A = {}; const at = (l, ln) => ((A[l] || (A[l] = {}))[ln] || (A[l][ln] = { v: 0, o: null, t: 0 }));
+    for (const x of sr) { if (x.d < s || x.d > e || x.b !== 'Wonder Bookstore' || x.c !== 'In-store POS' || !isStoreLoc(x.l)) continue; const a = at(x.l, 'pos'); a.v += x.v; a.o = (a.o || 0) + x.o; }
+    const tg = tr.filter((r) => r.m === m); const stLoc = new Set(tg.filter((r) => r.ln === 'st' && r.t > 0).map((r) => r.l));
+    if (split) {
+      const cafeV = {}, stV = {};
+      for (const x of gr) { if (x.d < s || x.d > e || x.b !== 'Wonder Bookstore' || x.c !== 'In-store POS') continue; if (x.g === 'Kafe') cafeV[x.l] = (cafeV[x.l] || 0) + x.v; else if (x.g === STGROUP && stLoc.has(x.l)) stV[x.l] = (stV[x.l] || 0) + x.v; }
+      if (kf) { for (const k of Object.keys(cafeV)) cafeV[k] = 0; for (const x of kf) { if (x.d < s || x.d > e || !A[x.l]) continue; cafeV[x.l] = (cafeV[x.l] || 0) + x.v; const c = at(x.l, 'cafe'); c.o = (c.o || 0) + x.o; } }
+      for (const [l, v] of Object.entries(cafeV)) if (v && A[l] && A[l].pos) { at(l, 'cafe').v += v; A[l].pos.v -= v; if (A[l].cafe.o != null) A[l].pos.o -= A[l].cafe.o; }
+      for (const [l, v] of Object.entries(stV)) if (v && A[l] && A[l].pos) { at(l, 'st').v += v; A[l].pos.v -= v; }
+    }
+    if (sl) for (const x of sl) { if (x.d < s || x.d > e || REP_BAD.has(x.st) || !A[x.l] || shopBrand(x.sh) !== 'Wonder Bookstore') continue; const a = at(x.l, shopLine(x.sh, x.c)); a.v += x.v; a.o = (a.o || 0) + x.o; }
+    for (const r of tg) { if (!A[r.l]) continue; at(r.l, r.ln === 'coffee' ? 'cafe' : r.ln).t += r.t; }
+    const counts = (ln) => ln !== 'cafe' && (multi || !isMulti(ln));
+    const stores = Object.keys(A).map((l) => { const ls = REPORDER.filter((ln) => A[l][ln]).map((ln) => ({ ln, ...A[l][ln], on: counts(ln) })); const on = ls.filter((x) => x.on);
+      return { l, ls, v: on.reduce((a, x) => a + x.v, 0), o: on.reduce((a, x) => a + (x.o || 0), 0), t: on.reduce((a, x) => a + x.t, 0) }; }).sort((a, z) => z.t - a.t || z.v - a.v);
+    const flat = []; const G = { v: 0, o: 0, t: 0 };
+    for (const st of stores) { flat.push({ kind: 'store', label: st.l, v: st.v, o: st.o, t: st.t }); st.ls.forEach((x) => flat.push({ kind: 'line', label: T(...REPLINE[x.ln]), v: x.v, o: x.o, t: x.t, on: x.on, store: st.l })); G.v += st.v; G.o += st.o; G.t += st.t; }
+    flat.push({ kind: 'total', label: T('Total semua toko', 'All stores'), ...G });
+    const ach = (r) => (r.t ? r.v / r.t : null), pm = (r) => (r.t ? r.v - r.t : null);
+    const cols = [
+      { h: ['Toko / jalur', 'Store / line'], f: (r) => (r.kind === 'line' ? r.store + ' · ' : '') + r.label },
+      { h: ['Penjualan', 'Sales'], num: 1, f: (r) => rp(r.v), x: (r) => Math.round(r.v) },
+      { h: ['Inv', 'Inv'], num: 1, f: (r) => (r.o == null ? '' : int(r.o)), x: (r) => (r.o == null ? '' : r.o) },
+      { h: ['Target', 'Target'], num: 1, f: (r) => (r.t ? rp(r.t) : ''), x: (r) => (r.t ? Math.round(r.t) : '') },
+      { h: ['Capaian', 'Achieved'], num: 1, f: (r) => (r.kind === 'line' ? '' : pct0(ach(r))), x: (r) => (r.kind === 'line' || ach(r) == null ? '' : +ach(r).toFixed(4)) },
+      { h: ['Plus / minus', 'Plus / minus'], num: 1, f: (r) => (r.kind === 'line' || pm(r) == null ? '' : (pm(r) > 0 ? '+' : '') + rp(pm(r))), x: (r) => (r.kind === 'line' || pm(r) == null ? '' : Math.round(pm(r))) },
+    ];
+    const t = $('#tbl-rep'); const hr = el('tr'); cols.forEach((c) => hr.append(el('th', c.num ? 'num' : '', T(...c.h)))); t.querySelector('thead').replaceChildren(hr);
+    const exp = days(s, e) / days(s, monthEnd(m));
+    t.querySelector('tbody').replaceChildren(...flat.map((r) => { const tr2 = el('tr', 'ss-rep-' + r.kind + (r.kind === 'line' && !r.on ? ' ss-rep-off' : ''));
+      cols.forEach((c, i) => { const td = el('td', c.num ? 'num' : ''); td.textContent = i === 0 && r.kind === 'line' ? r.label : c.f(r); if (i === 4 && r.kind !== 'line' && r.t) { const pc = paceCls(ach(r), exp); if (pc) td.classList.add(pc); } if (i === 5 && r.kind !== 'line' && r.t) td.classList.add(pm(r) >= 0 ? 'ss-up' : 'ss-down'); tr2.append(td); }); return tr2; }));
+    EXPORTS.monthrep = { name: 'tbl-rep', cols, data: flat };
+    const full = e === monthEnd(m);
+    note.textContent = T(`${fmonL(m)}${full ? '' : `, sampai ${fdy(e)} (seharusnya ${pct0(exp)} dari target)`}. ${multi ? 'Dengan Multi: pesanan toko resmi Shopee, Tokopedia dan TikTok yang dikirim dari toko ikut dihitung.' : 'Tanpa Multi: hanya kasir dan Shopee toko sendiri.'} Toko (kasir) tanpa kafe${stLoc.size ? ' dan tanpa alat tulis di toko yang punya target ST' : ''}; kafe ditampilkan terpisah, di luar total. Online = pesanan bulan ini yang tidak batal atau diretur (termasuk yang masih dikirim). Inv = jumlah pesanan. Target dari file Target Wonder Bookstore 2026. Tidak ikut filter periode.${split ? '' : ' Pemisahan kafe dan alat tulis hanya ada untuk 90 hari terakhir; bulan ini belum dipisah.'}`,
+      `${fmonL(m)}${full ? '' : `, through ${fdy(e)} (on pace would be ${pct0(exp)} of target)`}. ${multi ? "With Multi: official Shopee, Tokopedia and TikTok shop orders shipped from the store count." : "Without Multi: till and the store's own Shopee shop only."} Store (till) excludes the café${stLoc.size ? ' and, where there is an ST target, stationery' : ''}; the café is shown separately, outside the total. Online = this month's orders not cancelled or returned (including those still in transit). Inv = number of orders. Targets from the Target Wonder Bookstore 2026 file. Not affected by the period filter.${split ? '' : ' The café and stationery split only exists for the last 90 days; not split for this month.'}`);
   }
 
   // ---------------- PEMULIHAN PEMBATALAN ----------------
