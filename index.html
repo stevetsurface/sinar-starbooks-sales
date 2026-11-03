@@ -187,6 +187,10 @@
   .ss-tip .ss-tip-h { color: var(--ssb-purple); font-weight: 700; margin-bottom: 2px; }
   .ss-tablebox { max-height: 26rem; overflow: auto; background: linear-gradient(to right, #fff 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), #fff 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(16,32,26,.16), rgba(16,32,26,0)), radial-gradient(farthest-side at 100% 50%, rgba(16,32,26,.16), rgba(16,32,26,0)) 100% 0; background-repeat: no-repeat; background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%; background-attachment: local, local, scroll, scroll; }
   .ss-glance-top { margin-bottom: 0; }
+  .ss-month-box { margin-top: 14px; max-height: none; }
+  #tbl-month td:first-child { white-space: nowrap; }
+  .ss-table tfoot td { font-weight: 800; border-top: 1px solid var(--ssb-line-2); border-bottom: 0; color: var(--ssb-deep); }
+  .ss-seg button:disabled { opacity: .4; cursor: not-allowed; }
   @media (max-width: 600px) {
     #ss-root .ss-filters .ss-seg { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     #ss-root .ss-filters .ss-seg::-webkit-scrollbar { display: none; }
@@ -377,7 +381,7 @@
     <div class="ss-ctl" id="period-ctl">
       <label><span class="id">Periode</span><span class="en">Period</span>
         <select class="ss-preset" aria-label="Periode / Period">
-          <option value="today"></option><option value="yesterday"></option><option value="7d"></option><option value="30d"></option><option value="mtd"></option><option value="last_month"></option><option value="90d"></option><option value="ytd"></option><option value="all"></option><option value="custom"></option>
+          <option value="yesterday"></option><option value="7d"></option><option value="30d"></option><option value="mtd"></option><option value="last_month"></option><option value="90d"></option><option value="ytd"></option><option value="all"></option><option value="custom"></option>
         </select>
       </label>
       <label><span class="id">Dari</span><span class="en">From</span> <input type="date" class="ss-start" min="2025-10-01" max="2099-12-31" aria-label="Dari / From"></label>
@@ -395,8 +399,14 @@
 
   <!-- ================= RINGKASAN ================= -->
   <section id="ringkasan" class="ss" hidden>
+    <div class="ss-card" id="card-month">
+      <div class="ss-card-h"><h2><span class="id">Bulan ini vs bulan lalu</span><span class="en">This month vs last month</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="month">Excel</button><span class="ss-upd ss-upd-sales">–</span></span></div>
+      <p class="ss-note" id="month-note"></p>
+      <div class="ss-tiles" id="month-tiles" data-source="sales_daily_detail"></div>
+      <div class="ss-tablebox ss-month-box" data-source="sales_daily_detail"><table class="ss-table" id="tbl-month"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </div>
     <div class="ss-card" id="card-glance">
-      <div class="ss-card-h"><h2><span class="id">Sekilas</span><span class="en">At a glance</span></h2><span class="ss-upd ss-upd-sales">–</span></div>
+      <div class="ss-card-h"><h2><span class="id">Kemarin &amp; 7 hari</span><span class="en">Yesterday &amp; 7 days</span></h2></div>
       <p class="ss-note"><span class="id">Periode tetap, tidak ikut filter periode. Perubahan dibanding periode sebelumnya yang sebanding.</span><span class="en">Fixed periods, not affected by the period filter. Change vs the comparable period before.</span></p>
       <div class="ss-tiles" id="glance-tiles" data-source="sales_daily_detail"></div>
     </div>
@@ -504,7 +514,7 @@
     </div>
     <div class="ss-card" id="card-stores">
       <div class="ss-card-h"><h2><span class="id">Semua toko berdampingan</span><span class="en">All stores side by side</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="stores">Excel</button></span></div>
-      <p class="ss-note"><span class="id">Periode terpilih, transaksi kasir (POS) per toko. Klik judul kolom untuk mengurutkan; baris toko terpilih disorot. Filter merek dan online/toko tidak berlaku di halaman ini.</span><span class="en">Selected period, POS transactions per store. Click a column header to sort; the selected store's row is highlighted. The brand and online/store filters do not apply on this page.</span></p>
+      <p class="ss-note"><span class="id">Periode terpilih, transaksi kasir (POS) per toko. Klik judul kolom untuk mengurutkan; baris toko terpilih disorot.</span><span class="en">Selected period, POS transactions per store. Click a column header to sort; the selected store's row is highlighted.</span></p>
       <div class="ss-tablebox" data-source="sales_daily_detail"><table class="ss-table" id="tbl-stores"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
@@ -902,8 +912,14 @@
   window.ssState = window.ssState || { tab: 'ringkasan', heat: 'all', sort: 'revenue', cat: 'all', q: '', aq: '', split: 'brand' };
   const S = window.ssState;
   const P = () => dash.params();
-  const brand = () => P().brand || 'All';
-  const kind = () => P().kind || 'all';
+  // filters each tab uses; a filter a tab doesn't show counts as "all" there, so hidden choices never change its numbers.
+  // Rapor toko is till figures for Wonder's own stores; title data carries no channel.
+  const TAB_FILTERS = { ringkasan: ['brand', 'kind', 'period'], sales: ['brand', 'kind', 'period'], finance: ['brand', 'kind', 'period'], produk: ['brand', 'period'], toko: ['period'] };
+  const uses = (f) => (TAB_FILTERS[S.tab] || []).includes(f);
+  const brand = () => (uses('brand') && P().brand) || 'All';
+  const posBrands = () => { const sr = salesRows(); const c = cache.sales_daily_detail; if (!sr) return null; if (!c.pos) c.pos = new Set(sr.filter((x) => x.c === 'In-store POS').map((x) => x.b)); return c.pos; };
+  const hasStores = (b) => { const pb = posBrands(); return b === 'All' || !pb || pb.has(b); };  // Sinar Starbooks and Kikkerland have no tills
+  const kind = () => { const k = (uses('kind') && P().kind) || 'all'; return k === 'store' && !hasStores(brand()) ? 'all' : k; };
   const kindOk = (c) => (c == null ? true : kind() === 'all' ? true : kind() === 'store' ? c === 'In-store POS' : c !== 'In-store POS');
 
   // ---------------- DOM helpers ----------------
@@ -955,7 +971,9 @@
     if (cs && cs < min) cs = ce = null;
     return { s, e, cs, ce, label, p, partial: e === L };
   }
-  const range = () => (B ? rangeFor(P().period || 'mtd', B.min, B.max, P().start, P().end) : null);
+  // "today" is no longer offered: the sync runs at 04:00, so today held only a few early orders and always looked like a collapse
+  const period = () => { const p = P().period || 'mtd'; return p === 'today' ? 'yesterday' : p; };
+  const range = () => (B ? rangeFor(period(), B.min, B.max, P().start, P().end) : null);
   // clamp a range to a dataset's own window (for 90-day detail data)
   function clampTo(R, b) {
     if (!R || !b) return null;
@@ -1085,7 +1103,7 @@
       ...sheets.map(([, x], i) => ['xl/worksheets/sheet' + (i + 1) + '.xml', x]),
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], month: ['Penjualan per lokasi bulan ini', 'Sales by location this month'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   // Reseller-facing files carry the Sinar Star Books header, an order column and a terms sheet; contact details as on the reseller site.
   const SSB_CONTACT = 'WhatsApp +62 811-8069-559 · info@sinarstarbook.com · +62 21 4404188';
   const LIST_DATE = {
@@ -1299,26 +1317,28 @@
   function renderRingkasan(b) {
     const sr = salesRows(); const series = seriesFor(b);
     $$('#ringkasan .ss-leg').forEach((x) => legend(x, series));
-    const gt = $('#glance-tiles');
-    if (!sr) { gt.replaceChildren(); ['chart-daily', 'chart-weekly', 'chart-monthly'].forEach((id) => chartState($('#' + id), 'sales_daily_detail')); return; }
+    const gt = $('#glance-tiles'), mt = $('#month-tiles');
+    if (!sr) { gt.replaceChildren(); mt.replaceChildren(); tableState($('#card-month .ss-tablebox'), 'sales_daily_detail'); ['chart-daily', 'chart-weekly', 'chart-monthly'].forEach((id) => chartState($('#' + id), 'sales_daily_detail')); return; }
     const L = B.max;
-    const defs = [['yesterday', T('Kemarin', 'Yesterday')], ['7d', T('7 hari terakhir', 'Last 7 days')], ['mtd', T('Bulan ini', 'Month to date')], ['last_month', T('Bulan lalu', 'Last month')]];
-    gt.replaceChildren(...defs.map(([p, lab]) => {
+    const periodTile = (p, lab) => {
       const R = rangeFor(p, B.min, L);
       const c = one(sumBy(sr, R.s, R.e, b)), q = R.cs ? one(sumBy(sr, R.cs, R.ce, b)) : null;
       const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab + ' · ' + (R.s === R.e ? fd(R.s) : fd(R.s) + '–' + fd(R.e))), el('span', 'ss-big', rp(c.v)));
       const sub = el('div', 'ss-sub'); sub.append(document.createTextNode(int(c.o) + T(' pesanan · ', ' orders · ')), chgEl(c.v, q && q.v), document.createTextNode(' vs ' + T(...R.label))); t.append(sub);
-      if (kind() === 'all') { // store vs online halves, each against the same comparable period
+      if (kind() === 'all' && hasStores(b)) { // store vs online halves, each against the same comparable period
         const split = el('div', 'ss-sub ss-split-line');
         split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(c.pos) + ' '), chgEl(c.pos, q && q.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(c.onl) + ' '), chgEl(c.onl, q && q.onl));
         t.append(split);
       }
       spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
-    }));
+    };
+    gt.replaceChildren(periodTile('yesterday', T('Kemarin', 'Yesterday')), periodTile('7d', T('7 hari terakhir', 'Last 7 days')));
+    mt.replaceChildren(periodTile('mtd', T('Bulan ini', 'Month to date')), periodTile('last_month', T('Bulan lalu', 'Last month')));
+    const Rm = rangeFor('mtd', B.min, L), Rl = rangeFor('last_month', B.min, L);
+    const mon = fmonL(Rm.s.slice(0, 7)).split(' ')[0], lmon = fmonL(Rl.s.slice(0, 7)).split(' ')[0];
     // projection for this month: days already sold + each remaining day estimated from what that weekday sold
     // on average over the last 8 full weeks (same brand filter, per channel side so the split adds up)
-    { const Rm = rangeFor('mtd', B.min, L), Rl = rangeFor('last_month', B.min, L);
-      const mEnd = monthEnd(Rm.s.slice(0, 7));
+    { const mEnd = monthEnd(Rm.s.slice(0, 7));
       const cm = one(sumBy(sr, Rm.s, Rm.e, b)), cl = one(sumBy(sr, Rl.s, Rl.e, b));
       const histEnd = Rm.e < L ? Rm.e : add(L, -1), histStart = add(histEnd, -55);
       const hist = sumBy(sr, histStart, histEnd, b, (x) => x.d);
@@ -1326,23 +1346,54 @@
       const avPos = dowAvg((a) => a.pos), avOnl = dowAvg((a) => a.onl);
       let restPos = 0, restOnl = 0; for (let t = add(Rm.e, 1); t <= mEnd; t = add(t, 1)) { const w = D(t).getUTCDay(); restPos += avPos[w]; restOnl += avOnl[w]; }
       const pPos = cm.pos + restPos, pOnl = cm.onl + restOnl, proj = pPos + pOnl;
-      const dIn = days(Rm.s, Rm.e), dAll = days(Rm.s, mEnd), mon = fmonL(Rm.s.slice(0, 7)).split(' ')[0], lmon = fmonL(Rl.s.slice(0, 7)).split(' ')[0];
+      const dIn = days(Rm.s, Rm.e), dAll = days(Rm.s, mEnd);
       const t = el('div', 'ss-tile ss-tile-proj'); t.append(el('div', 'ss-lab', T('Proyeksi ', 'Projected ') + mon), el('span', 'ss-big', rp(proj)));
       const sub = el('div', 'ss-sub');
       sub.append(chgEl(proj, cl.v), document.createTextNode(T(` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} dari ${lmon} sudah tercapai setelah ${dIn} dari ${dAll} hari`, ` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} of ${lmon} already reached after ${dIn} of ${dAll} days`)));
       t.append(sub);
-      if (kind() === 'all') { const split = el('div', 'ss-sub ss-split-line'); split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(pPos) + ' '), chgEl(pPos, cl.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(pOnl) + ' '), chgEl(pOnl, cl.onl)); t.append(split); }
+      if (kind() === 'all' && hasStores(b)) { const split = el('div', 'ss-sub ss-split-line'); split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(pPos) + ' '), chgEl(pPos, cl.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(pOnl) + ' '), chgEl(pOnl, cl.onl)); t.append(split); }
       t.title = T('Hari yang sudah lewat = penjualan nyata. Sisa hari = rata-rata penjualan hari yang sama (Senin, Selasa, …) selama 8 minggu terakhir.', 'Days already passed = actual sales. Remaining days = the average for that weekday (Monday, Tuesday, …) over the last 8 weeks.');
-      gt.append(t); }
-    { const tc = targetCalc(); if (tc && tc.lines.length) {
-        const exp = tc.dIn / tc.dAll, sh = pctOf(tc.A, tc.T);
+      mt.append(t); }
+    // targets exist for Wonder Bookstore only: till (with stationery) and Shopee; the tile follows the channel filter
+    { const tc = targetCalc(); const k = kind(); if (tc && tc.lines.length && (b === 'All' || b === 'Wonder Bookstore')) {
+        const want = k === 'store' ? ['pos', 'st'] : k === 'online' ? ['shopee'] : null;
+        const ls = tc.lines.filter((x) => x.a != null && (!want || want.includes(x.ln)));
+        const tT = ls.reduce((s2, x) => s2 + x.t, 0), tA = ls.reduce((s2, x) => s2 + x.a, 0), tP = ls.reduce((s2, x) => s2 + x.p, 0);
+        const exp = tc.dIn / tc.dAll, sh = pctOf(tA, tT);
         const t = el('div', 'ss-tile'); const big = el('span', 'ss-big', pct0(sh)); const pc = paceCls(sh, exp); if (pc) big.classList.add(pc);
-        t.append(el('div', 'ss-lab', T('Target ', 'Target ') + fmonL(tc.m).split(' ')[0]), big);
-        t.append(el('div', 'ss-sub', T(`tercapai, seharusnya ${pct0(exp)} · proyeksi ${pct0(pctOf(tc.P, tc.T))} dari ${rp(tc.T)}`, `achieved, on pace would be ${pct0(exp)} · projected ${pct0(pctOf(tc.P, tc.T))} of ${rp(tc.T)}`)));
-        const pl = tc.byLine('pos'), shp = tc.byLine('shopee'); const split = el('div', 'ss-sub ss-split-line');
-        split.append(el('b', '', T('Toko ', 'Stores ')), document.createTextNode(pct0(pctOf(pl.a, pl.t)) + ' · '), el('b', '', 'Shopee '), document.createTextNode(pct0(pctOf(shp.a, shp.t))));
-        t.append(split); t.title = T('Wonder Bookstore saja; Tokopedia, TikTok dan gudang online tidak punya target. Rincian di Penjualan & toko.', 'Wonder Bookstore only; Tokopedia, TikTok and the online warehouse have no targets. Detail on Sales & stores.');
-        gt.append(t); } }
+        t.append(el('div', 'ss-lab', T('Target ', 'Target ') + fmonL(tc.m).split(' ')[0] + (k === 'store' ? T(' · toko', ' · stores') : k === 'online' ? ' · Shopee' : '')), big);
+        t.append(el('div', 'ss-sub', T(`tercapai, seharusnya ${pct0(exp)} · proyeksi ${pct0(pctOf(tP, tT))} dari ${rp(tT)}`, `achieved, on pace would be ${pct0(exp)} · projected ${pct0(pctOf(tP, tT))} of ${rp(tT)}`)));
+        if (!want) { const pl = tc.byLine('pos'), shp = tc.byLine('shopee'); const split = el('div', 'ss-sub ss-split-line');
+          split.append(el('b', '', T('Toko ', 'Stores ')), document.createTextNode(pct0(pctOf(pl.a, pl.t)) + ' · '), el('b', '', 'Shopee '), document.createTextNode(pct0(pctOf(shp.a, shp.t)))); t.append(split); }
+        t.title = T('Wonder Bookstore saja; Tokopedia, TikTok dan gudang online tidak punya target. Rincian di Penjualan & toko.', 'Wonder Bookstore only; Tokopedia, TikTok and the online warehouse have no targets. Detail on Sales & stores.');
+        mt.append(t); } }
+    // per location: a store's figure is its till plus online orders shipped from it
+    // (pop-ups are one row: each runs a few weeks)
+    { const loc = (x) => (/^PAMERAN/i.test(x.l) ? 'PAMERAN' : x.l);
+      const cur = sumBy(sr, Rm.s, Rm.e, b, loc), prv = Rm.cs ? sumBy(sr, Rm.cs, Rm.ce, b, loc) : new Map(), lm = sumBy(sr, Rl.s, Rl.e, b, loc);
+      const typeOf = (l) => (isStoreLoc(l) ? 0 : l === 'ONLINE' ? 1 : l === 'PAMERAN' ? 2 : 3);
+      const name = (l) => (l === 'ONLINE' ? T('Gudang online', 'Online warehouse') : l === 'PAMERAN' ? T('Pameran', 'Pop-ups') : l === '-' || !l ? T('Tanpa lokasi', 'No location') : l);
+      const g = (m, l) => m.get(l) || ZERO;
+      const locs = [...new Set([...cur.keys(), ...prv.keys(), ...lm.keys()])].filter((l) => g(cur, l).v || g(prv, l).v || g(lm, l).v)
+        .map((l) => ({ l, c: g(cur, l), p: Rm.cs ? g(prv, l) : null, m: g(lm, l), ty: typeOf(l) }))
+        .sort((a, z) => a.ty - z.ty || z.c.v - a.c.v);
+      const span = (s, e) => (s === e ? fd(s) : fd(s) + '–' + fd(e)), cm = span(Rm.s, Rm.e), pm = Rm.cs ? span(Rm.cs, Rm.ce) : lmon;
+      table('tbl-month', [
+        { h: ['Lokasi', 'Location'], name: 1, f: (r) => name(r.l) },
+        { h: [cm, cm], num: 1, f: (r) => rp(r.c.v), x: (r) => Math.round(r.c.v) },
+        { h: [pm, pm], num: 1, f: (r) => (r.p ? rp(r.p.v) : '–'), x: (r) => (r.p ? Math.round(r.p.v) : '') },
+        { h: ['Perubahan', 'Change'], num: 1, f: (r) => chgEl(r.c.v, r.p && r.p.v), x: (r) => (r.p && r.p.v ? +(r.c.v / r.p.v - 1).toFixed(4) : '') },
+        { h: [lmon + ' penuh', 'All of ' + lmon], num: 1, f: (r) => rp(r.m.v), x: (r) => Math.round(r.m.v) },
+        { h: ['% dari ' + lmon, '% of ' + lmon], num: 1, f: (r) => pct0(r.m.v ? r.c.v / r.m.v : null), x: (r) => (r.m.v ? +(r.c.v / r.m.v).toFixed(4) : '') },
+        { h: ['Di toko (' + mon + ')', 'In-store (' + mon + ')'], xo: 1, f: (r) => Math.round(r.c.pos) },
+        { h: ['Online (' + mon + ')', 'Online (' + mon + ')'], xo: 1, f: (r) => Math.round(r.c.onl) },
+        { h: ['Pesanan (' + mon + ')', 'Orders (' + mon + ')'], xo: 1, f: (r) => r.c.o },
+      ], locs, 'month');
+      const tc0 = one(sumBy(sr, Rm.s, Rm.e, b)), tp0 = Rm.cs ? one(sumBy(sr, Rm.cs, Rm.ce, b)) : null, tl0 = one(sumBy(sr, Rl.s, Rl.e, b));
+      const tr = el('tr'); [T('Total', 'Total'), rp(tc0.v), tp0 ? rp(tp0.v) : '–', chgEl(tc0.v, tp0 && tp0.v), rp(tl0.v), pct0(tl0.v ? tc0.v / tl0.v : null)].forEach((v, i) => { const td = el('td', i ? 'num' : ''); if (v instanceof Node) td.append(v); else td.textContent = v; tr.append(td); });
+      $('#tbl-month tfoot').replaceChildren(tr);
+      $('#month-note').textContent = T(`${span(Rm.s, Rm.e)} dibanding tanggal yang sama bulan lalu${Rm.cs ? ' (' + span(Rm.cs, Rm.ce) + ')' : ''}. Toko = kasir ditambah pesanan online yang dikirim dari toko itu. Tidak ikut filter periode; ikut filter merek dan online/toko.`,
+        `${span(Rm.s, Rm.e)} against the same days last month${Rm.cs ? ' (' + span(Rm.cs, Rm.ce) + ')' : ''}. A store = its till plus online orders shipped from it. Not affected by the period filter; follows the brand and online/store filters.`); }
     // daily 60
     const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
     let box = $('#chart-daily'); skel(box, false);
@@ -1355,7 +1406,7 @@
     const R = range(); const ht = $('#health-tiles'); const tiles = [];
     const mini = (lab, v, sub, cls) => { const d = el('div', 'ss-mini'); d.append(el('div', 'ss-lab', lab), el('span', 'ss-v' + (cls ? ' ' + cls : ''), v)); if (sub) d.append(el('div', 'ss-sub', sub)); return d; };
     const cur = one(sumBy(sr, R.s, R.e, b)); const onlineShare = cur.v ? cur.onl / cur.v : null;
-    tiles.push(mini(T('Porsi online', 'Online share'), pct0(onlineShare), T('sisanya kasir toko', 'rest is in-store')));
+    if (kind() === 'all' && hasStores(b)) tiles.push(mini(T('Porsi online', 'Online share'), pct0(onlineShare), T('sisanya kasir toko', 'rest is in-store')));
     tiles.push(mini(T('Batal & retur', 'Cancel & return'), pct0(cr(cur)), int(cur.x) + T(' pesanan', ' orders')));
     const sl = rows('stock_locations');
     if (sl) { const v = sl.reduce((a, r) => a + +r.retail_value, 0), dv = sl.reduce((a, r) => a + +r.dead_value, 0); tiles.push(mini(T('Nilai stok (harga jual)', 'Stock value (retail)'), rp(v), int(sl.reduce((a, r) => a + +r.units, 0)) + T(' unit', ' units'))); tiles.push(mini(T('Stok mati 90+ hari', 'Dead stock 90+ days'), pct0(v ? dv / v : null), rp(dv), dv / v > 0.2 ? 'ss-down' : '')); }
@@ -1524,10 +1575,9 @@
     const q = (S.q || '').trim().toLowerCase();
     const catList = list.filter(catOk); const ctv = catList.reduce((x, a) => x + a.v, 0);
     const top = catList.filter((a) => !q || a.it.item_name.toLowerCase().includes(q) || a.k.includes(q)).sort((a, z) => (S.sort === 'qty' ? z.q - a.q : z.v - a.v)).slice(0, 300);
-    const kn = kind() !== 'all' ? T(' Filter online/toko belum berlaku untuk data per judul.', ' The online/store filter does not apply to title data yet.') : '';
     const catLab = S.cat === 'books' ? T('buku', 'books') : S.cat === 'gift' ? T('gift & alat tulis', 'gift & stationery') : T('judul', 'titles');
     const catSum = S.cat && S.cat !== 'all' ? T(` ${catLab[0].toUpperCase() + catLab.slice(1)}: ${int(catList.length)} barang, ${int(catList.reduce((x, a) => x + a.q, 0))} unit, ${rp(ctv)} (${pct0(tv ? ctv / tv : null)} dari penjualan barang).`, ` ${catLab[0].toUpperCase() + catLab.slice(1)}: ${int(catList.length)} items, ${int(catList.reduce((x, a) => x + a.q, 0))} units, ${rp(ctv)} (${pct0(tv ? ctv / tv : null)} of item sales).`) : '';
-    $('#top-note').textContent = kn + T(`300 ${catLab} teratas, ${fd(R.s)} – ${fdy(R.e)}. Porsi = bagian dari penjualan barang periode ini. Unduh Excel untuk daftar lengkap yang tampil.`, `Top 300 ${catLab}, ${fd(R.s)} – ${fdy(R.e)}. Share = part of this period's item sales. Download Excel for the full list shown.`) + catSum + note;
+    $('#top-note').textContent = T(`300 ${catLab} teratas, ${fd(R.s)} – ${fdy(R.e)}. Porsi = bagian dari penjualan barang periode ini. Unduh Excel untuk daftar lengkap yang tampil.`, `Top 300 ${catLab}, ${fd(R.s)} – ${fdy(R.e)}. Share = part of this period's item sales. Download Excel for the full list shown.`) + catSum + note;
     table('tbl-top', [
       { h: ['#', '#'], num: 1, f: (r) => String(top.indexOf(r) + 1), x: (r) => top.indexOf(r) + 1 },
       { h: ['Judul', 'Title'], name: 1, f: (r) => r.it.item_name },
@@ -2135,14 +2185,17 @@
     $$('.ss-kind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === kind())));
     $$('.ss-tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === S.tab)));
     ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
-    const usesBrand = ['ringkasan', 'sales', 'toko', 'produk', 'finance'].includes(S.tab), usesPeriod = usesBrand;
-    { const gl = $('#card-glance'), filt = $('#filters'), sec = document.getElementById('ringkasan');
-      if (S.tab === 'ringkasan') { if (gl.nextElementSibling !== filt) filt.parentNode.insertBefore(gl, filt); gl.classList.add('ss-glance-top'); }
-      else if (gl.parentNode !== sec) { sec.insertBefore(gl, sec.firstChild); gl.classList.remove('ss-glance-top'); } }
-    $('.ss-brands').style.visibility = usesBrand ? 'visible' : 'hidden';
-    $('#period-ctl').style.display = usesPeriod ? '' : 'none';
-    $('#filters').style.display = usesBrand ? '' : 'none';
-    $('#insight-box').style.display = S.tab === 'panduan' ? 'none' : '';
+    { const filt = $('#filters'), sec = document.getElementById('ringkasan'), top = [$('#card-month'), $('#card-glance')];
+      if (S.tab === 'ringkasan') top.forEach((c) => { filt.parentNode.insertBefore(c, filt); c.classList.add('ss-glance-top'); });
+      else if (top[0].parentNode !== sec) top.slice().reverse().forEach((c) => { sec.insertBefore(c, sec.firstChild); c.classList.remove('ss-glance-top'); }); }
+    const anyFilter = !!TAB_FILTERS[S.tab];
+    $('.ss-brands').style.display = uses('brand') ? '' : 'none';
+    $('.ss-kind').style.display = uses('kind') ? '' : 'none';
+    $('#period-ctl').style.display = uses('period') ? '' : 'none';
+    $('#filters').style.display = anyFilter ? '' : 'none';
+    $('#insight-box').style.display = anyFilter ? '' : 'none';
+    { const sb = $('.ss-kind button[data-kind="store"]'), ok = hasStores(b); sb.disabled = !ok; sb.title = ok ? '' : T(b + ' tidak punya toko fisik; semua penjualannya online.', b + ' has no physical stores; all its sales are online.'); }
+    $('#card-target').hidden = b !== 'All' && b !== 'Wonder Bookstore';
     updNotes(); renderInbox();
     const sr = salesRows(); if (sr) B = bounds(sr);
     if (B) {
