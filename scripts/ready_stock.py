@@ -14,6 +14,7 @@ READY_MIN_QTY = 3          # copies on offer before a title goes on the list
 STORE_KEEP = 2             # copies each Wonder store keeps on its shelf; the rest is offered
 NOT_FOR_RESELLERS = re.compile(r'VOUCHER|PAPER ?BAG|KARDUS|PACKING|GIFT ?WRAP|BUKU PROMO')  # vouchers, bags, packing, gift wrap and promo bundles carry stock but are not merchandise
 NOT_OURS = re.compile(r'GRAMEDIA')  # Gramedia-published titles are bought locally for our stores, not distributed by us
+FAR_STORES = re.compile(r'BALI')  # Bali stores can't get stock to Jakarta resellers in time (reseller meeting, 3 Nov)
 HEADER = ['item_code', 'item_name', 'group', 'category', 'supplier', 'price', 'offer_qty', 'centre', 'stores_offer', 'offer_by_location', 'as_of']
 
 KIDS = re.compile(r'TODDLER|BABY|CHILDREN|EARLY READER|MIDDLE GRADE')
@@ -50,7 +51,7 @@ def ready(path):
         if 'Item No.' in r:
             col = {str(h).strip(): i for i, h in enumerate(r) if h is not None}
             break
-    stores = [(h[len('WONDER '):], i) for h, i in col.items() if h.startswith('WONDER ')]
+    stores = [(h[len('WONDER '):], i) for h, i in col.items() if h.startswith('WONDER ') and not FAR_STORES.search(h)]
     n = lambda v: max(0, int(v)) if isinstance(v, (int, float)) else 0
     out = []
     for r in it:
