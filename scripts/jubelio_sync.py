@@ -381,6 +381,15 @@ def main():
         k = (wib(o['transaction_date']).date().isoformat(), (o.get('store_name') or '-').strip(), chan(o.get('channel_name')))
         SH[k][0] += 1; SH[k][1] += float(o.get('grand_total') or 0)
     write('shop_daily.csv', ['date', 'shop', 'channel', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in sorted(SH.items())])
+    # the stores' monthly report splits each store's online sales by marketplace shop ("Shopee Wonder Berawa" vs the
+    # official shop's "Multi" orders shipped from that store); status kept so the report can match how the team counts
+    SL = defaultdict(lambda: [0, 0.0])
+    for o in orders:
+        if chan(o.get('channel_name')) == 'In-store POS' or o.get('is_canceled') is True: continue
+        k = (wib(o['transaction_date']).date().isoformat(), o.get('location_name') or '-', (o.get('store_name') or '-').strip(), chan(o.get('channel_name')), o.get('internal_status') or '-')
+        SL[k][0] += 1; SL[k][1] += float(o.get('grand_total') or 0)
+    write('shop_location_daily.csv', ['date', 'location', 'shop', 'channel', 'status', 'orders', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in sorted(SL.items())])
+    print('order fields:', sorted(orders[0].keys()) if orders else '-')
     write('sales_daily_detail.csv', ['date', 'brand', 'channel', 'location', 'orders', 'revenue', 'canceled'], [list(k) + [v[0], round(v[1]), v[2]] for k, v in sorted(D.items())])
 
     since = (now - timedelta(days=90)).date().isoformat()
