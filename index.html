@@ -191,8 +191,19 @@
   .ss-tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--ssb-line-2); border-radius: 12px; box-shadow: var(--cds-shadow-popover); padding: 8px 12px; font-size: 12px; white-space: nowrap; z-index: 2; color: var(--ssb-ink); }
   .ss-tip .ss-tip-h { color: var(--ssb-purple); font-weight: 700; margin-bottom: 2px; }
   .ss-tablebox { max-height: 26rem; overflow: auto; background: linear-gradient(to right, #fff 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), #fff 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(16,32,26,.16), rgba(16,32,26,0)), radial-gradient(farthest-side at 100% 50%, rgba(16,32,26,.16), rgba(16,32,26,0)) 100% 0; background-repeat: no-repeat; background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%; background-attachment: local, local, scroll, scroll; }
-  .ss-glance-top { margin-bottom: 0; }
   .ss-month-box { margin-top: 14px; max-height: none; }
+  .ss-hero-tiles { grid-template-columns: minmax(0, 1.7fr) repeat(var(--n, 3), minmax(0, 1fr)); }
+  .ss-tile.ss-tile-hero { grid-template-areas: 'lab lab' 'big spark' 'sub sub' 'split split' 'pace pace'; border-top-color: var(--ssb-purple); }
+  .ss-tile-hero > .ss-big { font-size: 40px; margin: 10px 0 6px; }
+  .ss-pace { grid-area: pace; margin-top: 10px; }
+  .ss-hero-tiles > .ss-tile:not(.ss-tile-hero) > .ss-spark { display: none; }
+  .ss-pace-bar { position: relative; height: 8px; background: var(--ssb-lilac); border-radius: 4px; margin-bottom: 6px; }
+  .ss-pace-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ssb-gold); border-radius: 4px; }
+  .ss-pace-bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ssb-purple); }
+  @media (max-width: 899px) {
+    #ss-root .ss-hero-tiles { grid-template-columns: 1fr 1fr; }
+    #ss-root .ss-tile-hero, #ss-root .ss-hero-tiles > .ss-tile:last-child:nth-child(even) { grid-column: span 2; }
+  }
   #tbl-month td:first-child { white-space: nowrap; }
   .ss-table tfoot td { font-weight: 800; border-top: 1px solid var(--ssb-line-2); border-bottom: 0; color: var(--ssb-deep); }
   .ss-seg button:disabled { opacity: .4; cursor: not-allowed; }
@@ -215,6 +226,7 @@
     #ss-root .ss-tile { padding: 12px 12px 10px; }
     #ss-root .ss-tile > .ss-spark { display: none; }
     #ss-root .ss-tile > .ss-big { font-size: 20px; }
+    #ss-root .ss-tile-hero > .ss-big { font-size: 30px; }
     #ss-root .ss-tile .ss-sub, #ss-root .ss-tile .ss-lab { font-size: 10.5px; }
   }
   .ss-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -443,45 +455,32 @@
     <div class="ss-card" id="card-month">
       <div class="ss-card-h"><h2><span class="id">Bulan ini vs bulan lalu</span><span class="en">This month vs last month</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="month">Excel</button><span class="ss-upd ss-upd-sales">–</span></span></div>
       <p class="ss-note" id="month-note"></p>
-      <div class="ss-tiles" id="month-tiles" data-source="sales_daily_detail"></div>
+      <div class="ss-tiles ss-hero-tiles" id="month-tiles" data-source="sales_daily_detail"></div>
       <div class="ss-tablebox ss-month-box" data-source="sales_daily_detail"><table class="ss-table" id="tbl-month"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </div>
-    <div class="ss-card" id="card-glance">
-      <div class="ss-card-h"><h2><span class="id">Kemarin &amp; 7 hari</span><span class="en">Yesterday &amp; 7 days</span></h2></div>
-      <p class="ss-note"><span class="id">Periode tetap, tidak ikut filter periode. Perubahan dibanding periode sebelumnya yang sebanding.</span><span class="en">Fixed periods, not affected by the period filter. Change vs the comparable period before.</span></p>
-      <div class="ss-tiles" id="glance-tiles" data-source="sales_daily_detail"></div>
-    </div>
-    <div class="ss-card" id="card-basket">
-      <div class="ss-card-h"><h2><span class="id">Keranjang · online vs toko</span><span class="en">Basket · online vs store</span><button class="ss-help" data-goto="guide-basket" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="basket">Excel</button><span class="ss-upd ss-upd-detail">–</span></span></div>
-      <p class="ss-note" id="basket-note"><span class="id">Periode terpilih, selalu online dan toko berdampingan (filter online/toko tidak berlaku di sini). Dari data rinci pesanan 90 hari terakhir.</span><span class="en">Selected period, always online and store side by side (the online/store filter doesn't apply here). From order-level data for the last 90 days.</span></p>
-      <div class="ss-tablebox" data-source="basket_daily"><table class="ss-table" id="tbl-basket"><thead></thead><tbody></tbody></table></div>
-    </div>
     <div class="ss-grid">
-      <div class="ss-card" id="card-daily">
-        <h2><span class="id">Harian · 60 hari</span><span class="en">Daily · 60 days</span></h2>
-        <p class="ss-note"><span class="id">Hari ini belum lengkap (lebih terang).</span><span class="en">Today is partial (lighter).</span></p>
-        <div class="ss-legend ss-leg"></div>
-        <div class="ss-chart dash-skeleton" id="chart-daily" data-source="sales_daily_detail"></div>
-      </div>
-      <div class="ss-card" id="card-weekly">
-        <h2><span class="id">Mingguan · 17 minggu</span><span class="en">Weekly · 17 weeks</span></h2>
-        <p class="ss-note"><span class="id">Minggu mulai Senin; minggu ini belum lengkap.</span><span class="en">Weeks start Monday; this week is partial.</span></p>
-        <div class="ss-legend ss-leg"></div>
-        <div class="ss-chart dash-skeleton" id="chart-weekly" data-source="sales_daily_detail"></div>
-      </div>
-    </div>
-    <div class="ss-grid">
-      <div class="ss-card" id="card-monthly">
-        <h2><span class="id">Bulanan · sejak Okt 2025</span><span class="en">Monthly · since Oct 2025</span></h2>
-        <p class="ss-note"><span class="id">Bulan ini belum lengkap.</span><span class="en">This month is partial.</span></p>
-        <div class="ss-legend ss-leg"></div>
-        <div class="ss-chart dash-skeleton" id="chart-monthly" data-source="sales_daily_detail"></div>
+      <div class="ss-card" id="card-glance">
+        <div class="ss-card-h"><h2><span class="id">Kemarin &amp; 7 hari</span><span class="en">Yesterday &amp; 7 days</span></h2></div>
+        <p class="ss-note"><span class="id">Periode tetap, tidak ikut filter periode. Perubahan dibanding periode sebelumnya yang sebanding.</span><span class="en">Fixed periods, not affected by the period filter. Change vs the comparable period before.</span></p>
+        <div class="ss-tiles" id="glance-tiles" data-source="sales_daily_detail"></div>
       </div>
       <div class="ss-card" id="card-health">
         <div class="ss-card-h"><h2><span class="id">Kesehatan bisnis</span><span class="en">Business health</span></h2><span class="ss-upd ss-upd-stock">–</span></div>
         <p class="ss-note"><span class="id">Angka kunci dari semua tim, untuk periode terpilih dan stok saat ini.</span><span class="en">Key numbers from every team, for the selected period and current stock.</span></p>
         <div class="ss-mini-tiles" id="health-tiles" data-source="sales_daily_detail stock_locations finance_daily resellers"></div>
       </div>
+    </div>
+    <div class="ss-card" id="card-ovtrend">
+      <div class="ss-card-h"><h2><span class="id">Tren penjualan</span><span class="en">Sales trend</span></h2>
+        <span class="ss-card-tools"><div class="ss-seg ss-ovgran" role="group" aria-label="Rincian / Granularity"><button data-ovgran="day"><span class="id">Harian</span><span class="en">Daily</span></button><button data-ovgran="week"><span class="id">Mingguan</span><span class="en">Weekly</span></button><button data-ovgran="month"><span class="id">Bulanan</span><span class="en">Monthly</span></button></div></span></div>
+      <p class="ss-note" id="ovtrend-note"></p>
+      <div class="ss-legend ss-leg"></div>
+      <div class="ss-chart dash-skeleton" id="chart-ov" data-source="sales_daily_detail"></div>
+    </div>
+    <div class="ss-card" id="card-basket">
+      <div class="ss-card-h"><h2><span class="id">Keranjang · online vs toko</span><span class="en">Basket · online vs store</span><button class="ss-help" data-goto="guide-basket" title="Panduan / Guide">?</button></h2><span class="ss-card-tools"><button class="ss-xl" data-export="basket">Excel</button><span class="ss-upd ss-upd-detail">–</span></span></div>
+      <p class="ss-note" id="basket-note"><span class="id">Periode terpilih, selalu online dan toko berdampingan (filter online/toko tidak berlaku di sini). Dari data rinci pesanan 90 hari terakhir.</span><span class="en">Selected period, always online and store side by side (the online/store filter doesn't apply here). From order-level data for the last 90 days.</span></p>
+      <div class="ss-tablebox" data-source="basket_daily"><table class="ss-table" id="tbl-basket"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
 
@@ -1210,6 +1209,7 @@
   $$('.ss-lang button').forEach((b) => b.addEventListener('click', () => dash.setParams({ lang: b.dataset.lang })));
   $$('.ss-kind button[data-kind]').forEach((b) => b.addEventListener('click', () => dash.setParams({ kind: b.dataset.kind })));
   $$('.ss-gran button').forEach((b) => b.addEventListener('click', () => dash.setParams({ gran: b.dataset.gran })));
+  $$('.ss-ovgran button').forEach((b) => b.addEventListener('click', () => { S.ovGran = b.dataset.ovgran; render(); }));
   $$('.ss-split button').forEach((b) => b.addEventListener('click', () => { S.split = b.dataset.split; render(); }));
   $$('.ss-heatkind button').forEach((b) => b.addEventListener('click', () => { S.heat = b.dataset.kind; render(); }));
   $$('.ss-urg button').forEach((b) => b.addEventListener('click', () => { S.urg = b.dataset.urg; render(); }));
@@ -1423,7 +1423,7 @@
     const sr = salesRows(); const series = seriesFor(b);
     $$('#ringkasan .ss-leg').forEach((x) => legend(x, series));
     const gt = $('#glance-tiles'), mt = $('#month-tiles');
-    if (!sr) { gt.replaceChildren(); mt.replaceChildren(); tableState($('#card-month .ss-tablebox'), 'sales_daily_detail'); ['chart-daily', 'chart-weekly', 'chart-monthly'].forEach((id) => chartState($('#' + id), 'sales_daily_detail')); return; }
+    if (!sr) { gt.replaceChildren(); mt.replaceChildren(); tableState($('#card-month .ss-tablebox'), 'sales_daily_detail'); chartState($('#chart-ov'), 'sales_daily_detail'); return; }
     const L = B.max;
     const periodTile = (p, lab) => {
       const R = rangeFor(p, B.min, L);
@@ -1438,7 +1438,9 @@
       spark(t, daily(sr, R.s === R.e ? [add(R.e, -13), B.min].sort()[1] : R.s, R.e, b, (a) => a.v)); return t;
     };
     gt.replaceChildren(periodTile('yesterday', T('Kemarin', 'Yesterday')), periodTile('7d', T('7 hari terakhir', 'Last 7 days')));
-    mt.replaceChildren(periodTile('mtd', T('Bulan ini', 'Month to date')), periodTile('last_month', T('Bulan lalu', 'Last month')));
+    // headline row: month to date is the focal tile, then projection, target and last month
+    const mtdT = periodTile('mtd', T('Bulan ini', 'Month to date')), lmT = periodTile('last_month', T('Bulan lalu', 'Last month'));
+    mtdT.classList.add('ss-tile-hero'); mt.replaceChildren(mtdT);
     const Rm = rangeFor('mtd', B.min, L), Rl = rangeFor('last_month', B.min, L);
     const mon = fmonL(Rm.s.slice(0, 7)).split(' ')[0], lmon = fmonL(Rl.s.slice(0, 7)).split(' ')[0];
     // projection for this month: days already sold + each remaining day estimated from what that weekday sold
@@ -1454,7 +1456,14 @@
       const dIn = days(Rm.s, Rm.e), dAll = days(Rm.s, mEnd);
       const t = el('div', 'ss-tile ss-tile-proj'); t.append(el('div', 'ss-lab', T('Proyeksi ', 'Projected ') + mon), el('span', 'ss-big', rp(proj)));
       const sub = el('div', 'ss-sub');
-      sub.append(chgEl(proj, cl.v), document.createTextNode(T(` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} dari ${lmon} sudah tercapai setelah ${dIn} dari ${dAll} hari`, ` vs ${lmon} · ${pct0(cl.v ? cm.v / cl.v : null)} of ${lmon} already reached after ${dIn} of ${dAll} days`)));
+      sub.append(chgEl(proj, cl.v), document.createTextNode(' vs ' + lmon));
+      // pace: share of last month's total already sold (bar) against the share of this month's days gone (line)
+      if (cl.v) { const reach = cm.v / cl.v, gone = dIn / dAll;
+        const pace = el('div', 'ss-pace'), bar = el('div', 'ss-pace-bar'), fill = el('i'), mark = el('b');
+        fill.style.width = Math.min(100, reach * 100) + '%'; mark.style.left = Math.min(100, gone * 100) + '%'; bar.append(fill, mark);
+        const txt = T(`${pct0(reach)} dari total ${lmon} sudah tercapai · ${dIn} dari ${dAll} hari sudah lewat (garis)`, `${pct0(reach)} of ${lmon}'s total reached · ${dIn} of ${dAll} days gone (line)`);
+        bar.setAttribute('role', 'img'); bar.setAttribute('aria-label', txt);
+        pace.append(bar, el('div', 'ss-sub', txt)); mtdT.append(pace); }
       t.append(sub);
       if (kind() === 'all' && hasStores(b)) { const split = el('div', 'ss-sub ss-split-line'); split.append(el('b', '', T('Toko ', 'Store ')), document.createTextNode(rp(pPos) + ' '), chgEl(pPos, cl.pos), document.createTextNode(' · '), el('b', '', 'Online '), document.createTextNode(rp(pOnl) + ' '), chgEl(pOnl, cl.onl)); t.append(split); }
       t.title = T('Hari yang sudah lewat = penjualan nyata. Sisa hari = rata-rata penjualan hari yang sama (Senin, Selasa, …) selama 8 minggu terakhir.', 'Days already passed = actual sales. Remaining days = the average for that weekday (Monday, Tuesday, …) over the last 8 weeks.');
@@ -1472,6 +1481,7 @@
           split.append(el('b', '', T('Toko ', 'Stores ')), document.createTextNode(pct0(pctOf(pl.a, pl.t)) + ' · '), el('b', '', 'Shopee '), document.createTextNode(pct0(pctOf(shp.a, shp.t)))); t.append(split); }
         t.title = T('Wonder Bookstore saja; Tokopedia, TikTok dan gudang online tidak punya target. Rincian di Penjualan & toko.', 'Wonder Bookstore only; Tokopedia, TikTok and the online warehouse have no targets. Detail on Sales & stores.');
         mt.append(t); } }
+    mt.append(lmT); mt.style.setProperty('--n', mt.children.length - 1);
     // per location: a store's figure is its till plus online orders shipped from it
     // (pop-ups are one row: each runs a few weeks)
     { const loc = (x) => (/^PAMERAN/i.test(x.l) ? 'PAMERAN' : x.l);
@@ -1501,12 +1511,12 @@
         `${span(Rm.s, Rm.e)} against the same days last month${Rm.cs ? ' (' + span(Rm.cs, Rm.ce) + ')' : ''}. A store = its till plus online orders shipped from it. Not affected by the period filter; follows the brand and online/store filters.`); }
     // daily 60
     const agg = (keyFn, from) => { const m = new Map(); for (const x of sr) { if (x.d < from || (b !== 'All' && x.b !== b) || !kindOk(x.c)) continue; const k = keyFn(x.d); const a = m.get(k) || { key: k, values: {}, o: 0 }; a.values[x.b] = (a.values[x.b] || 0) + x.v; a.o += x.o; m.set(k, a); } return [...m.values()].sort((a, z) => (a.key < z.key ? -1 : 1)); };
-    let box = $('#chart-daily'); skel(box, false);
-    bars(box, agg((d) => d, add(L, -59)).map((a) => ({ ...a, label: fd(a.key), tipLabel: fday(a.key) + (a.key === L ? T(' (belum lengkap)', ' (partial)') : ''), partial: a.key === L, extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
-    box = $('#chart-weekly'); skel(box, false);
-    bars(box, agg(weekOf, weekOf(add(L, -16 * 7))).map((a) => ({ ...a, label: fd(a.key), tipLabel: T('Minggu ', 'Week ') + fd(a.key) + ' – ' + fd(add(a.key, 6)), partial: a.key === weekOf(L), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
-    box = $('#chart-monthly'); skel(box, false);
-    bars(box, agg((d) => d.slice(0, 7), B.min).map((a) => ({ ...a, label: fmon(a.key), tipLabel: fmonL(a.key), partial: a.key === L.slice(0, 7), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+    { const og = S.ovGran || 'day'; $$('.ss-ovgran button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.ovgran === og)));
+      const box = $('#chart-ov'); skel(box, false);
+      if (og === 'day') bars(box, agg((d) => d, add(L, -59)).map((a) => ({ ...a, label: fd(a.key), tipLabel: fday(a.key) + (a.key === L ? T(' (belum lengkap)', ' (partial)') : ''), partial: a.key === L, extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+      else if (og === 'week') bars(box, agg(weekOf, weekOf(add(L, -16 * 7))).map((a) => ({ ...a, label: fd(a.key), tipLabel: T('Minggu ', 'Week ') + fd(a.key) + ' – ' + fd(add(a.key, 6)), partial: a.key === weekOf(L), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+      else bars(box, agg((d) => d.slice(0, 7), B.min).map((a) => ({ ...a, label: fmon(a.key), tipLabel: fmonL(a.key), partial: a.key === L.slice(0, 7), extra: int(a.o) + T(' pesanan', ' orders') })), series, { tipFmt: rpFull });
+      $('#ovtrend-note').textContent = { day: T('60 hari terakhir. Hari ini belum lengkap (lebih terang).', 'Last 60 days. Today is partial (lighter).'), week: T('17 minggu terakhir, mulai Senin. Minggu ini belum lengkap.', 'Last 17 weeks, Monday start. This week is partial.'), month: T('Sejak Okt 2025. Bulan ini belum lengkap.', 'Since Oct 2025. This month is partial.') }[og]; }
     // health
     const R = range(); const ht = $('#health-tiles'); const tiles = [];
     const mini = (lab, v, sub, cls) => { const d = el('div', 'ss-mini'); d.append(el('div', 'ss-lab', lab), el('span', 'ss-v' + (cls ? ' ' + cls : ''), v)); if (sub) d.append(el('div', 'ss-sub', sub)); return d; };
@@ -2360,9 +2370,8 @@
       $$('.ss-section button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.section === sec)));
       $('#title').hidden = sec === 'reseller'; $('#title-reseller').hidden = sec !== 'reseller'; $('#bell').hidden = sec === 'reseller'; }
     ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
-    { const filt = $('#filters'), sec = document.getElementById('ringkasan'), top = [$('#card-month'), $('#card-glance')];
-      if (S.tab === 'ringkasan') top.forEach((c) => { filt.parentNode.insertBefore(c, filt); c.classList.add('ss-glance-top'); });
-      else if (top[0].parentNode !== sec) top.slice().reverse().forEach((c) => { sec.insertBefore(c, sec.firstChild); c.classList.remove('ss-glance-top'); }); }
+    // on the overview the highlights follow the month headline instead of pushing it down
+    { const ib = $('#insight-box'); if (S.tab === 'ringkasan') $('#card-month').after(ib); else $('#filters').after(ib); }
     const anyFilter = !!TAB_FILTERS[S.tab];
     $('.ss-brands').style.display = uses('brand') ? '' : 'none';
     $('.ss-kind').style.display = uses('kind') ? '' : 'none';
