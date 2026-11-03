@@ -442,7 +442,7 @@ def main():
     group = item_group
 
     byid = {str(o['salesorder_id']): o for o in recent}
-    F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}; G = defaultdict(float)
+    F = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0, 0]); CR = defaultdict(lambda: [0, 0]); CU = defaultdict(lambda: [0, 0]); T = defaultdict(lambda: [0, 0]); ITEM = {}; G = defaultdict(float); KF = defaultdict(lambda: [0, 0.0])
     for k, d in det.items():
         o = byid.get(k)
         if not o: continue
@@ -456,6 +456,9 @@ def main():
         gt = float(o.get('grand_total') or d['gt'])
         f[0] += 1; f[1] += d['sub']; f[2] += d['disc']; f[3] += d['fee']; f[4] += d['ship']; f[5] += gt
         if d.get('cust'): CU[(b, c, d['cust'])][0] += 1; CU[(b, c, d['cust'])][1] += gt
+        if c == 'In-store POS':  # café-only tickets, so a store's till report can leave the café out (Berawa's Brawa coffee)
+            live = [it for it in d['items'] if not it[5] and not (skip_item(it[1], it[2]) and not cafe(it[1], it[2]))]
+            if live and all(group(it[1], it[2]) == 'Kafe' for it in live): k2 = (day, (o.get('location_name') or '-').strip()); KF[k2][0] += 1; KF[k2][1] += gt
         for iid, code, name, qty, amt, cx in d['items']:
             if cx or skip_item(code, name) and not cafe(code, name): continue
             T[(day, code, b)][0] += qty if qty > 0 else (1 if amt > 0 else 0); T[(day, code, b)][1] += amt  # POS lines carry qty 0: count the line
@@ -471,6 +474,7 @@ def main():
     write('titles_daily.csv', ['date', 'item_code', 'brand', 'qty', 'revenue'], [list(k) + [round(v[0], 2), round(v[1])] for k, v in sorted(T.items())])
     # line value per product group per location, for targets split by group (PIM's stationery "ST" line)
     write('group_daily.csv', ['date', 'brand', 'channel', 'location', 'group', 'revenue'], [list(k) + [round(v)] for k, v in sorted(G.items())])
+    write('cafe_daily.csv', ['date', 'location', 'tickets', 'revenue'], [list(k) + [v[0], round(v[1])] for k, v in sorted(KF.items())])
     write('items.csv', ['item_code', 'item_name', 'group', 'price'], [[c, n, g, round(p)] for c, (n, g, p) in ITEM.items()])
     write('basket_daily.csv', BASKET_HEADER, basket_rows(recent, det))
     rec, locr, tit = cancel_recovery(recent, det)
