@@ -612,5 +612,5 @@ date,brand,channel,orders,units,lines,gross,revenue,discount_amount,discounted_o
 2026-11-03,Sinar Starbooks,Blibli,1,1.0,1,175800,158220,17580,1,1,1,158220
 2026-11-03,Sinar Starbooks,Shopee,2,3.0,3,684000,548120,0,0,2,2,548120
 2026-11-03,Wonder Bookstore,In-store POS,13,22.0,22,3106603,3037580,69023,5,2,0,0
-2026-11-03,Wonder Bookstore,Shopee,32,42.0,42,8170200,6566252,0,0,32,5,1109072
+2026-11-03,Wonder Bookstore,Shopee,36,49.0,49,9694800,7788555,0,0,36,6,1213921
 2026-11-03,Wonder Bookstore,Tokopedia,2,2.0,2,601600,601600,0,0,2,0,0

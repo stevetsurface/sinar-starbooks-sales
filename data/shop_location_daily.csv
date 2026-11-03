@@ -8151,8 +8151,8 @@ date,location,shop,channel,status,orders,revenue
 2026-10-29,ASHTA,TOKOPEDIA - Wonderstorecoid,Tokopedia,RETURNED,1,427400
 2026-10-29,ASHTA,TOKOPEDIA - Wonderstorecoid,Tokopedia,SHIPPED,2,578170
 2026-10-29,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,173800
-2026-10-29,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,COMPLETED,4,751700
-2026-10-29,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,4,655100
+2026-10-29,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,COMPLETED,5,896799
+2026-10-29,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,3,510001
 2026-10-29,BALI-BERAWA,TOKOPEDIA - Wonderstorecoid,Tokopedia,COMPLETED,1,131800
 2026-10-29,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,COMPLETED,3,498892
 2026-10-29,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,1,155375
@@ -8312,10 +8312,10 @@ date,location,shop,channel,status,orders,revenue
 2026-11-02,ONLINE,TOKOPEDIA - SINAR STARBOOKS (TTS),Tokopedia,SHIPPED,1,175000
 2026-11-02,ONLINE,TOKOPEDIA - Wonderstorecoid,Tokopedia,SHIPPED,2,627600
 2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,5,1477200
-2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,2,288619
-2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,8,1612327
+2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,228850
+2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,8,1497212
 2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,RETURNED,1,450999
-2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,8,2327429
+2026-11-02,PIM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,9,2502313
 2026-11-02,PIM,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,1,295000
 2026-11-02,PIM,TOKOPEDIA - Wonderstorecoid,Tokopedia,SHIPPED,3,664400
 2026-11-03,ASHTA,SHOPEE - Wonder Bookstore Distric 8,Shopee,PROCESSING,1,174884
@@ -8324,14 +8324,14 @@ date,location,shop,channel,status,orders,revenue
 2026-11-03,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,5,1013041
 2026-11-03,BALI-BERAWA,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,1,334800
 2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,2,357468
-2026-11-03,HUBLIFE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,600360
+2026-11-03,HUBLIFE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,6,1424917
 2026-11-03,JKT-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,2,617833
 2026-11-03,ONLINE,BLIBLI - WOE-70018,Blibli,PAID,1,158220
 2026-11-03,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PENDING,1,267620
 2026-11-03,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PROCESSING,1,280500
-2026-11-03,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,225375
-2026-11-03,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,6,952704
-2026-11-03,ONLINE,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,1,266800
+2026-11-03,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,2,518272
+2026-11-03,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,7,1057553
+2026-11-03,ONLINE,TOKOPEDIA - Wonderstorecoid,Tokopedia,SHIPPED,1,266800
 2026-11-03,PIM,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,302800
 2026-11-03,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,786431
 2026-11-03,PIM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,3,526262
