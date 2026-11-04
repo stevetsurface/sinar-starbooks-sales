@@ -1,4 +1,6 @@
-"""Reseller ready-stock list from Sinar's Accurate warehouse snapshot ("Acc dd.mm.yyyy.xlsx", Quantity Item by Warehouse).
+"""Reseller ready-stock list: the centre warehouse from Sinar's Accurate snapshot ("Acc dd.mm.yyyy.xlsx", Quantity Item by
+Warehouse), the online warehouse and the Jakarta Wonder stores from Jubelio (data/catalog.csv, written by the daily sync).
+Accurate is the truth for the centre, Jubelio for online and the stores (Kafi and Yoga, 4 Nov).
 
 The snapshot lives in Drive (SSB & WBS / SINAR STARBOOKS / Daily Stock Warehouse), which the GitHub sync cannot read,
 so this runs on Steve's Mac:  python3 scripts/ready_stock.py [path-to-Acc.xlsx]
@@ -11,7 +13,8 @@ import openpyxl
 
 DRIVE = os.path.expanduser('~/Library/CloudStorage/GoogleDrive-steve@surfaceskinhabit.com/My Drive/SSB & WBS/SINAR STARBOOKS/Daily Stock Warehouse')
 READY_MIN_QTY = 3          # copies on offer before a title goes on the list
-STORE_KEEP = 2             # copies each Wonder store keeps on its shelf; the rest is offered
+STORE_KEEP = 2             # copies each Wonder store and the online warehouse keep; the rest is offered
+CATALOG = os.environ.get('CATALOG') or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'catalog.csv')
 NOT_FOR_RESELLERS = re.compile(r'VOUCHER|PAPER ?BAG|KARDUS|PACKING|GIFT ?WRAP|BUKU PROMO')  # vouchers, bags, packing, gift wrap and promo bundles carry stock but are not merchandise
 NOT_OURS = re.compile(r'GRAMEDIA')  # Gramedia-published titles are bought locally for our stores, not distributed by us
 FAR_STORES = re.compile(r'BALI')  # Bali stores can't get stock to Jakarta resellers in time (reseller meeting, 3 Nov)
@@ -39,6 +42,16 @@ def newest():
     return max(files, key=day)
 
 
+def jubelio_stock():
+    """Available copies per item at the online warehouse and the Jakarta stores, from Jubelio."""
+    out = {}
+    with open(CATALOG, encoding='utf-8') as f:
+        for r in csv.DictReader(f):
+            locs = (x.rsplit(' ', 1) for x in (r['available_by_location'] or '').split('; ') if ' ' in x)
+            out[r['item_code']] = {l: int(float(q)) for l, q in locs if not FAR_STORES.search(l)}
+    return out
+
+
 def ready(path):
     ws = openpyxl.load_workbook(path, read_only=True, data_only=True).worksheets[0]
     it = ws.iter_rows(values_only=True)
@@ -51,7 +64,7 @@ def ready(path):
         if 'Item No.' in r:
             col = {str(h).strip(): i for i, h in enumerate(r) if h is not None}
             break
-    stores = [(h[len('WONDER '):], i) for h, i in col.items() if h.startswith('WONDER ') and not FAR_STORES.search(h)]
+    jub = jubelio_stock()
     n = lambda v: max(0, int(v)) if isinstance(v, (int, float)) else 0
     out = []
     for r in it:
@@ -61,11 +74,11 @@ def ready(path):
         price = n(r[col['Unit Price']])
         if not price or NOT_FOR_RESELLERS.search(name.upper()) or NOT_OURS.search(sup.upper()): continue
         centre = n(r[col['CENTRE']])
-        offer = [(s, n(r[i]) - STORE_KEEP) for s, i in stores if n(r[i]) > STORE_KEEP]
+        offer = [(s, q - STORE_KEEP) for s, q in jub.get(str(code), {}).items() if q > STORE_KEEP]
         st = sum(q for _, q in offer)
         if centre + st < READY_MIN_QTY: continue
         cat = re.sub(r'\s+', ' ', str(r[col['Item Category Name']] or '')).strip()
-        locs = ([f'GUDANG {centre}'] if centre else []) + [f'{s} {q}' for s, q in sorted(offer, key=lambda x: -x[1])]
+        locs = ([f'GUDANG PUSAT {centre}'] if centre else []) + [f"{'GUDANG ONLINE' if s == 'ONLINE' else s} {q}" for s, q in sorted(offer, key=lambda x: -x[1])]
         out.append([str(code), name, group(cat), cat.title() if cat else '', sup, price, centre + st, centre, st, '; '.join(locs), as_of])
     return sorted(out, key=lambda r: (-r[6] * r[5], r[1]))
 
