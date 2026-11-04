@@ -239,6 +239,11 @@
   .ss-table th.ss-sort-desc::after { content: ' ▼'; font-size: 8px; } .ss-table th.ss-sort-asc::after { content: ' ▲'; font-size: 8px; }
   .ss-table td.ss-name { max-width: 22rem; font-weight: 600; }
   .ss-table td.ss-sel { background: var(--ssb-gold-soft); }
+  .ss-viewas { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #E9E3D6; }
+  .ss-viewas[hidden], #ss-root .ss-section[hidden] { display: none; }
+  .ss-viewas select.ss-bell { appearance: auto; padding: 4px 8px; max-width: min(260px, 60vw); }
+  @media (max-width: 767px) { .ss-viewas select.ss-bell { min-height: 44px; } }
+  .ss-viewas select.ss-bell option { color: #0F2D24; background: #fff; }
   .ss-bell { font: inherit; font-size: 12px; font-weight: 700; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .ss-bell:hover, .ss-bell[aria-expanded="true"] { background: rgba(255,255,255,.24); }
   .ss-bell-n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #D9534F; color: #fff; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
@@ -393,6 +398,7 @@
         <span class="ss-sync-txt" id="upd-top">–</span>
       </div>
       <button type="button" class="ss-bell ss-who-btn" id="who-btn" hidden title="Ganti nama / Change name"></button>
+      <label class="ss-viewas" id="viewas-wrap" hidden><span class="id">Lihat sebagai</span><span class="en">View as</span> <select id="viewas" class="ss-bell"></select></label>
       <button type="button" class="ss-bell" id="bell" aria-expanded="false" aria-controls="inbox"><span class="id">Notifikasi</span><span class="en">Alerts</span><span class="ss-bell-n" id="bell-n" hidden>0</span></button>
       <div class="ss-seg ss-section" role="group" aria-label="Bagian / Section"><button data-section="wonder">Wonder Bookstore</button><button data-section="reseller"><span class="id">Reseller Sinar</span><span class="en">Sinar resellers</span></button></div>
       <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
@@ -1267,7 +1273,7 @@
     if (!name || !role || !slug(name)) return;
     const first = !who(), w = { id: slug(name), name, role };
     try { localStorage.setItem(WHO_KEY, JSON.stringify(w)); } catch (e) {}
-    whoBox.classList.add('ss-hidden'); showWho();
+    whoBox.classList.add('ss-hidden'); showWho(); if (typeof render === 'function') render();  // a new team changes the view
     mpSend('/engage/', { $token: MP_TOKEN, $distinct_id: w.id, $set: { $name: name, role } });
     if (first) track('Open dashboard', { tab: S.tab });
   });
@@ -1288,10 +1294,31 @@
   // two sections: Wonder Bookstore's sales and stock, and the Sinar reseller team's lists and accounts (reseller meeting, 3 Nov)
   const SECTION_TABS = { wonder: ['ringkasan', 'sales', 'toko', 'produk', 'stock', 'finance', 'panduan'], reseller: ['lists', 'reseller'] };
   const sectionOf = (t) => (SECTION_TABS.reseller.includes(t) ? 'reseller' : 'wonder');
+  // Division views: the team picked in "Siapa Anda?" decides which tabs show and where the page opens.
+  // A tidy-up, not a lock: everyone shares one login, and Management can preview any view.
+  const VIEWS = {
+    'Manajemen': { tabs: null, home: 'ringkasan' },
+    'Keuangan': { tabs: ['ringkasan', 'sales', 'finance', 'panduan'], home: 'finance' },
+    'Reseller / distribusi': { tabs: ['lists', 'reseller', 'stock', 'panduan'], home: 'lists' },
+    'Merchandiser': { tabs: ['ringkasan', 'produk', 'stock', 'panduan'], home: 'produk' },
+    'Lainnya': { tabs: ['ringkasan', 'panduan'], home: 'ringkasan' },
+  };
+  const STORE_VIEW = { tabs: ['toko', 'produk', 'stock', 'panduan'], home: 'toko' };
+  const VIEWAS_KEY = 'ssb-viewas';
+  const viewRole = () => { const w = who(); if (!w) return null; if (w.role !== 'Manajemen') return w.role; try { return localStorage.getItem(VIEWAS_KEY) || w.role; } catch (e) { return w.role; } };
+  const viewStore = () => { const r = viewRole(); return r && r.startsWith('Toko ') ? r.slice(5) : null; };
+  const view = () => { const r = viewRole(); return !r ? VIEWS['Manajemen'] : viewStore() ? STORE_VIEW : VIEWS[r] || VIEWS['Lainnya']; };
+  const allowed = (t) => { const v = view().tabs; return !v || v.includes(t); };
+  { // Management only: preview another team's view (this device only)
+    const sel = $('#viewas'), wrap = $('#viewas-wrap');
+    [...document.getElementById('ss-who-r').options].filter((o) => o.value).forEach((o) => { const x = el('option', '', o.textContent); x.value = o.value; sel.append(x); });
+    sel.addEventListener('change', () => { try { localStorage.setItem(VIEWAS_KEY, sel.value); } catch (e) {} S.tab = view().home; showTab(S.tab); });
+    window.ssViewAs = () => { const w = who(); wrap.hidden = !w || w.role !== 'Manajemen'; if (!wrap.hidden) sel.value = viewRole(); };
+  }
   const TAB_KEY = 'ssb-tab';  // each device reopens where it left off, so the reseller team lands on its own section
   const showTab = (t) => { const changed = S.tab !== t; S.tab = t; dash.setLink(t); try { localStorage.setItem(TAB_KEY, t); } catch (e) {} render(); if (changed) { window.scrollTo(0, 0); track('View tab', { tab: t }); } };
   S.lastTab = S.lastTab || {};
-  $$('.ss-section button').forEach((b) => b.addEventListener('click', () => { const sec = b.dataset.section; if (sectionOf(S.tab) !== sec) showTab(S.lastTab[sec] || SECTION_TABS[sec][0]); }));
+  $$('.ss-section button').forEach((b) => b.addEventListener('click', () => { const sec = b.dataset.section; if (sectionOf(S.tab) !== sec) showTab(allowed(S.lastTab[sec]) ? S.lastTab[sec] : SECTION_TABS[sec].find(allowed)); }));
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
   $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
   // alerts inbox: read state lives in this browser only
@@ -1309,7 +1336,8 @@
   document.addEventListener('click', (e) => { const ib = $('#inbox'); if (ib.hidden || ib.contains(e.target) || $('#bell').contains(e.target)) return; closeInbox(false); });
   const ALERT_TAB = { ringkasan: ['Ringkasan', 'Overview'], sales: ['Penjualan', 'Sales'], toko: ['Rapor toko', 'Store scorecard'], stock: ['Stok', 'Stock'], finance: ['Keuangan', 'Finance'], produk: ['Produk', 'Titles'] };
   function renderInbox() {
-    const al = rows('alerts'); const n = $('#bell-n'), list = $('#inbox-list'), note = $('#inbox-note'), bell = $('#bell');
+    const own = viewStore(), mine = (a) => allowed(a.tab) && (!own || a.tab !== 'toko' || a.key === own);
+    const al = rows('alerts') && rows('alerts').filter(mine); const n = $('#bell-n'), list = $('#inbox-list'), note = $('#inbox-note'), bell = $('#bell');
     if (!al) { n.hidden = true; list.replaceChildren(); note.textContent = ds('alerts').status === 'loading' ? '…' : T('Belum ada notifikasi (menunggu sinkronisasi berikutnya).', 'No alerts yet (waiting for the next sync).'); return; }
     const rd = readSet(); const unread = al.filter((a) => !rd.has(a.id)).length;
     n.hidden = false; n.textContent = String(unread); n.classList.toggle('ss-zero', !unread); bell.title = T(`${unread} belum dibaca`, `${unread} unread`);
@@ -2201,7 +2229,9 @@
     const R = range();
     const stores = [...new Set(sr.filter((x) => x.c === 'In-store POS' && isStoreLoc(x.l) && x.d >= add(B.max, -90)).map((x) => x.l))].sort();
     if (!stores.length) { box.replaceChildren(); note.textContent = T('Tidak ada transaksi kasir dalam 90 hari.', 'No POS transactions in the last 90 days.'); return; }
+    const own = viewStore(); if (own && stores.includes(own)) S.store = own;
     if (!S.store || !stores.includes(S.store)) S.store = stores[0];
+    $('.ss-stores').hidden = !!own;  // a store team sees its own store; the side-by-side table still compares
     $('.ss-stores').replaceChildren(...stores.map((st) => { const bt = el('button', '', st); bt.dataset.store = st; bt.setAttribute('aria-pressed', String(st === S.store)); bt.addEventListener('click', () => { S.store = st; render(); }); return bt; }));
     const M = (s, e) => { const m = {}; if (!s) return m; for (const x of sr) { if (x.d < s || x.d > e || !isStoreLoc(x.l)) continue; const a = m[x.l] || (m[x.l] = { pos: 0, po: 0, onl: 0, oo: 0, x: 0 }); if (x.c === 'In-store POS') { a.pos += x.v; a.po += x.o; } else { a.onl += x.v; a.oo += x.o; } a.x += x.x; } return m; };
     const cur = M(R.s, R.e), prv = R.cs ? M(R.cs, R.ce) : null;
@@ -2365,8 +2395,12 @@
     $$('.ss-brands button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.brand === b)));
     $$('.ss-kind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === kind())));
     $$('.ss-tabs button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tab === S.tab)));
+    if (!allowed(S.tab)) { S.tab = view().home; dash.setLink(S.tab); }
+    window.ssViewAs();
     { const sec = sectionOf(S.tab); S.lastTab[sec] = S.tab;
-      $$('.ss-tabs button').forEach((x) => { x.hidden = sectionOf(x.dataset.tab) !== sec; });
+      $$('.ss-tabs button').forEach((x) => { x.hidden = sectionOf(x.dataset.tab) !== sec || !allowed(x.dataset.tab); });
+      $$('.ss-section button').forEach((x) => { x.hidden = !SECTION_TABS[x.dataset.section].some(allowed); });
+      $('.ss-section').hidden = $$('.ss-section button').filter((x) => !x.hidden).length < 2;
       $$('.ss-section button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.section === sec)));
       $('#title').hidden = sec === 'reseller'; $('#title-reseller').hidden = sec !== 'reseller'; $('#bell').hidden = sec === 'reseller'; }
     ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
@@ -2399,7 +2433,7 @@
   const named = location.hash.replace(/^#\/?/, ''); // accepts old "#tab" links and new "#/tab" ones
   if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
   else if (named === 'moving') { S.tab = 'stock'; dash.setLink('stock'); render(); }
-  else if (!named) { let t = null; try { t = localStorage.getItem(TAB_KEY); } catch (e) {} if (t && sectionOf(t) === 'reseller') { S.tab = t; dash.setLink(t); render(); } }
+  else if (!named) { let t = null; try { t = localStorage.getItem(TAB_KEY); } catch (e) {} if (t && sectionOf(t) === 'reseller' && allowed(t)) { S.tab = t; dash.setLink(t); render(); } else if (who()) { S.tab = view().home; dash.setLink(S.tab); render(); } }
   if (named) { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); }
   if (who()) track('Open dashboard', { tab: S.tab }); else askWho();
 })();
