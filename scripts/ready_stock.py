@@ -17,6 +17,7 @@ STORE_KEEP = 2             # copies each Wonder store and the online warehouse k
 CATALOG = os.environ.get('CATALOG') or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'catalog.csv')
 NOT_FOR_RESELLERS = re.compile(r'VOUCHER|PAPER ?BAG|KARDUS|PACKING|GIFT ?WRAP|BUKU PROMO')  # vouchers, bags, packing, gift wrap and promo bundles carry stock but are not merchandise
 NOT_OURS = re.compile(r'GRAMEDIA')  # Gramedia-published titles are bought locally for our stores, not distributed by us
+JUBELIO_CENTRE = re.compile(r'CENT|PUSAT|SUKAPURA', re.I)  # the centre comes from Accurate only, never from Jubelio (4 Nov)
 FAR_STORES = re.compile(r'BALI')  # Bali stores can't get stock to Jakarta resellers in time (reseller meeting, 3 Nov)
 HEADER = ['item_code', 'item_name', 'group', 'category', 'supplier', 'price', 'offer_qty', 'centre', 'stores_offer', 'offer_by_location', 'as_of']
 
@@ -48,7 +49,7 @@ def jubelio_stock():
     with open(CATALOG, encoding='utf-8') as f:
         for r in csv.DictReader(f):
             locs = (x.rsplit(' ', 1) for x in (r['available_by_location'] or '').split('; ') if ' ' in x)
-            out[r['item_code']] = {l: int(float(q)) for l, q in locs if not FAR_STORES.search(l)}
+            out[r['item_code']] = {l: int(float(q)) for l, q in locs if not FAR_STORES.search(l) and not JUBELIO_CENTRE.search(l)}
     return out
 
 
