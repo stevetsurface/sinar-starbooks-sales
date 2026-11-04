@@ -14,6 +14,7 @@ CACHE = os.path.join(ROOT, 'data', 'book_meta.csv')
 HEADER = ['isbn', 'cover', 'synopsis', 'source', 'google_checked', 'checked']
 KEY = os.environ.get('GOOGLE_BOOKS_KEY', '').strip()
 PER_RUN = 900              # stays under Google's 1,000 a day
+PACE = 0.7                 # seconds between titles with the key: Google also caps requests per minute
 RETRY_DAYS = 30            # a title with nothing found is tried again after this long (new titles get covers late)
 SYNOPSIS_MAX = 600         # characters kept, cut at a sentence end where possible
 LISTS = [('preorder.csv', 'isbn'), ('ready_stock.csv', 'item_code'), ('clearance.csv', 'item_code')]
@@ -77,18 +78,22 @@ def main():
         if '/b/isbn/' in r['cover']: return True  # older rate-limited link, swap for the cover-id one
         return not r['cover'] and date.fromisoformat(r['checked']) <= today - timedelta(days=RETRY_DAYS)
     todo = [i for i in wanted() if due(i)][:PER_RUN if KEY else None]  # the cap is for Google's quota only
-    found = 0
+    found, done, waits = 0, 0, 0
     for n, i in enumerate(todo):
         old = cache.get(i, {})
         cover, syn, src = '', '', []
         if KEY:
-            try:
-                cover, syn = google(i)
-                if cover or syn: src.append('Google Books')
-            except urllib.error.HTTPError as e:
-                if e.code == 429: print('Google quota reached after', n, 'lookups; the rest wait for the next run', file=sys.stderr); break
-                print('google', i, e, file=sys.stderr)
-            except Exception as e: print('google', i, e, file=sys.stderr)
+            for attempt in range(3):  # a 429 is usually the per-minute cap: wait a minute and go on
+                try:
+                    cover, syn = google(i)
+                    if cover or syn: src.append('Google Books')
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code != 429: print('google', i, e, file=sys.stderr); break
+                    waits += 1; time.sleep(65)
+                except Exception as e: print('google', i, e, file=sys.stderr); break
+            else:
+                print('Google still refusing after', n, 'lookups (daily quota); the rest wait for the next run', file=sys.stderr); break
         if not cover:
             cover = openlibrary(i)
             if cover: src.append('Open Library')
@@ -96,11 +101,12 @@ def main():
         found += bool(cover)
         cache[i] = {'isbn': i, 'cover': cover, 'synopsis': syn, 'source': ' + '.join(src) or old.get('source', ''),
                     'google_checked': 'y' if KEY else old.get('google_checked', ''), 'checked': today.isoformat()}
-        time.sleep(0.1)
+        done += 1
+        time.sleep(PACE if KEY else 0.1)
         if n % 100 == 99: save(cache)
     save(cache)
     rows = cache.values()
-    print(f'book meta: looked up {len(todo)} ({found} with a cover), cache {len(cache)} ISBNs,',
+    print(f'book meta: looked up {done} of {len(todo)} due ({found} with a cover, {waits} one-minute waits), cache {len(cache)} ISBNs,',
           sum(1 for r in rows if r['cover']), 'covers,', sum(1 for r in rows if r['synopsis']), 'synopses', '' if KEY else '(no GOOGLE_BOOKS_KEY: Open Library covers only)')
 
 
