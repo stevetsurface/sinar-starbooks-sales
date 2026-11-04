@@ -8306,9 +8306,8 @@ date,location,shop,channel,status,orders,revenue
 2026-11-03,ASHTA,SHOPEE - Wonder Bookstore Distric 8,Shopee,SHIPPED,2,331253
 2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,674600
 2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,104849
-2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,794440
-2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,REQUEST_CANCEL,1,138370
-2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,3,479411
+2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,3,528752
+2026-11-03,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,5,883469
 2026-11-03,ASHTA,Shop | Tokopedia - WonderBookstore,TikTok Shop,PROCESSING,1,224800
 2026-11-03,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,315800
 2026-11-03,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,140269
@@ -8317,8 +8316,8 @@ date,location,shop,channel,status,orders,revenue
 2026-11-03,BALI-BERAWA,Shop | Tokopedia - WonderBookstore,TikTok Shop,PENDING,1,276800
 2026-11-03,BALI-BERAWA,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,3,1028200
 2026-11-03,BALI-BERAWA,TOKOPEDIA - Wonderstorecoid,Tokopedia,SHIPPED,1,334800
-2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,2,249759
-2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,571466
+2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,94384
+2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,5,726841
 2026-11-03,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,3,554087
 2026-11-03,HUBLIFE,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,3,503400
 2026-11-03,HUBLIFE,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,155564
@@ -8328,7 +8327,7 @@ date,location,shop,channel,status,orders,revenue
 2026-11-03,JKT-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,572057
 2026-11-03,JKT-TSM,SHOPEE - Wonderstore Official Shop,Shopee,SHIPPED,2,555043
 2026-11-03,ONLINE,BLIBLI - WOE-70018,Blibli,SHIPPED,1,158220
-2026-11-03,ONLINE,LAZADA - verasinarstarbooks@gmail.com,Lazada,PAID,1,82256
+2026-11-03,ONLINE,LAZADA - verasinarstarbooks@gmail.com,Lazada,PROCESSING,1,82256
 2026-11-03,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,CANCELED,2,441000
 2026-11-03,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PROCESSING,8,3603155
 2026-11-03,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,SHIPPED,4,931215
@@ -8345,19 +8344,21 @@ date,location,shop,channel,status,orders,revenue
 2026-11-03,PIM,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,2,453400
 2026-11-04,ASHTA,SHOPEE - Wonder Bookstore Distric 8,Shopee,PROCESSING,1,156369
 2026-11-04,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,188800
-2026-11-04,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,2,373843
-2026-11-04,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,3,1033176
+2026-11-04,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,3,583342
+2026-11-04,ASHTA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,1117900
+2026-11-04,ASHTA,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,1,162800
 2026-11-04,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,300464
-2026-11-04,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,3,663112
+2026-11-04,BALI-BERAWA,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,4,745421
 2026-11-04,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,59769
 2026-11-04,BALI-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,2,268871
 2026-11-04,HUBLIFE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,3,352221
 2026-11-04,JKT-TSM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,2,312738
 2026-11-04,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PENDING,1,267620
-2026-11-04,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PROCESSING,2,1002945
+2026-11-04,ONLINE,SHOPEE - SINAR STAR BOOKS,Shopee,PROCESSING,5,2093115
 2026-11-04,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,CANCELED,1,316800
 2026-11-04,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,2,111488
-2026-11-04,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,10,1565300
+2026-11-04,ONLINE,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,11,1617019
+2026-11-04,ONLINE,TOKOPEDIA - Kikkerland,Tokopedia,PROCESSING,1,91960
 2026-11-04,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PENDING,1,228850
-2026-11-04,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,6,1322199
+2026-11-04,PIM,SHOPEE - Wonderstore Official Shop,Shopee,PROCESSING,8,1606762
 2026-11-04,PIM,TOKOPEDIA - Wonderstorecoid,Tokopedia,PROCESSING,3,1018200
