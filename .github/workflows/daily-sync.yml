@@ -23,6 +23,9 @@ jobs:
           JUBELIO_EMAIL: ${{ secrets.JUBELIO_EMAIL }}
           JUBELIO_PASSWORD: ${{ secrets.JUBELIO_PASSWORD }}
         run: python scripts/jubelio_sync.py
+      - name: Reseller ready stock (newest Accurate snapshot in Drive + Jubelio stores)
+        continue-on-error: true   # a Drive hiccup keeps yesterday's list and must not stop the data commit
+        run: python scripts/ready_stock.py --drive
       - name: Covers and synopses for the reseller lists
         continue-on-error: true   # a lookup outage must not stop the data commit
         env:

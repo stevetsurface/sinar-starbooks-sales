@@ -2,15 +2,18 @@
 Warehouse), the online warehouse and the Jakarta Wonder stores from Jubelio (data/catalog.csv, written by the daily sync).
 Accurate is the truth for the centre, Jubelio for online and the stores (Kafi and Yoga, 4 Nov).
 
-The snapshot lives in Drive (SSB & WBS / SINAR STARBOOKS / Daily Stock Warehouse), which the GitHub sync cannot read,
-so this runs on Steve's Mac:  python3 scripts/ready_stock.py [path-to-Acc.xlsx]
-With no path it takes the newest snapshot in the synced Drive folder. Writes data/ready_stock.csv.
+Yoga puts a snapshot in Drive every morning (SSB & WBS / SINAR STARBOOKS / Daily Stock Warehouse, shared as
+"anyone with the link"). The GitHub sync reads the newest one from there; on a day the file isn't in yet it uses the latest.
+  python scripts/ready_stock.py --drive        newest snapshot from the shared Drive folder (GitHub)
+  python3 scripts/ready_stock.py [path]         a local file, or the newest in the Mac's synced Drive folder
+Writes data/ready_stock.csv.
 """
-import csv, glob, os, re, sys
+import csv, glob, os, re, sys, tempfile, urllib.request
 from datetime import datetime
 
 import openpyxl
 
+DRIVE_FOLDER = '1ZIsYapiuSA0IHG9nj3cQH7o0LAy3mV8V'  # Daily Stock Warehouse, read without signing in
 DRIVE = os.path.expanduser('~/Library/CloudStorage/GoogleDrive-steve@surfaceskinhabit.com/My Drive/SSB & WBS/SINAR STARBOOKS/Daily Stock Warehouse')
 READY_MIN_QTY = 3          # copies on offer before a title goes on the list
 STORE_KEEP = 2             # copies each Wonder store and the online warehouse keep; the rest is offered
@@ -34,10 +37,26 @@ def group(cat):
     return 'Buku umum'
 
 
+def day(name):
+    m = re.search(r'Acc (\d{2})\.(\d{2})\.(\d{4})', os.path.basename(name))
+    return datetime(int(m[3]), int(m[2]), int(m[1])) if m else datetime.min
+
+
+def from_drive():
+    """Download the newest Acc snapshot from the shared folder; returns the local path."""
+    get = lambda u: urllib.request.urlopen(urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60).read()
+    page = get(f'https://drive.google.com/embeddedfolderview?id={DRIVE_FOLDER}').decode('utf-8', 'ignore')
+    files = [(t.strip(), i) for i, t in re.findall(r'/file/d/([\w-]+)/.*?<div class="flip-entry-title">([^<]+)</div>', page, re.S) if day(t) > datetime.min]
+    if not files: sys.exit('no Acc snapshot in the shared Drive folder (is it still shared as "anyone with the link"?)')
+    name, fid = max(files, key=lambda f: day(f[0]))
+    data = get(f'https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t')
+    if not data.startswith(b'PK'): sys.exit(f'{name}: Drive did not return the xlsx (sharing changed?)')
+    path = os.path.join(tempfile.mkdtemp(), name.replace(' .', '.'))
+    with open(path, 'wb') as f: f.write(data)
+    return path
+
+
 def newest():
-    def day(p):
-        m = re.search(r'Acc (\d{2})\.(\d{2})\.(\d{4})', os.path.basename(p))
-        return datetime(int(m[3]), int(m[2]), int(m[1])) if m else datetime.min
     files = [p for p in glob.glob(os.path.join(DRIVE, 'Acc *.xlsx')) if day(p) > datetime.min]
     if not files: sys.exit('no Acc snapshot in ' + DRIVE)
     return max(files, key=day)
@@ -85,7 +104,8 @@ def ready(path):
 
 
 if __name__ == '__main__':
-    src = sys.argv[1] if len(sys.argv) > 1 else newest()
+    arg = sys.argv[1] if len(sys.argv) > 1 else ''
+    src = from_drive() if arg == '--drive' else arg or newest()
     rows = ready(src)
     dst = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'ready_stock.csv')
     with open(dst, 'w', newline='', encoding='utf-8') as f:
