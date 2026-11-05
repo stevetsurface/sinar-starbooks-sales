@@ -1,13 +1,4 @@
 date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled_orders,canceled_value
-2026-08-06,Kikkerland,TikTok Shop,1,204800,10240,0,0,194560,0,0
-2026-08-06,Kikkerland,Tokopedia,2,628600,38590,0,0,590010,0,0
-2026-08-06,Sinar Starbooks,Blibli,2,840780,0,0,0,840780,0,0
-2026-08-06,Sinar Starbooks,Shopee,11,5169000,0,996600,0,4158650,2,702000
-2026-08-06,Sinar Starbooks,Tokopedia,11,4478000,39000,0,0,4439000,0,0
-2026-08-06,Wonder Bookstore,In-store POS,135,44419305,2724275,0,0,41695030,0,0
-2026-08-06,Wonder Bookstore,Shopee,136,34323800,101260,6673277,0,27424663,26,7470000
-2026-08-06,Wonder Bookstore,TikTok Shop,1,224800,0,0,0,224800,1,162800
-2026-08-06,Wonder Bookstore,Tokopedia,30,6647600,478090,0,0,6169510,3,426400
 2026-08-07,Kikkerland,Tokopedia,3,600000,32320,0,0,567680,0,0
 2026-08-07,Sinar Starbooks,Blibli,1,145800,0,0,0,145800,1,176220
 2026-08-07,Sinar Starbooks,Shopee,2,392000,0,76440,0,313060,3,634000
@@ -569,7 +560,7 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-10-24,Kikkerland,Tokopedia,1,355800,17790,0,0,338010,2,654600
 2026-10-24,Sinar Starbooks,Shopee,5,4097000,0,795080,0,3295670,3,1354000
 2026-10-24,Sinar Starbooks,Tokopedia,2,509000,0,0,0,509000,0,0
-2026-10-24,Wonder Bookstore,In-store POS,174,46209903,1290503,0,0,44919400,0,0
+2026-10-24,Wonder Bookstore,In-store POS,175,46612703,1693303,0,0,44919400,0,0
 2026-10-24,Wonder Bookstore,Shopee,40,8939200,0,1744874,0,7144326,15,3302800
 2026-10-24,Wonder Bookstore,TikTok Shop,1,195800,0,0,0,195800,0,0
 2026-10-24,Wonder Bookstore,Tokopedia,8,1718200,52250,0,0,1665950,0,0
@@ -635,7 +626,7 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-11-01,Sinar Starbooks,Shopee,10,4663000,0,904315,0,3746185,1,247000
 2026-11-01,Sinar Starbooks,Tokopedia,1,363000,0,0,0,363000,0,0
 2026-11-01,Wonder Bookstore,In-store POS,154,32892203,420323,0,0,32471880,0,0
-2026-11-01,Wonder Bookstore,Shopee,90,23106000,0,4488746,0,18506004,20,4195800
+2026-11-01,Wonder Bookstore,Shopee,91,23318800,0,4530242,0,18676058,19,3983000
 2026-11-01,Wonder Bookstore,TikTok Shop,1,125800,0,0,0,125800,0,0
 2026-11-01,Wonder Bookstore,Tokopedia,15,2925800,0,0,0,2925800,1,259000
 2026-11-02,Kikkerland,TikTok Shop,0,0,0,0,0,0,1,365800
@@ -652,11 +643,17 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-11-03,Sinar Starbooks,Lazada,1,84800,2544,0,0,82256,0,0
 2026-11-03,Sinar Starbooks,Shopee,12,5647000,0,1097630,0,4534370,2,441000
 2026-11-03,Wonder Bookstore,In-store POS,72,17867103,371773,0,0,17495330,0,0
-2026-11-03,Wonder Bookstore,Shopee,107,24193600,0,4694701,0,19365149,12,3223800
-2026-11-03,Wonder Bookstore,TikTok Shop,3,1037400,10000,0,0,1027400,0,0
+2026-11-03,Wonder Bookstore,Shopee,103,23572400,0,4573567,0,18870083,16,3845000
+2026-11-03,Wonder Bookstore,TikTok Shop,2,760600,10000,0,0,750600,1,276800
 2026-11-03,Wonder Bookstore,Tokopedia,8,2400000,0,0,0,2400000,1,315800
-2026-11-04,Kikkerland,Tokopedia,1,96800,4840,0,0,91960,0,0
-2026-11-04,Sinar Starbooks,Shopee,7,3610000,0,704025,0,2897225,0,0
-2026-11-04,Wonder Bookstore,In-store POS,4,255802,2,0,0,255800,0,0
-2026-11-04,Wonder Bookstore,Shopee,44,9808400,0,1920238,0,7833162,2,505600
-2026-11-04,Wonder Bookstore,Tokopedia,4,1181000,0,0,0,1181000,0,0
+2026-11-04,Kikkerland,Tokopedia,2,333600,4840,0,0,328760,0,0
+2026-11-04,Sinar Starbooks,Blibli,0,0,0,0,0,0,1,0
+2026-11-04,Sinar Starbooks,Shopee,30,10034000,0,1949260,0,8047240,3,813000
+2026-11-04,Sinar Starbooks,TikTok Shop,2,290000,0,0,0,290000,1,145000
+2026-11-04,Sinar Starbooks,Tokopedia,2,350000,0,0,0,350000,0,0
+2026-11-04,Wonder Bookstore,In-store POS,97,20626203,1030113,0,0,19596090,0,0
+2026-11-04,Wonder Bookstore,Shopee,123,32411800,0,6277750,0,25980300,9,2477400
+2026-11-04,Wonder Bookstore,TikTok Shop,1,383800,0,0,0,383800,0,0
+2026-11-04,Wonder Bookstore,Tokopedia,9,2266800,0,0,0,2266800,0,0
+2026-11-05,Wonder Bookstore,Shopee,22,6699800,0,1307596,0,5364704,1,204800
+2026-11-05,Wonder Bookstore,Tokopedia,4,730400,0,0,0,730400,0,0
