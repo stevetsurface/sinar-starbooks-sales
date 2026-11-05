@@ -1331,13 +1331,30 @@
   const closeInbox = (refocus) => { const ib = $('#inbox'); if (ib.hidden) return; ib.hidden = true; $('#bell').setAttribute('aria-expanded', 'false'); if (refocus) $('#bell').focus(); };
   $('#bell').addEventListener('click', () => ($('#inbox').hidden ? openInbox() : closeInbox(true)));
   $('#inbox-close').addEventListener('click', () => closeInbox(true));
-  $('#inbox-readall').addEventListener('click', () => { const st = readSet(); (rows('alerts') || []).forEach((a) => st.add(a.id)); saveRead(st); renderInbox(); });
+  $('#inbox-readall').addEventListener('click', () => { const st = readSet(); (myAlerts() || []).forEach((a) => st.add(a.id)); saveRead(st); renderInbox(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInbox(true); });
   document.addEventListener('click', (e) => { const ib = $('#inbox'); if (ib.hidden || ib.contains(e.target) || $('#bell').contains(e.target)) return; closeInbox(false); });
   const ALERT_TAB = { ringkasan: ['Ringkasan', 'Overview'], sales: ['Penjualan', 'Sales'], toko: ['Rapor toko', 'Store scorecard'], stock: ['Stok', 'Stock'], finance: ['Keuangan', 'Finance'], produk: ['Produk', 'Titles'] };
+  // Which team gets which alert. 'Toko' means a store team, and a store drop goes only to that store.
+  // Management (and Management's "View as" off) gets everything. A rule not listed here falls back to "teams whose view has the tab".
+  const ALERT_TEAMS = {
+    store_drop: ['Toko'],
+    cancel_rate: ['Keuangan'],
+    runout: ['Merchandiser', 'Toko'],
+    oversold: ['Merchandiser'],
+    transfers: ['Toko', 'Reseller / distribusi', 'Merchandiser'],
+  };
+  const myAlert = (a) => {
+    const r = viewRole() || 'Manajemen', own = viewStore();
+    if (r === 'Manajemen') return true;
+    const teams = ALERT_TEAMS[a.rule];
+    if (!teams) return allowed(a.tab) && (!own || a.tab !== 'toko' || a.key === own);
+    if (own) return teams.includes('Toko') && (a.rule !== 'store_drop' || a.key === own);
+    return teams.includes(r);
+  };
+  const myAlerts = () => rows('alerts') && rows('alerts').filter(myAlert);
   function renderInbox() {
-    const own = viewStore(), mine = (a) => allowed(a.tab) && (!own || a.tab !== 'toko' || a.key === own);
-    const al = rows('alerts') && rows('alerts').filter(mine); const n = $('#bell-n'), list = $('#inbox-list'), note = $('#inbox-note'), bell = $('#bell');
+    const al = myAlerts(); const n = $('#bell-n'), list = $('#inbox-list'), note = $('#inbox-note'), bell = $('#bell');
     if (!al) { n.hidden = true; list.replaceChildren(); note.textContent = ds('alerts').status === 'loading' ? '…' : T('Belum ada notifikasi (menunggu sinkronisasi berikutnya).', 'No alerts yet (waiting for the next sync).'); return; }
     const rd = readSet(); const unread = al.filter((a) => !rd.has(a.id)).length;
     n.hidden = false; n.textContent = String(unread); n.classList.toggle('ss-zero', !unread); bell.title = T(`${unread} belum dibaca`, `${unread} unread`);
