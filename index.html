@@ -181,6 +181,10 @@
   .ss-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 12px; }
   .ss-card-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: center; }
   .ss-card h2 { font-family: var(--ssb-serif); font-weight: 500; font-size: 15px; letter-spacing: -0.01em; text-transform: uppercase; color: var(--ssb-purple); margin: 0; }
+  .ss-res-off { display: none; }
+  .ss-res-go { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; padding: 0 18px; border: 0; border-radius: 999px; background: #0F2D24; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  #reseller.ss-res-unavailable > * { display: none; }
+  #reseller.ss-res-unavailable > .ss-res-off { display: block; }
   .ss-note { font-size: 12px; line-height: 1.5; color: var(--ssb-muted); margin: 4px 0 12px; }
   .ss-chart { position: relative; min-height: 230px; }
   .ss-chart.ss-h { min-height: 120px; }
@@ -604,6 +608,11 @@
 
   <!-- ================= RESELLER ================= -->
   <section id="reseller" class="ss" hidden>
+    <div class="ss-status ss-res-off" id="res-off">
+      <p class="id"><b>Data akun reseller belum ada di situs ini.</b> Isinya nama toko dan angka penjualan, jadi baru dipasang setelah ada login khusus. Tab ini tidak rusak. Stok siap kirim, cuci gudang dan pre-order tetap bisa dilihat di Daftar reseller.</p>
+      <p class="en"><b>Reseller account data isn't on this site yet.</b> It holds shop names and sales figures, so it goes up once there's a private login. This tab isn't broken. Ready stock, clearance and pre-order are still in Reseller lists.</p>
+      <button type="button" class="ss-res-go" id="res-go"><span class="id">Buka Daftar reseller</span><span class="en">Open Reseller lists</span></button>
+    </div>
     <div class="ss-status"><p class="id">Data reseller Sinar Star berasal dari <b>Reseller Recency Database</b> dan <b>Reseller Tracker</b> (bukan Jubelio), per 14–22 Okt 2026. Filter merek dan periode tidak berlaku di sini.</p><p class="en">Sinar Star reseller data comes from the <b>Reseller Recency Database</b> and <b>Reseller Tracker</b> files (not Jubelio), as of 14–22 Oct 2026. Brand and period filters don't apply here.</p></div>
     <div class="ss-tiles" id="res-tiles" data-source="resellers reseller_tracker"></div>
     <div class="ss-grid">
@@ -1224,6 +1233,7 @@
   $$('.ss-topsort button').forEach((b) => b.addEventListener('click', () => { S.sort = b.dataset.sort; render(); }));
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
   $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
+  $('#res-go').addEventListener('click', () => showTab('lists'));
   $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
   $$('.ss-clrcat button').forEach((b) => b.addEventListener('click', () => { S.clrCat = b.dataset.cat; render(); }));
   $('#clr-search').addEventListener('input', (e) => { S.clrQ = e.target.value; renderLists(); });
@@ -1753,6 +1763,7 @@
   // ---------------- RESELLER ----------------
   function renderReseller() {
     const rs = rows('resellers'), tk = rows('reseller_tracker'); const rt = $('#res-tiles');
+    $('#reseller').classList.toggle('ss-res-unavailable', ds('resellers').status === 'error');
     if (!rs) { rt.replaceChildren(); return; }
     const sum = (a, f) => a.reduce((s, r) => s + (+r[f] || 0), 0);
     const active = rs.filter((r) => r.recency === 'Under 60 days');
