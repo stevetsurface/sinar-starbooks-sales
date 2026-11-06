@@ -1308,7 +1308,7 @@
   const viewRole = () => { const w = who(); if (!w) return null; if (w.role !== 'Manajemen') return w.role; try { return localStorage.getItem(VIEWAS_KEY) || w.role; } catch (e) { return w.role; } };
   const viewStore = () => { const r = viewRole(); return r && r.startsWith('Toko ') ? r.slice(5) : null; };
   const view = () => { const r = viewRole(); return !r ? VIEWS['Manajemen'] : viewStore() ? STORE_VIEW : VIEWS[r] || VIEWS['Lainnya']; };
-  const allowed = (t) => { const v = view().tabs; return !v || v.includes(t); };
+  const allowed = (t) => { const v = view().tabs; return !v || v.includes(t) || SECTION_TABS.reseller.includes(t); };  // the reseller section shows for every team
   { // Management only: preview another team's view (this device only)
     const sel = $('#viewas'), wrap = $('#viewas-wrap');
     [...document.getElementById('ss-who-r').options].filter((o) => o.value).forEach((o) => { const x = el('option', '', o.textContent); x.value = o.value; sel.append(x); });
