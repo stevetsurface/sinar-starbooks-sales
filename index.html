@@ -65,7 +65,7 @@
 <script>
 /* Minimal stand-in for the claude.ai dashboard runtime: loads data/*.csv and serves dash.data / dash.calc / dash.params. */
 (function () {
-  const DATASETS = ["targets", "shop_location_daily", "cafe_daily", "preorder", "book_meta", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
+  const DATASETS = ["catalog", "targets", "shop_location_daily", "cafe_daily", "preorder", "book_meta", "group_daily", "scout_picks", "clearance", "ready_stock", "reorder", "slow_movers", "suppliers", "alerts", "basket_daily", "cancel_by_location", "cancel_recovery", "cancel_titles", "store_daily", "transfer_summary", "cancel_reasons", "customers_90d", "finance_daily", "hour_dow", "items", "reseller_tracker", "resellers", "sales_daily_detail", "snapshots", "stock_best_sellers", "stock_dead_by_location", "stock_dead_items", "stock_dead_titles", "stock_dead_titles_total", "stock_locations", "stock_low_by_location", "stock_low_selling", "stock_oversold", "stock_runout", "stock_transfers", "titles_daily"];
   const store = {}; const calcs = {}; const cbs = [];
   let params = { brand: 'All', kind: 'all', period: 'mtd', start: null, end: null, gran: null, lang: 'id' };
   try { Object.assign(params, JSON.parse(localStorage.getItem('ssb-dash-params') || '{}')); } catch (e) {}
@@ -185,6 +185,11 @@
   .ss-res-go { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; padding: 0 18px; border: 0; border-radius: 999px; background: #0F2D24; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
   #reseller.ss-res-unavailable > * { display: none; }
   #reseller.ss-res-unavailable > .ss-res-off { display: block; }
+  .ss-md-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
+  .ss-stockkind { align-self: flex-start; width: fit-content; margin-bottom: 12px; }
+  .ss-file { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #0F2D24; color: #fff; font-weight: 700; cursor: pointer; }
+  .ss-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .ss-file-input:focus-visible + .ss-note, .ss-file:focus-within { outline: 3px solid var(--ssb-gold, #C89B5A); outline-offset: 2px; }
   .ss-note { font-size: 12px; line-height: 1.5; color: var(--ssb-muted); margin: 4px 0 12px; }
   .ss-chart { position: relative; min-height: 230px; }
   .ss-chart.ss-h { min-height: 120px; }
@@ -396,6 +401,7 @@
     <div class="ss-titles">
       <h1 id="title"><span class="id">Dashboard Penjualan &amp; Stok</span><span class="en">Sales &amp; Stock Dashboard</span></h1>
       <h1 id="title-reseller" hidden><span class="id">Reseller Sinar Star Books</span><span class="en">Sinar Star Books resellers</span></h1>
+      <h1 id="title-md" hidden>Merchandising</h1>
     </div>
     <div class="ss-topright">
       <div class="ss-sync" data-source="snapshots">
@@ -404,7 +410,7 @@
       <button type="button" class="ss-bell ss-who-btn" id="who-btn" hidden title="Ganti nama / Change name"></button>
       <label class="ss-viewas" id="viewas-wrap" hidden><span class="id">Lihat sebagai</span><span class="en">View as</span> <select id="viewas" class="ss-bell"></select></label>
       <button type="button" class="ss-bell" id="bell" aria-expanded="false" aria-controls="inbox"><span class="id">Notifikasi</span><span class="en">Alerts</span><span class="ss-bell-n" id="bell-n" hidden>0</span></button>
-      <div class="ss-seg ss-section" role="group" aria-label="Bagian / Section"><button data-section="wonder">Wonder Bookstore</button><button data-section="reseller"><span class="id">Reseller Sinar</span><span class="en">Sinar resellers</span></button></div>
+      <div class="ss-seg ss-section" role="group" aria-label="Bagian / Section"><button data-section="wonder">Wonder Bookstore</button><button data-section="reseller"><span class="id">Reseller Sinar</span><span class="en">Sinar resellers</span></button><button data-section="md">Merchandising</button></div>
       <div class="ss-seg ss-lang" role="group" aria-label="Bahasa / Language"><button data-lang="id">ID</button><button data-lang="en">EN</button></div>
     </div>
     <div class="ss-seg ss-tabs" role="tablist" aria-label="Halaman / Pages" style="flex-basis:100%">
@@ -414,6 +420,9 @@
       <button data-tab="produk"><span class="id">Produk</span><span class="en">Titles</span></button>
       <button data-tab="lists"><span class="id">Daftar reseller</span><span class="en">Reseller lists</span></button>
       <button data-tab="reseller"><span class="id">Akun reseller</span><span class="en">Reseller accounts</span></button>
+      <button data-tab="mdlist"><span class="id">Judul perlu perhatian</span><span class="en">Titles to watch</span></button>
+      <button data-tab="mdscout">Book Scout</button>
+      <button data-tab="mdsri"><span class="id">Cek SRI</span><span class="en">SRI check</span></button>
       <button data-tab="stock"><span class="id">Stok</span><span class="en">Stock</span></button>
       <button data-tab="finance"><span class="id">Keuangan</span><span class="en">Finance</span></button>
       <button data-tab="panduan"><span class="id">Panduan</span><span class="en">Guide</span></button>
@@ -688,7 +697,56 @@
   </section>
 
   <!-- ================= STOK ================= -->
+  <!-- ================= MERCHANDISING ================= -->
+  <section id="mdlist" class="ss" hidden>
+    <div class="ss-status"><p class="id"><b>Hanya buku.</b> Angka pesanan tetap dari SRI; halaman ini menandai judul yang perlu diperhatikan. Stok = toko + gudang online di Jubelio + gudang pusat di file Accurate. Kolom Dipesan tidak ikut dihitung karena sumbernya belum jelas.</p><p class="en"><b>Books only.</b> Order quantities still come from SRI; this page flags the titles to look at. Stock = stores + online warehouse in Jubelio + central warehouse in the Accurate file. The On order column is left out of the sums because its source is still unclear.</p></div>
+    <div class="ss-tiles" id="md-tiles" data-source="catalog ready_stock"></div>
+    <div class="ss-card" id="card-mdlist">
+      <div class="ss-card-h"><h2><span class="id">Judul perlu perhatian</span><span class="en">Titles to watch</span></h2><span class="ss-card-tools"><input class="ss-search" id="md-search" placeholder="Cari / Search"><button class="ss-xl" data-export="mdlist">Excel</button></span></div>
+      <div class="ss-md-filters">
+        <div class="ss-seg ss-mdband" role="group" aria-label="Status"><button data-band="KRITIS">Kritis</button><button data-band="SEGERA">Segera</button><button data-band="PANTAU">Pantau</button><button data-band="TRANSFER">Transfer</button><button data-band="all"><span class="id">Semua</span><span class="en">All</span></button></div>
+        <div class="ss-seg ss-mdgroup" role="group" aria-label="Kategori / Category"><button data-group="all"><span class="id">Semua</span><span class="en">All</span></button><button data-group="Buku umum"><span class="id">Umum</span><span class="en">General</span></button><button data-group="Buku anak"><span class="id">Anak</span><span class="en">Children's</span></button><button data-group="Komik &amp; manga"><span class="id">Komik</span><span class="en">Comics</span></button></div>
+      </div>
+      <p class="ss-note" id="md-note">–</p>
+      <div class="ss-tablebox" data-source="catalog ready_stock"><table class="ss-table" id="tbl-mdlist"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="mdscout" class="ss" hidden>
+    <div class="ss-status"><p class="id"><b>Katalog judul baru.</b> Sampul dan sinopsis sudah terisi otomatis dari Google Books, jadi tidak perlu dicari satu per satu.</p><p class="en"><b>New-title catalog.</b> Covers and synopses fill in from Google Books, so nobody has to look them up one by one.</p></div>
+    <div class="ss-tiles" id="scout-tiles" data-source="preorder book_meta"></div>
+    <div class="ss-card" id="card-mdscout">
+      <div class="ss-card-h"><h2>Book Scout</h2><span class="ss-card-tools"><input class="ss-search" id="scout-search" placeholder="Cari / Search"><button class="ss-xl" data-export="mdscout">Excel</button></span></div>
+      <div class="ss-md-filters"><div class="ss-seg ss-scoutown" role="group" aria-label="Katalog / Catalog"><button data-own="new"><span class="id">Belum kita punya</span><span class="en">Not carried yet</span></button><button data-own="all"><span class="id">Semua</span><span class="en">All</span></button></div></div>
+      <p class="ss-note" id="mdscout-note">–</p>
+      <div class="ss-tablebox" data-source="preorder book_meta"><table class="ss-table" id="tbl-mdscout"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="ss-card" id="card-scoutsrc">
+      <h2><span class="id">Sumber judul</span><span class="en">Title sources</span></h2>
+      <div class="ss-tablebox"><table class="ss-table" id="tbl-scoutsrc"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="mdsri" class="ss" hidden>
+    <div class="ss-status"><p class="id"><b>Cocokkan file SRI dengan data web.</b> Unggah hasil analisa SRI (bisa beberapa file sekaligus). File hanya dibaca di browser ini dan tidak dikirim ke mana pun.</p><p class="en"><b>Match the SRI file against the web data.</b> Upload the SRI analysis (several files at once is fine). The file is read in this browser only and isn't sent anywhere.</p></div>
+    <div class="ss-card" id="card-sriup">
+      <label class="ss-file" for="sri-file"><span class="id">Pilih file SRI</span><span class="en">Choose SRI files</span></label>
+      <input id="sri-file" class="ss-file-input" type="file" multiple accept=".xlsx,.xlsb,.xls,.csv">
+      <p class="ss-note" id="sri-note" role="status"><span class="id">Judul dikenali dari ISBN di kolom mana pun, jadi format file tidak perlu diubah.</span><span class="en">Titles are recognised by the ISBN in any column, so the file format doesn't need to change.</span></p>
+    </div>
+    <div id="sri-result" hidden>
+      <div class="ss-tiles" id="sri-tiles"></div>
+      <div class="ss-card" id="card-srigap">
+        <div class="ss-card-h"><h2><span class="id">Selisih SRI dan web</span><span class="en">SRI vs web gaps</span></h2><span class="ss-card-tools"><button class="ss-xl" data-export="srigap">Excel</button></span></div>
+        <div class="ss-md-filters"><div class="ss-seg ss-srigap" role="group" aria-label="Selisih / Gap"><button data-gap="missing"><span class="id">Web tandai, belum di SRI</span><span class="en">Flagged, not in SRI</span></button><button data-gap="ample"><span class="id">Di SRI, stok masih aman</span><span class="en">In SRI, stock looks fine</span></button><button data-gap="all"><span class="id">Semua judul SRI</span><span class="en">All SRI titles</span></button></div></div>
+        <p class="ss-note" id="sri-gapnote">–</p>
+        <div class="ss-tablebox"><table class="ss-table" id="tbl-srigap"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
   <section id="stock" class="ss" hidden>
+    <div class="ss-seg ss-stockkind" role="group" aria-label="Jenis barang / Item type"><button data-kind="all"><span class="id">Semua</span><span class="en">All</span></button><button data-kind="book"><span class="id">Buku</span><span class="en">Books</span></button><button data-kind="gift"><span class="id">Alat tulis &amp; gift</span><span class="en">Stationery &amp; gifts</span></button></div>
     <div class="ss-status" id="stock-status"><span class="dash-skeleton">–</span></div>
     <div class="ss-card" id="card-transferfile">
       <div class="ss-card-h"><h2><span class="id">File transfer stok (format toko)</span><span class="en">Stock transfer file (store format)</span></h2><span class="ss-card-tools"><a class="ss-xl ss-dl" id="transfer-dl" href="data/transfer_stok_toko_offline.xlsx" download><span class="id">Unduh Excel</span><span class="en">Download Excel</span></a></span></div>
@@ -1167,7 +1225,7 @@
       ...sheets.map(([, x], i) => ['xl/worksheets/sheet' + (i + 1) + '.xml', x]),
     ]);
   }
-  const EXPORT_NAMES = { target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], month: ['Penjualan per lokasi bulan ini', 'Sales by location this month'], monthrep: ['Laporan bulanan toko', 'Monthly store report'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
+  const EXPORT_NAMES = { mdlist: ['Judul perlu perhatian (buku)', 'Titles to watch (books)'], mdscout: ['Book Scout', 'Book Scout'], srigap: ['Selisih SRI dan web', 'SRI vs web gaps'], target: ['Target vs aktual', 'Target vs actual'], scout: ['Rekomendasi Booky Scout', 'Booky Scout picks'], reorder: ['Perlu dipesan ulang', 'Reorder list'], slow: ['Lambat laku', 'Slow movers'], suppliers: ['Per pemasok', 'By supplier'], stores: ['Rapor toko', 'Store scorecard'], crec: ['Pemulihan pembatalan', 'Cancellation recovery'], ctit: ['Judul paling sering batal', 'Most cancelled titles'], cloc: ['Pembatalan per toko pengirim', 'Cancellations by shipping store'], month: ['Penjualan per lokasi bulan ini', 'Sales by location this month'], monthrep: ['Laporan bulanan toko', 'Monthly store report'], basket: ['Keranjang online vs toko', 'Basket online vs store'], channels: ['Penjualan per kanal', 'Sales by channel'], locations: ['Penjualan per toko', 'Sales by store'], rising: ['Judul naik daun', 'Rising titles'], top: ['Judul terlaris', 'Best-selling titles'], pic: ['Reseller per PIC', 'Resellers by PIC'], callnow: ['Reseller harus dihubungi', 'Resellers to call'], accounts: ['Akun reseller', 'Reseller accounts'], stockloc: ['Situasi stok per lokasi', 'Stock by location'], runout: ['Segera habis', 'Running out'], oversold: ['Oversold', 'Oversold'], transfers: ['Usulan transfer', 'Suggested transfers'], lowsell: ['Stok menipis masih laku', 'Low stock still selling'], fast: ['Paling laku', 'Fast movers'], deadtitles: ['Stok mati per judul', 'Dead stock by title'], ready: ['Stok siap kirim', 'Ready stock'], readyint: ['Stok siap kirim per lokasi', 'Ready stock by location'], preorder: ['Pre-order', 'Pre-order'], preint: ['Pre-order dengan permintaan', 'Pre-order with requests'], clearance: ['Stok clearance', 'Clearance stock'], clearint: ['Stok clearance per toko', 'Clearance stock by store'], deaditems: ['Stok mati per toko', 'Dead stock by store'], fin: ['Keuangan per kanal', 'Finance by channel'], cancel: ['Alasan batal', 'Cancellation reasons'] };
   // Reseller-facing files carry the Sinar Star Books header, an order column and a terms sheet; contact details as on the reseller site.
   const SSB_CONTACT = 'WhatsApp +62 811-8069-559 · info@sinarstarbook.com · +62 21 4404188';
   const LIST_DATE = {
@@ -1234,6 +1292,14 @@
   $$('.ss-topcat button').forEach((b) => b.addEventListener('click', () => { S.cat = b.dataset.cat; render(); }));
   $('#top-search').addEventListener('input', (e) => { S.q = e.target.value; renderProduk(); });
   $('#res-go').addEventListener('click', () => showTab('lists'));
+  $$('.ss-mdband button').forEach((b) => b.addEventListener('click', () => { S.mdBand = b.dataset.band; render(); }));
+  $$('.ss-mdgroup button').forEach((b) => b.addEventListener('click', () => { S.mdGroup = b.dataset.group; render(); }));
+  $$('.ss-scoutown button').forEach((b) => b.addEventListener('click', () => { S.scoutOwn = b.dataset.own; render(); }));
+  $$('.ss-srigap button').forEach((b) => b.addEventListener('click', () => { S.sriGap = b.dataset.gap; render(); }));
+  $$('.ss-stockkind button').forEach((b) => b.addEventListener('click', () => { S.stockKind = b.dataset.kind; render(); }));
+  $('#md-search').addEventListener('input', (e) => { S.mdQ = e.target.value; renderMdList(); });
+  $('#scout-search').addEventListener('input', (e) => { S.scoutQ = e.target.value; renderMdScout(); });
+  $('#sri-file').addEventListener('change', (e) => { readSri([...e.target.files]); });
   $('#acc-search').addEventListener('input', (e) => { S.aq = e.target.value; renderReseller(); });
   $$('.ss-clrcat button').forEach((b) => b.addEventListener('click', () => { S.clrCat = b.dataset.cat; render(); }));
   $('#clr-search').addEventListener('input', (e) => { S.clrQ = e.target.value; renderLists(); });
@@ -1302,15 +1368,15 @@
   dashRoot.addEventListener('change', (ev) => { const q = ev.target.closest('.ss-search'); if (q && q.value.trim()) track('Search', { box: q.id, query: q.value.trim().slice(0, 60), tab: S.tab }); });
   showWho();
   // two sections: Wonder Bookstore's sales and stock, and the Sinar reseller team's lists and accounts (reseller meeting, 3 Nov)
-  const SECTION_TABS = { wonder: ['ringkasan', 'sales', 'toko', 'produk', 'stock', 'finance', 'panduan'], reseller: ['lists', 'reseller'] };
-  const sectionOf = (t) => (SECTION_TABS.reseller.includes(t) ? 'reseller' : 'wonder');
+  const SECTION_TABS = { wonder: ['ringkasan', 'sales', 'toko', 'produk', 'stock', 'finance', 'panduan'], reseller: ['lists', 'reseller'], md: ['mdlist', 'mdscout', 'mdsri'] };
+  const sectionOf = (t) => (SECTION_TABS.reseller.includes(t) ? 'reseller' : SECTION_TABS.md.includes(t) ? 'md' : 'wonder');
   // Division views: the team picked in "Siapa Anda?" decides which tabs show and where the page opens.
   // A tidy-up, not a lock: everyone shares one login, and Management can preview any view.
   const VIEWS = {
     'Manajemen': { tabs: null, home: 'ringkasan' },
     'Keuangan': { tabs: ['ringkasan', 'sales', 'finance', 'panduan'], home: 'finance' },
     'Reseller / distribusi': { tabs: ['lists', 'reseller', 'stock', 'panduan'], home: 'lists' },
-    'Merchandiser': { tabs: ['ringkasan', 'produk', 'stock', 'panduan'], home: 'produk' },
+    'Merchandiser': { tabs: ['ringkasan', 'produk', 'stock', 'panduan'], home: 'mdlist' },
     'Lainnya': { tabs: ['ringkasan', 'panduan'], home: 'ringkasan' },
   };
   const STORE_VIEW = { tabs: ['toko', 'produk', 'stock', 'panduan'], home: 'toko' };
@@ -1318,7 +1384,7 @@
   const viewRole = () => { const w = who(); if (!w) return null; if (w.role !== 'Manajemen') return w.role; try { return localStorage.getItem(VIEWAS_KEY) || w.role; } catch (e) { return w.role; } };
   const viewStore = () => { const r = viewRole(); return r && r.startsWith('Toko ') ? r.slice(5) : null; };
   const view = () => { const r = viewRole(); return !r ? VIEWS['Manajemen'] : viewStore() ? STORE_VIEW : VIEWS[r] || VIEWS['Lainnya']; };
-  const allowed = (t) => { const v = view().tabs; return !v || v.includes(t) || SECTION_TABS.reseller.includes(t); };  // the reseller section shows for every team
+  const allowed = (t) => { const v = view().tabs; return !v || v.includes(t) || sectionOf(t) !== 'wonder'; };  // the reseller and merchandising sections show for every team
   { // Management only: preview another team's view (this device only)
     const sel = $('#viewas'), wrap = $('#viewas-wrap');
     [...document.getElementById('ss-who-r').options].filter((o) => o.value).forEach((o) => { const x = el('option', '', o.textContent); x.value = o.value; sel.append(x); });
@@ -1351,7 +1417,7 @@
     store_drop: ['Toko'],
     cancel_rate: ['Keuangan'],
     runout: ['Merchandiser', 'Toko'],
-    oversold: ['Merchandiser'],
+    oversold: [],  // a Jubelio sync error during release wars, not something MD can act on (meeting 6 Nov 2026)
     transfers: ['Toko', 'Reseller / distribusi', 'Merchandiser'],
   };
   const myAlert = (a) => {
@@ -1850,7 +1916,13 @@
     info.textContent = T(`${int(sum('sku_transfer'))} SKU bisa ditransfer (${int(sum('qty_transfer'))} pcs, ${int(sum('sku_high'))} prioritas tinggi) · ${int(sum('sku_restock'))} SKU perlu restock tanpa sumber · penjualan POS ${fdy(g.window_start)} – ${fdy(g.window_end)} · dibuat ${fwib(g.generated_at)}`,
       `${int(sum('sku_transfer'))} SKUs to transfer (${int(sum('qty_transfer'))} pcs, ${int(sum('sku_high'))} high priority) · ${int(sum('sku_restock'))} SKUs need restock with no source · POS sales ${fdy(g.window_start)} – ${fdy(g.window_end)} · generated ${fwib(g.generated_at)}`);
   }
+  // Books or stationery on the Stock page: rows carry a group, or get it from the catalog through their item code.
+  let catRows = null, catMap = new Map();
+  const catOf = (code) => { const c = rows('catalog'); if (c !== catRows) { catRows = c; catMap = new Map((c || []).map((r) => [r.item_code, r])); } return catMap.get(code); };
+  const stockKind = () => S.stockKind || (viewRole() === 'Merchandiser' ? 'book' : 'all');
+  const kindOkStock = (r) => { const k = stockKind(); if (k === 'all') return true; const g = r.group || (catOf(r.item_code) || {}).group; if (!g) return false; return k === 'gift' ? g === 'Alat tulis & gift' : g !== 'Alat tulis & gift'; };
   function renderStock() {
+    $$('.ss-stockkind button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.kind === stockKind())));
     renderTransferFile(); renderBuyList();
     const st = $('#stock-status'); const ss = ds('stock_summary');
     if (ss.status === 'ok') {
@@ -1884,7 +1956,7 @@
       const ab = $('#chart-aging'); skel(ab, false);
       bars(ab, data.filter((r) => +r.units > 0).map((r) => ({ key: r.location, label: r.location, values: Object.fromEntries(AG.map((a) => [a[0], +r[a[0]]])), valueLabel: int(r.units) + T(' unit', ' units') })), AG.map((a) => a[0]), { horizontal: true, fmt: (v) => int(v) + T(' unit', ' units'), color: (k) => cmap[k], label: (k) => lmap[k] });
     } else { chartState($('#chart-aging'), 'stock_locations'); }
-    const tbl = (id, tid, cols, key) => { const r = rows(id); if (r) table(tid, cols, r, key); };
+    const tbl = (id, tid, cols, key) => { const r = rows(id); if (r) table(tid, cols, r.filter(kindOkStock), key); };
     tbl('stock_runout', 'tbl-runout', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Terjual/hari', 'Sold/day'], num: 1, f: (r) => num(r.daily_avg), x: (r) => +r.daily_avg }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available_qty), x: (r) => +r.available_qty }, { h: ['Sisa hari', 'Days left'], num: 1, f: (r) => int(r.days_left), x: (r) => +r.days_left, cls: (r) => (+r.days_left <= 7 ? 'ss-flag' : +r.days_left <= 14 ? 'ss-warn' : '') }, { h: ['Pesan ulang', 'Reorder by'], num: 1, f: (r) => r.reorder_by }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'runout');
     tbl('stock_oversold', 'tbl-oversold', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Lokasi', 'Location'], f: (r) => r.location }, { h: ['Stok', 'On hand'], num: 1, f: (r) => num(r.on_hand), x: (r) => +r.on_hand }, { h: ['Dipesan', 'Reserved'], num: 1, f: (r) => num(r.reserved), x: (r) => +r.reserved }, { h: ['Tersedia', 'Available'], num: 1, f: (r) => num(r.available), x: (r) => +r.available, cls: () => 'ss-flag' }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'oversold');
     tbl('stock_transfers', 'tbl-transfers', [{ h: ['Barang', 'Item'], name: 1, f: (r) => r.item_name }, { h: ['Dari', 'From'], f: (r) => r.from_location }, { h: ['Stok di asal', 'Stock at source'], num: 1, f: (r) => int(r.from_units), x: (r) => +r.from_units }, { h: ['Tidak laku (hari)', 'Unsold (days)'], num: 1, f: (r) => int(r.days_since_sale_from), x: (r) => +r.days_since_sale_from }, { h: ['Ke', 'To'], f: (r) => r.to_location }, { h: ['Terjual di tujuan', 'Sold at destination'], num: 1, f: (r) => int(r.to_units_sold), x: (r) => +r.to_units_sold }, { h: ['Stok di tujuan', 'Stock at destination'], num: 1, f: (r) => int(r.to_available), x: (r) => +r.to_available }, { h: ['Usulan unit', 'Suggested qty'], num: 1, f: (r) => int(r.suggested_qty), x: (r) => +r.suggested_qty, cls: () => 'ss-up' }, { h: ['Nilai', 'Value'], num: 1, f: (r) => rp(+r.suggested_value), x: (r) => +r.suggested_value }, { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code }], 'transfers');
@@ -2043,6 +2115,160 @@
     ], tc.lines, 'target');
   }
 
+  // ---------------- MERCHANDISING ----------------
+  // Titles to watch: books selling at least 6 in 90 days, sized on stock we can see (Jubelio + central warehouse).
+  // Jubelio's on_order is left out: it stays high on sold-out titles (Tuesdays with Morrie: 0 available, 1.300 on order), which hid them from the reorder list.
+  const MD_MIN_UNITS = 6, MD_KRITIS = 30, MD_SEGERA = 60, MD_PANTAU = 90;
+  const isBook = (g) => g && g !== 'Alat tulis & gift';
+  let mdSrc = null, mdCache = [];
+  function mdRows() {
+    const c = rows('catalog'), rs = rows('ready_stock'); if (!c) return null;
+    if (mdSrc === c && mdCache.rsSrc === rs) return mdCache;
+    const centre = new Map((rs || []).map((r) => [r.item_code, +r.centre || 0]));
+    const out = [];
+    for (const r of c) {
+      const u = +r.units_90d || 0; if (!isBook(r.group) || u < MD_MIN_UNITS) continue;
+      const d = u / 90, av = Math.max(+r.available || 0, 0), ce = centre.get(r.item_code) || 0, cover = (av + ce) / d, jub = av / d;
+      const band = cover < MD_KRITIS ? 'KRITIS' : cover < MD_SEGERA ? 'SEGERA' : cover < MD_PANTAU ? 'PANTAU' : '';
+      const transfer = jub < MD_KRITIS && ce > 0;
+      out.push({ ...r, u, d, av, ce, cover, band, transfer });
+    }
+    out.sort((a, z) => a.cover - z.cover || z.u - a.u);
+    mdSrc = c; mdCache = out; mdCache.rsSrc = rs; return out;
+  }
+  const MD_BAND = { KRITIS: ['Kritis', 'Critical'], SEGERA: ['Segera', 'Soon'], PANTAU: ['Pantau', 'Watch'] };
+  const mdMini = (lab, v, sub, cls) => { const t = el('div', 'ss-tile'); t.append(el('div', 'ss-lab', lab), el('span', 'ss-big' + (cls ? ' ' + cls : ''), v)); if (sub) t.append(el('div', 'ss-sub', sub)); return t; };
+  function renderMdList() {
+    const all = mdRows(); const tl = $('#md-tiles'), note = $('#md-note');
+    if (!S.mdBand) S.mdBand = 'KRITIS'; if (!S.mdGroup) S.mdGroup = 'all';
+    $$('.ss-mdband button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.band === S.mdBand)));
+    $$('.ss-mdgroup button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.group === S.mdGroup)));
+    if (!all) { tl.replaceChildren(); note.textContent = ds('catalog').status === 'loading' ? '…' : T('Data belum tersedia.', 'No data yet.'); tableState($('#card-mdlist .ss-tablebox'), 'catalog'); return; }
+    const inGroup = all.filter((r) => S.mdGroup === 'all' || r.group === S.mdGroup);
+    const cnt = (f) => inGroup.filter(f).length;
+    tl.replaceChildren(
+      mdMini(T('Kritis', 'Critical'), int(cnt((r) => r.band === 'KRITIS')), T(`cukup kurang dari ${MD_KRITIS} hari`, `under ${MD_KRITIS} days of stock`), 'ss-down'),
+      mdMini(T('Segera', 'Soon'), int(cnt((r) => r.band === 'SEGERA')), T(`${MD_KRITIS} sampai ${MD_SEGERA} hari`, `${MD_KRITIS} to ${MD_SEGERA} days`)),
+      mdMini(T('Pantau', 'Watch'), int(cnt((r) => r.band === 'PANTAU')), T(`${MD_SEGERA} sampai ${MD_PANTAU} hari`, `${MD_SEGERA} to ${MD_PANTAU} days`)),
+      mdMini(T('Transfer dari pusat', 'Transfer from centre'), int(cnt((r) => r.transfer)), T('toko menipis, gudang pusat masih ada', 'stores low, central warehouse has stock')),
+    );
+    const q = (S.mdQ || '').trim().toLowerCase();
+    const data = inGroup.filter((r) => (S.mdBand === 'all' ? r.band || r.transfer : S.mdBand === 'TRANSFER' ? r.transfer : r.band === S.mdBand) && (!q || (r.item_name + ' ' + r.item_code + ' ' + r.supplier).toLowerCase().includes(q)));
+    const asof = ((rows('ready_stock') || [])[0] || {}).as_of;
+    note.textContent = T(`${int(data.length)} judul. Buku yang laku minimal ${MD_MIN_UNITS} dalam 90 hari. Cukup = (Jubelio + pusat) ÷ laku per hari. Penjualan hanya dari Jubelio, jadi reseller dan Gramedia tidak ikut. Gudang pusat dari file Accurate${asof ? ' ' + fdy(asof) : ''}.`,
+      `${int(data.length)} titles. Books selling at least ${MD_MIN_UNITS} in 90 days. Cover = (Jubelio + centre) ÷ sold per day. Sales are Jubelio only, so resellers and Gramedia aren't counted. Central warehouse from the Accurate file${asof ? ' of ' + fdy(asof) : ''}.`);
+    table('tbl-mdlist', [
+      { h: ['Status', 'Status'], f: (r) => (r.band ? T(...MD_BAND[r.band]) : T('Aman', 'OK')), cls: (r) => (r.band === 'KRITIS' ? 'ss-flag' : '') },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name },
+      { h: ['ISBN / kode', 'ISBN / code'], f: (r) => r.item_code },
+      { h: ['Kategori', 'Category'], muted: 1, f: (r) => r.group },
+      { h: ['Terjual 90 hr', 'Sold 90d'], num: 1, f: (r) => int(r.u), x: (r) => r.u },
+      { h: ['Toko + online', 'Stores + online'], num: 1, f: (r) => int(r.av), x: (r) => r.av },
+      { h: ['Gudang pusat', 'Central warehouse'], num: 1, f: (r) => (r.ce ? int(r.ce) : '–'), x: (r) => r.ce },
+      { h: ['Cukup (hari)', 'Cover (days)'], num: 1, f: (r) => int(r.cover), x: (r) => Math.round(r.cover) },
+      { h: ['Catatan', 'Note'], f: (r) => (r.transfer ? T('Transfer dari pusat dulu', 'Transfer from centre first') : '') },
+      { h: ['Dipesan (Jubelio)', 'On order (Jubelio)'], num: 1, muted: 1, f: (r) => int(r.on_order), x: (r) => +r.on_order || 0 },
+      { h: ['Lokasi stok', 'Stock by location'], muted: 1, f: (r) => r.available_by_location || '–' },
+      { h: ['Terakhir laku', 'Last sale'], muted: 1, f: (r) => r.last_sale || '–' },
+    ], data, 'mdlist');
+  }
+  function renderMdScout() {
+    const pr = rows('preorder'); const tl = $('#scout-tiles'), note = $('#mdscout-note');
+    if (!S.scoutOwn) S.scoutOwn = 'new';
+    $$('.ss-scoutown button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.own === S.scoutOwn)));
+    const picks = rows('scout_picks') || [];
+    table('tbl-scoutsrc', [
+      { h: ['Sumber', 'Source'], name: 1, f: (r) => T(r[0], r[1]) },
+      { h: ['Status', 'Status'], f: (r) => T(r[2], r[3]) },
+    ], [
+      ['File penerbit (folder Email Publisher)', 'Publisher files (Email Publisher folder)', 'Masuk otomatis tiap hari', 'Comes in automatically every day'],
+      ['Rekomendasi mingguan Booky Scout', 'Weekly Booky Scout picks', picks.length ? 'Masuk otomatis' : 'Belum masuk: Google Sheet-nya masih kosong', picks.length ? 'Comes in automatically' : 'Not coming in: its Google Sheet is still empty'],
+      ['Edelweiss', 'Edelweiss', 'Menunggu daftar penerbit fokus dari tim MD', 'Waiting for the MD team\'s list of focus publishers'],
+      ['Amazon, New York Times, Goodreads', 'Amazon, New York Times, Goodreads', 'Belum tersambung', 'Not connected yet'],
+      ['BookTok, Threads, Tokopedia, Shopee', 'BookTok, Threads, Tokopedia, Shopee', 'Belum tersambung', 'Not connected yet'],
+    ]);
+    if (!pr) { tl.replaceChildren(); note.textContent = ''; tableState($('#card-mdscout .ss-tablebox'), 'preorder'); return; }
+    const carried = (r) => catOf(r.isbn);
+    const q = (S.scoutQ || '').trim().toLowerCase();
+    const data = pr.filter((r) => (S.scoutOwn === 'all' || !carried(r)) && (!q || (r.title + ' ' + r.author + ' ' + r.isbn + ' ' + r.publisher).toLowerCase().includes(q)));
+    const hasCover = pr.filter((r) => bookMeta(r.isbn).cover).length, hasSyn = pr.filter((r) => bookMeta(r.isbn).synopsis).length;
+    tl.replaceChildren(
+      mdMini(T('Judul', 'Titles'), int(pr.length), T(`${int(pr.filter((r) => !carried(r)).length)} belum kita punya`, `${int(pr.filter((r) => !carried(r)).length)} not carried yet`)),
+      mdMini(T('Ada sampul', 'With cover'), int(hasCover), T('dari ', 'of ') + int(pr.length)),
+      mdMini(T('Ada sinopsis', 'With synopsis'), int(hasSyn), T('dari ', 'of ') + int(pr.length)),
+    );
+    note.textContent = T(`${int(data.length)} judul tampil. Excel berisi ISBN, judul, pengarang, penerbit, format, tanggal terbit, cover price, tautan sampul dan sinopsis.`, `${int(data.length)} titles shown. The Excel has ISBN, title, author, publisher, format, on-sale date, cover price, cover link and synopsis.`);
+    table('tbl-mdscout', [
+      { h: ['ISBN', 'ISBN'], f: (r) => r.isbn },
+      ...bookCols((r) => r.isbn, (r) => r.title),
+      { h: ['Pengarang', 'Author'], muted: 1, f: (r) => r.author || '–' },
+      { h: ['Penerbit', 'Publisher'], muted: 1, f: (r) => r.publisher || '–' },
+      { h: ['Format', 'Format'], f: (r) => r.format || '–' },
+      { h: ['Terbit', 'On sale'], f: (r) => r.on_sale || '–' },
+      { h: ['Cover price', 'Cover price'], num: 1, f: (r) => r.list_price || '–' },
+      { h: ['Di katalog', 'In catalog'], f: (r) => (carried(r) ? T('Ada', 'Yes') : T('Belum', 'Not yet')) },
+      { h: ['Sumber', 'Source'], muted: 1, f: (r) => r.source || '–' },
+    ], data, 'mdscout');
+  }
+  // SRI check: read the analysis files in the browser and find their ISBNs in any column.
+  const SHEETJS = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  const loadSheetJs = () => (window.XLSX ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = SHEETJS; sc.onload = ok; sc.onerror = () => no(new Error('library')); document.head.append(sc); }));
+  const sriCode = (v) => { if (typeof v === 'number') v = String(Math.round(v)); if (typeof v !== 'string') return ''; const t = v.replace(/[\s-]/g, ''); return /^97[89]\d{10}$/.test(t) ? t : ''; };
+  async function readSri(files) {
+    const note = $('#sri-note'); if (!files.length) return;
+    note.textContent = T('Membaca file…', 'Reading the files…');
+    try {
+      await loadSheetJs();
+      const found = new Map(); let sheets = 0; const bad = [];
+      for (const f of files) {
+        try {
+          const wb = window.XLSX.read(await f.arrayBuffer(), { type: 'array', cellFormula: false, cellHTML: false, cellStyles: false });
+          for (const name of wb.SheetNames) {
+            sheets++;
+            for (const row of window.XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, blankrows: false })) {
+              const code = row.map(sriCode).find(Boolean); if (!code || found.has(code)) continue;
+              const title = row.filter((c) => typeof c === 'string' && !sriCode(c)).sort((a, z) => z.length - a.length)[0] || '';
+              found.set(code, { code, title, file: f.name });
+            }
+          }
+        } catch (e) { bad.push(f.name); }
+      }
+      S.sri = { rows: [...found.values()], names: files.map((f) => f.name).filter((n) => !bad.includes(n)) };
+      if (!found.size) { $('#sri-result').hidden = true; note.textContent = T(`Tidak ada ISBN yang ditemukan di ${int(sheets)} sheet. Pastikan file berisi kolom ISBN 13 digit.`, `No ISBNs found in ${int(sheets)} sheets. Check the file has a 13-digit ISBN column.`); return; }
+      note.textContent = T(`Dibaca: ${S.sri.names.join(', ')}.`, `Read: ${S.sri.names.join(', ')}.`) + (bad.length ? T(` Gagal dibaca: ${bad.join(', ')}.`, ` Couldn't read: ${bad.join(', ')}.`) : '');
+      renderMdSri();
+    } catch (e) { note.textContent = T('Gagal memuat pembaca Excel. Periksa koneksi lalu coba lagi.', 'Couldn\'t load the Excel reader. Check the connection and try again.'); }
+  }
+  function renderMdSri() {
+    const res = $('#sri-result'); if (!S.sri) { res.hidden = true; return; } res.hidden = false;
+    if (!S.sriGap) S.sriGap = 'missing';
+    $$('.ss-srigap button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.gap === S.sriGap)));
+    const web = mdRows() || []; const byCode = new Map(web.map((r) => [r.item_code, r]));
+    const inSri = new Set(S.sri.rows.map((r) => r.code));
+    const flagged = web.filter((r) => r.band === 'KRITIS' || r.band === 'SEGERA');
+    const sriRows = S.sri.rows.map((r) => { const w = byCode.get(r.code), c = catOf(r.code); return { ...(w || {}), item_code: r.code, item_name: (c && c.item_name) || r.title, group: (c && c.group) || '', sri: true, known: !!c, watched: !!w, u: w ? w.u : +(c || {}).units_90d || 0 }; });
+    const missing = flagged.filter((r) => !inSri.has(r.item_code)).map((r) => ({ ...r, known: true, watched: true, sri: false }));
+    const ample = sriRows.filter((r) => r.watched && !r.band);
+    $('#sri-tiles').replaceChildren(
+      mdMini(T('Judul di file SRI', 'Titles in the SRI file'), int(S.sri.rows.length), T(`${int(sriRows.filter((r) => r.known).length)} ada di katalog Jubelio`, `${int(sriRows.filter((r) => r.known).length)} in the Jubelio catalog`)),
+      mdMini(T('Web tandai, belum di SRI', 'Flagged, not in SRI'), int(missing.length), T('kritis atau segera', 'critical or soon'), missing.length ? 'ss-down' : ''),
+      mdMini(T('Di SRI, stok masih aman', 'In SRI, stock looks fine'), int(ample.length), T('cukup 90 hari atau lebih', '90 days or more of stock')),
+    );
+    const data = S.sriGap === 'missing' ? missing : S.sriGap === 'ample' ? ample : sriRows;
+    $('#sri-gapnote').textContent = T({ missing: 'Judul yang mungkin terlewat di SRI. Cek dulu; angka pesanan tetap dari SRI.', ample: 'Judul di SRI yang stoknya masih cukup menurut web. Penjualan web tidak termasuk reseller dan Gramedia, jadi bisa saja SRI benar.', all: 'Semua judul di file SRI dengan status dari web.' }[S.sriGap],
+      { missing: 'Titles SRI may have missed. Check them first; order quantities still come from SRI.', ample: 'SRI titles with enough stock by the web data. Web sales leave out resellers and Gramedia, so SRI may well be right.', all: 'Every title in the SRI file with its status from the web.' }[S.sriGap]);
+    table('tbl-srigap', [
+      { h: ['Status web', 'Web status'], f: (r) => (!r.known ? T('Tidak di Jubelio', 'Not in Jubelio') : r.band ? T(...MD_BAND[r.band]) : r.watched ? T('Aman', 'OK') : T('Laku sedikit', 'Slow')), cls: (r) => (r.band === 'KRITIS' ? 'ss-flag' : '') },
+      { h: ['Judul', 'Title'], name: 1, f: (r) => r.item_name || '–' },
+      { h: ['ISBN', 'ISBN'], f: (r) => r.item_code },
+      { h: ['Kategori', 'Category'], muted: 1, f: (r) => r.group || '–' },
+      { h: ['Terjual 90 hr', 'Sold 90d'], num: 1, f: (r) => int(r.u), x: (r) => r.u || 0 },
+      { h: ['Toko + online', 'Stores + online'], num: 1, f: (r) => (r.watched ? int(r.av) : '–'), x: (r) => (r.watched ? r.av : '') },
+      { h: ['Gudang pusat', 'Central warehouse'], num: 1, f: (r) => (r.watched && r.ce ? int(r.ce) : '–'), x: (r) => (r.watched ? r.ce : '') },
+      { h: ['Cukup (hari)', 'Cover (days)'], num: 1, f: (r) => (r.watched ? int(r.cover) : '–'), x: (r) => (r.watched ? Math.round(r.cover) : '') },
+    ], data, 'srigap');
+  }
+
   // ---------------- DAFTAR BELI (data half) ----------------
   const URG = { KRITIS: ['Kritis', 'Critical'], SEGERA: ['Segera', 'This week'], PANTAU: ['Pantau', 'This month'] };
   function renderBuyList() {
@@ -2065,7 +2291,7 @@
         { h: ['Urgensi', 'Urgency'], f: (r) => T(...(URG[r.urgency] || [r.urgency, r.urgency])) },
         { h: ['Lokasi stok', 'Stock by location'], muted: 1, f: (r) => r.available_by_location || '–' },
         { h: ['Kode', 'Code'], muted: 1, f: (r) => r.item_code },
-      ], ro.filter((r) => S.urg === 'all' || r.urgency === S.urg), 'reorder');
+      ], ro.filter((r) => (S.urg === 'all' || r.urgency === S.urg) && kindOkStock(r)), 'reorder');
     }
     if (!sl) { tableState($('#card-slow .ss-tablebox'), 'slow_movers'); sn.textContent = ''; return; }
     const val = sl.reduce((a, r) => a + +r.retail_value, 0);
@@ -2430,8 +2656,8 @@
       $$('.ss-section button').forEach((x) => { x.hidden = !SECTION_TABS[x.dataset.section].some(allowed); });
       $('.ss-section').hidden = $$('.ss-section button').filter((x) => !x.hidden).length < 2;
       $$('.ss-section button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.section === sec)));
-      $('#title').hidden = sec === 'reseller'; $('#title-reseller').hidden = sec !== 'reseller'; $('#bell').hidden = sec === 'reseller'; }
-    ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
+      $('#title').hidden = sec !== 'wonder'; $('#title-reseller').hidden = sec !== 'reseller'; $('#title-md').hidden = sec !== 'md'; $('#bell').hidden = sec === 'reseller'; }
+    ['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'mdlist', 'mdscout', 'mdsri', 'stock', 'finance', 'panduan'].forEach((t) => { document.getElementById(t).hidden = t !== S.tab; });
     // on the overview the highlights follow the month headline instead of pushing it down
     { const ib = $('#insight-box'); if (S.tab === 'ringkasan') $('#card-month').after(ib); else $('#filters').after(ib); }
     const anyFilter = !!TAB_FILTERS[S.tab];
@@ -2453,7 +2679,7 @@
       $('#range-text').textContent = `${days(R.s, R.e)} ${T('hari', 'days')}` + (R.cs ? ` · ${T('dibanding', 'vs')} ${fd(R.cs)}${R.cs !== R.ce ? ' – ' + fd(R.ce) : ''}` : '') + (R.partial ? T(' · hari ini belum lengkap', ' · today is partial') : '');
     }
     renderHeader(b);
-    const fn = { ringkasan: renderRingkasan, sales: renderSales, toko: renderToko, produk: renderProduk, reseller: renderReseller, lists: renderLists, stock: renderStock, finance: (bb) => { renderFinance(bb); renderCancelRecovery(bb); } }[S.tab];
+    const fn = { ringkasan: renderRingkasan, sales: renderSales, toko: renderToko, produk: renderProduk, reseller: renderReseller, lists: renderLists, mdlist: renderMdList, mdscout: renderMdScout, mdsri: renderMdSri, stock: renderStock, finance: (bb) => { renderFinance(bb); renderCancelRecovery(bb); } }[S.tab];
     if (fn && (B || S.tab === 'reseller' || S.tab === 'lists' || S.tab === 'stock')) fn(b);
   }
 
@@ -2461,7 +2687,7 @@
   const named = location.hash.replace(/^#\/?/, ''); // accepts old "#tab" links and new "#/tab" ones
   if (['ringkasan', 'sales', 'toko', 'produk', 'reseller', 'lists', 'stock', 'finance', 'panduan'].includes(named)) { S.tab = named; dash.setLink(named); render(); }
   else if (named === 'moving') { S.tab = 'stock'; dash.setLink('stock'); render(); }
-  else if (!named) { let t = null; try { t = localStorage.getItem(TAB_KEY); } catch (e) {} if (t && sectionOf(t) === 'reseller' && allowed(t)) { S.tab = t; dash.setLink(t); render(); } else if (who()) { S.tab = view().home; dash.setLink(S.tab); render(); } }
+  else if (!named) { let t = null; try { t = localStorage.getItem(TAB_KEY); } catch (e) {} if (t && sectionOf(t) !== 'wonder' && allowed(t)) { S.tab = t; dash.setLink(t); render(); } else if (who()) { S.tab = view().home; dash.setLink(S.tab); render(); } }
   if (named) { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); }
   if (who()) track('Open dashboard', { tab: S.tab }); else askWho();
 })();
