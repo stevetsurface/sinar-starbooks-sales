@@ -630,6 +630,15 @@ def transfer_workbook(recent, det, price, master, bundles, now):
     out = os.path.join(OUT, 'transfer_stok_toko_offline.xlsx')
     res = tw.build(out, stores, months, pos, online, last, stock, names, brands, bundles, start, end, asof)
     print('wrote transfer_stok_toko_offline.xlsx', res['transfer_rows'], 'transfers,', res['restock_rows'], 'restock')
+    # titles selling at a store with under 30 days of stock there: the dashboard's Transfer tab matches these to the central warehouse
+    low = []
+    for (loc, iid), by_month in pos.items():
+        units = sum(by_month.values()); code = (names.get(iid) or ('', ''))[0]
+        if units < 2 or not code: continue
+        av = max(stock.get((iid, loc), (0, 0, 0))[2], 0)
+        if av / (units / 92.0) < 30: low.append([code, loc, int(units), int(av)])
+    low.sort(key=lambda r: (r[1], -r[2], r[0]))
+    write('store_low_titles.csv', ['item_code', 'location', 'units_90d', 'available'], low)
     write('transfer_summary.csv', ['store', 'sku_out_sold', 'sku_out_sold2', 'sku_transfer', 'sku_full', 'sku_high', 'qty_transfer', 'sku_restock', 'window_start', 'window_end', 'generated_at'],
           [[st] + [p['sold1'], p['sold2'], p['transfer'], p['full'], p['high'], p['qty'], p['restock']] + [start.isoformat(), end.isoformat(), now.strftime('%Y-%m-%dT%H:%M:%S+07:00')] for st, p in sorted(res['stores'].items())])
     try:
