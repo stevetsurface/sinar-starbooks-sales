@@ -1416,7 +1416,7 @@
   const TAB_KEY = 'ssb-tab';  // each device reopens where it left off, so the reseller team lands on its own section
   const showTab = (t) => { const changed = S.tab !== t; S.tab = t; dash.setLink(t); try { localStorage.setItem(TAB_KEY, t); } catch (e) {} render(); if (changed) { window.scrollTo(0, 0); track('View tab', { tab: t }); } };
   S.lastTab = S.lastTab || {};
-  $$('.ss-section button').forEach((b) => b.addEventListener('click', () => { const sec = b.dataset.section; if (sectionOf(S.tab) !== sec) showTab(allowed(S.lastTab[sec]) ? S.lastTab[sec] : SECTION_TABS[sec].find(allowed)); }));
+  $$('.ss-section button').forEach((b) => b.addEventListener('click', () => { const sec = b.dataset.section; if (sectionOf(S.tab) !== sec) { const last = S.lastTab[sec]; showTab(last && allowed(last) ? last : SECTION_TABS[sec].find(allowed)); } }));
   document.querySelector('#ss-root').addEventListener('click', (ev) => { const h = ev.target.closest('.ss-help'); if (!h) return; ev.stopPropagation(); S.tab = 'panduan'; render(); const t = document.getElementById(h.dataset.goto); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(h.dataset.goto); } });
   $$('.ss-tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
   // alerts inbox: read state lives in this browser only
