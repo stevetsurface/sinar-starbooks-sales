@@ -793,8 +793,8 @@ Wonder Bookstore,online,ONLINE,3,9,14,2679316
 Wonder Bookstore,online,ASHTA,3,9,8,1663683
 Wonder Bookstore,online,JKT-TSM,3,9,6,1355744
 Wonder Bookstore,online,PIM,3,9,16,4491934
-Wonder Bookstore,online,BALI-BERAWA,3,9,8,1769348
-Sinar Starbooks,online,ONLINE,3,9,12,4133990
+Wonder Bookstore,online,BALI-BERAWA,3,9,6,1569310
+Sinar Starbooks,online,ONLINE,3,9,11,3866370
 Wonder Bookstore,store,PIM,3,10,12,4319300
 Wonder Bookstore,online,PIM,3,10,18,4863326
 Wonder Bookstore,store,BALI-BERAWA,3,10,21,3728600
@@ -821,7 +821,7 @@ Wonder Bookstore,store,ASHTA,3,13,37,10202140
 Wonder Bookstore,online,PIM,3,13,23,4863995
 Wonder Bookstore,store,BALI-TSM,3,13,20,5482140
 Wonder Bookstore,store,BALI-BERAWA,3,13,25,5742920
-Wonder Bookstore,online,ASHTA,3,13,15,3069885
+Wonder Bookstore,online,ASHTA,3,13,14,2899831
 Wonder Bookstore,store,HUBLIFE,3,13,5,758250
 Sinar Starbooks,online,ONLINE,3,13,20,9797703
 Wonder Bookstore,store,PIM,3,13,25,7625180
@@ -883,7 +883,7 @@ Wonder Bookstore,store,PIM,3,20,20,5391600
 Wonder Bookstore,online,HUBLIFE,3,20,5,625844
 Wonder Bookstore,store,JKT-TSM,3,20,6,1544820
 Wonder Bookstore,online,BALI-BERAWA,3,20,8,1671979
-Sinar Starbooks,online,ONLINE,3,20,13,2603434
+Sinar Starbooks,online,ONLINE,3,20,12,2253704
 Wonder Bookstore,store,ASHTA,3,21,16,5973800
 Sinar Starbooks,online,ONLINE,3,21,12,2748355
 Wonder Bookstore,online,ONLINE,3,21,26,4997244
@@ -901,7 +901,7 @@ Wonder Bookstore,online,BALI-BERAWA,4,0,7,2353552
 Wonder Bookstore,online,ONLINE,4,0,13,2423929
 Wonder Bookstore,online,PIM,4,1,5,715061
 Wonder Bookstore,online,BALI-BERAWA,4,1,7,1080810
-Wonder Bookstore,online,ASHTA,4,2,3,554244
+Wonder Bookstore,online,ASHTA,4,2,2,487230
 Wonder Bookstore,online,BALI-BERAWA,4,4,2,302273
 Wonder Bookstore,online,HUBLIFE,4,5,3,611968
 Wonder Bookstore,store,BALI-BERAWA,4,6,18,1009140
@@ -911,70 +911,70 @@ Wonder Bookstore,online,PIM,4,7,7,2353938
 Wonder Bookstore,online,ONLINE,4,7,9,2150004
 Wonder Bookstore,online,JKT-TSM,4,7,9,1706460
 Kikkerland,online,ONLINE,4,7,1,263720
-Wonder Bookstore,online,ASHTA,4,8,9,1400117
+Wonder Bookstore,online,ASHTA,4,8,10,1510601
 Wonder Bookstore,online,PIM,4,8,24,7425998
 Sinar Starbooks,online,ONLINE,4,8,8,2494645
-Wonder Bookstore,store,BALI-BERAWA,4,8,22,4177900
+Wonder Bookstore,store,BALI-BERAWA,4,8,23,4683500
 Wonder Bookstore,online,JKT-TSM,4,8,10,2347693
 Wonder Bookstore,online,HUBLIFE,4,8,5,635101
-Wonder Bookstore,online,ONLINE,4,8,11,3177975
-Sinar Starbooks,online,ONLINE,4,9,13,3875465
-Wonder Bookstore,online,PIM,4,9,30,8162618
-Wonder Bookstore,online,ASHTA,4,9,16,3697332
-Wonder Bookstore,online,ONLINE,4,9,16,2499773
+Wonder Bookstore,online,ONLINE,4,8,12,3403350
+Sinar Starbooks,online,ONLINE,4,9,14,4093905
+Wonder Bookstore,online,PIM,4,9,34,8871872
+Wonder Bookstore,online,ASHTA,4,9,17,3944132
+Wonder Bookstore,online,ONLINE,4,9,17,2751163
 Wonder Bookstore,store,BALI-BERAWA,4,9,24,2858100
 Wonder Bookstore,store,ASHTA,4,9,1,345420
 Wonder Bookstore,online,BALI-TSM,4,9,6,1147909
 Wonder Bookstore,online,JKT-TSM,4,9,5,787650
-Wonder Bookstore,online,ASHTA,4,10,11,2883405
-Wonder Bookstore,store,BALI-BERAWA,4,10,29,4125920
-Wonder Bookstore,online,BALI-TSM,4,10,4,989021
-Wonder Bookstore,online,ONLINE,4,10,21,4194039
-Wonder Bookstore,store,ASHTA,4,10,19,5346340
+Wonder Bookstore,online,ASHTA,4,10,13,3205789
+Wonder Bookstore,store,BALI-BERAWA,4,10,30,4414280
+Wonder Bookstore,online,BALI-TSM,4,10,5,1239575
+Wonder Bookstore,online,ONLINE,4,10,22,4376973
+Wonder Bookstore,store,ASHTA,4,10,22,5777040
 Wonder Bookstore,store,PIM,4,10,15,6265260
-Wonder Bookstore,online,JKT-TSM,4,10,4,989025
-Wonder Bookstore,online,BALI-BERAWA,4,11,11,2715480
-Wonder Bookstore,store,ASHTA,4,11,39,10620230
-Wonder Bookstore,online,ASHTA,4,11,10,1896518
-Wonder Bookstore,store,BALI-TSM,4,11,5,994540
-Sinar Starbooks,online,ONLINE,4,11,10,5699705
+Wonder Bookstore,online,JKT-TSM,4,10,6,1208383
+Wonder Bookstore,online,BALI-BERAWA,4,11,12,2937054
+Wonder Bookstore,store,ASHTA,4,11,41,11025830
+Wonder Bookstore,online,ASHTA,4,11,12,2192351
+Wonder Bookstore,store,BALI-TSM,4,11,6,1285140
+Sinar Starbooks,online,ONLINE,4,11,12,5873500
 Wonder Bookstore,store,PIM,4,11,18,3014680
-Wonder Bookstore,store,BALI-BERAWA,4,11,22,6443300
-Wonder Bookstore,online,ONLINE,4,11,16,3844393
-Wonder Bookstore,store,PIM,4,12,59,14464280
+Wonder Bookstore,store,BALI-BERAWA,4,11,23,6931900
+Wonder Bookstore,online,ONLINE,4,11,18,4348142
+Wonder Bookstore,store,PIM,4,12,64,16235280
 Wonder Bookstore,store,BALI-BERAWA,4,12,32,6258160
-Wonder Bookstore,store,JKT-TSM,4,12,11,1643580
-Wonder Bookstore,online,PIM,4,12,15,4444502
-Wonder Bookstore,store,ASHTA,4,12,66,16716540
+Wonder Bookstore,store,JKT-TSM,4,12,14,2508570
+Wonder Bookstore,online,PIM,4,12,16,4702301
+Wonder Bookstore,store,ASHTA,4,12,71,18520320
 Wonder Bookstore,online,BALI-BERAWA,4,12,9,1464052
-Wonder Bookstore,online,JKT-TSM,4,12,8,1301999
+Wonder Bookstore,online,JKT-TSM,4,12,9,1587168
 Kikkerland,online,ONLINE,4,13,1,495210
-Wonder Bookstore,store,ASHTA,4,13,38,8543450
-Wonder Bookstore,online,ONLINE,4,13,16,2445224
+Wonder Bookstore,store,ASHTA,4,13,43,9907950
+Wonder Bookstore,online,ONLINE,4,13,17,2814024
 Wonder Bookstore,online,BALI-BERAWA,4,13,7,1573511
-Wonder Bookstore,store,PIM,4,13,33,7894100
-Wonder Bookstore,online,ASHTA,4,13,12,2556755
-Wonder Bookstore,store,HUBLIFE,4,13,5,578640
-Wonder Bookstore,online,BALI-TSM,4,13,5,864398
-Wonder Bookstore,store,BALI-BERAWA,4,13,17,2807060
-Wonder Bookstore,online,JKT-TSM,4,13,8,1335169
+Wonder Bookstore,store,PIM,4,13,35,8835400
+Wonder Bookstore,online,ASHTA,4,13,13,2612380
+Wonder Bookstore,store,HUBLIFE,4,13,8,1370940
+Wonder Bookstore,online,BALI-TSM,4,13,6,1071321
+Wonder Bookstore,store,BALI-BERAWA,4,13,24,3997060
+Wonder Bookstore,online,JKT-TSM,4,13,10,1764632
 Wonder Bookstore,store,JKT-TSM,4,14,9,1544720
-Wonder Bookstore,store,ASHTA,4,14,40,11553080
-Wonder Bookstore,online,ONLINE,4,14,8,1641145
-Wonder Bookstore,store,BALI-BERAWA,4,14,19,3410420
-Sinar Starbooks,online,ONLINE,4,14,8,2644400
+Wonder Bookstore,store,ASHTA,4,14,43,12559300
+Wonder Bookstore,online,ONLINE,4,14,9,1717819
+Wonder Bookstore,store,BALI-BERAWA,4,14,21,4120420
+Sinar Starbooks,online,ONLINE,4,14,10,3111585
 Wonder Bookstore,online,BALI-BERAWA,4,14,3,696193
-Wonder Bookstore,online,JKT-TSM,4,14,5,852716
+Wonder Bookstore,online,JKT-TSM,4,14,7,1362104
 Wonder Bookstore,online,ONLINE,4,15,19,2922878
 Wonder Bookstore,store,BALI-BERAWA,4,15,22,3804320
-Wonder Bookstore,store,PIM,4,15,36,10739680
-Wonder Bookstore,store,ASHTA,4,15,36,9619340
+Wonder Bookstore,store,PIM,4,15,39,11338480
+Wonder Bookstore,store,ASHTA,4,15,38,10355420
 Wonder Bookstore,store,JKT-TSM,4,16,13,3031610
 Wonder Bookstore,online,BALI-BERAWA,4,16,5,1048732
-Wonder Bookstore,store,PIM,4,16,29,7881360
+Wonder Bookstore,store,PIM,4,16,32,8510640
 Wonder Bookstore,store,ASHTA,4,16,33,9049110
 Wonder Bookstore,online,JKT-TSM,4,16,9,1538558
-Wonder Bookstore,store,BALI-TSM,4,16,9,2641760
+Wonder Bookstore,store,BALI-TSM,4,16,10,2955360
 Wonder Bookstore,online,ASHTA,4,16,15,2518681
 Wonder Bookstore,store,ASHTA,4,17,36,9438090
 Wonder Bookstore,store,PIM,4,17,33,8218660
@@ -1253,7 +1253,7 @@ Wonder Bookstore,online,ASHTA,3,6,5,1122207
 Wonder Bookstore,online,ONLINE,3,7,5,617661
 Wonder Bookstore,online,PIM,3,7,10,2180245
 Wonder Bookstore,online,ASHTA,3,8,9,2408438
-Sinar Starbooks,online,ONLINE,3,8,4,1863675
+Sinar Starbooks,online,ONLINE,3,8,3,1572710
 Kikkerland,online,ONLINE,3,8,2,955200
 Wonder Bookstore,online,BALI-BERAWA,3,10,6,1281949
 Wonder Bookstore,online,ONLINE,3,10,18,3395913
@@ -1272,7 +1272,7 @@ Wonder Bookstore,online,BALI-BERAWA,3,16,7,1416907
 Wonder Bookstore,online,HUBLIFE,3,17,4,430766
 Wonder Bookstore,online,ASHTA,3,18,11,1873367
 Wonder Bookstore,online,JKT-TSM,3,18,5,1195287
-Wonder Bookstore,online,BALI-TSM,3,18,5,926615
+Wonder Bookstore,online,BALI-TSM,3,18,6,1046990
 Wonder Bookstore,store,JKT-TSM,3,18,11,1715300
 Wonder Bookstore,online,JKT-TSM,3,19,5,1006945
 Wonder Bookstore,store,HUBLIFE,3,20,5,457500
@@ -1288,29 +1288,29 @@ Wonder Bookstore,online,ASHTA,4,7,9,1485022
 Wonder Bookstore,store,BALI-BERAWA,4,7,14,634600
 Wonder Bookstore,online,BALI-BERAWA,4,7,6,1637002
 Wonder Bookstore,online,BALI-BERAWA,4,8,11,2329931
-Wonder Bookstore,online,PIM,4,10,18,5770362
+Wonder Bookstore,online,PIM,4,10,20,6358249
 Wonder Bookstore,store,JKT-TSM,4,10,7,1973100
 Wonder Bookstore,store,HUBLIFE,4,10,7,716960
 Kikkerland,online,ONLINE,4,11,1,91960
-Wonder Bookstore,online,PIM,4,11,12,2476365
+Wonder Bookstore,online,PIM,4,11,13,2927410
 Wonder Bookstore,online,HUBLIFE,4,11,3,338986
 Wonder Bookstore,online,BALI-TSM,4,11,7,872419
-Wonder Bookstore,online,ASHTA,4,12,11,1988894
-Wonder Bookstore,online,PIM,4,13,20,4114284
+Wonder Bookstore,online,ASHTA,4,12,12,2362452
+Wonder Bookstore,online,PIM,4,13,24,4833882
 Wonder Bookstore,store,JKT-TSM,4,13,12,2681160
 Wonder Bookstore,store,BALI-TSM,4,13,10,1942120
 Sinar Starbooks,online,ONLINE,4,13,16,8828561
-Wonder Bookstore,online,PIM,4,14,19,4770021
-Wonder Bookstore,online,ASHTA,4,14,15,2928750
-Wonder Bookstore,store,BALI-TSM,4,14,9,5667770
-Wonder Bookstore,store,PIM,4,14,26,4877640
-Wonder Bookstore,store,BALI-TSM,4,15,6,1262700
-Wonder Bookstore,online,BALI-BERAWA,4,15,8,1794186
+Wonder Bookstore,online,PIM,4,14,22,5841704
+Wonder Bookstore,online,ASHTA,4,14,17,3097968
+Wonder Bookstore,store,BALI-TSM,4,14,10,5695770
+Wonder Bookstore,store,PIM,4,14,31,5481540
+Wonder Bookstore,store,BALI-TSM,4,15,7,1381320
+Wonder Bookstore,online,BALI-BERAWA,4,15,9,2594072
 Wonder Bookstore,online,ASHTA,4,15,7,1450935
 Wonder Bookstore,store,JKT-TSM,4,15,7,1585180
 Wonder Bookstore,store,BALI-BERAWA,4,16,19,4716640
-Wonder Bookstore,online,ONLINE,4,16,10,1914578
-Sinar Starbooks,online,ONLINE,4,16,5,1217811
+Wonder Bookstore,online,ONLINE,4,16,11,1959052
+Sinar Starbooks,online,ONLINE,4,16,7,1765931
 Sinar Starbooks,online,ONLINE,4,17,5,1159655
 Wonder Bookstore,online,BALI-BERAWA,4,17,8,1311598
 Wonder Bookstore,online,JKT-TSM,4,17,7,1462234
@@ -1537,9 +1537,9 @@ Wonder Bookstore,store,JKT-TSM,4,11,10,1629040
 Wonder Bookstore,store,PAMERAN ASHTA,4,12,14,2155920
 Wonder Bookstore,online,BALI-TSM,4,12,8,1879255
 Wonder Bookstore,store,PAMERAN ASHTA,4,14,10,2501020
-Wonder Bookstore,online,HUBLIFE,4,14,6,984629
+Wonder Bookstore,online,HUBLIFE,4,14,7,1168293
 Wonder Bookstore,store,PAMERAN ASHTA,4,15,4,626320
-Wonder Bookstore,online,PIM,4,15,19,3867978
+Wonder Bookstore,online,PIM,4,15,21,4248336
 Sinar Starbooks,online,ONLINE,4,15,5,2862910
 Wonder Bookstore,online,HUBLIFE,4,16,4,772160
 Wonder Bookstore,store,HUBLIFE,4,17,6,741240
@@ -1608,7 +1608,7 @@ Wonder Bookstore,online,HUBLIFE,3,5,4,543263
 Wonder Bookstore,store,BALI-BERAWA,3,6,13,357800
 Sinar Starbooks,online,ONLINE,3,6,3,575045
 Sinar Starbooks,online,ONLINE,3,7,2,430960
-Wonder Bookstore,online,HUBLIFE,3,8,4,861332
+Wonder Bookstore,online,HUBLIFE,3,8,3,434483
 Wonder Bookstore,store,BALI-TSM,3,9,3,465600
 Wonder Bookstore,online,BALI-BERAWA,3,11,7,1030486
 Wonder Bookstore,online,ASHTA,3,11,7,2330387
@@ -1629,15 +1629,15 @@ Wonder Bookstore,online,ASHTA,4,5,3,983212
 Wonder Bookstore,online,BALI-BERAWA,4,6,7,1135294
 Wonder Bookstore,online,HUBLIFE,4,6,2,357013
 Wonder Bookstore,online,BALI-TSM,4,7,2,267497
-Wonder Bookstore,online,BALI-BERAWA,4,9,6,933938
-Wonder Bookstore,online,BALI-BERAWA,4,10,5,1171453
-Sinar Starbooks,online,ONLINE,4,10,14,5720400
+Wonder Bookstore,online,BALI-BERAWA,4,9,7,1036372
+Wonder Bookstore,online,BALI-BERAWA,4,10,6,1356802
+Sinar Starbooks,online,ONLINE,4,10,16,6797330
 Wonder Bookstore,store,HUBLIFE,4,11,6,3034280
 Wonder Bookstore,online,HUBLIFE,4,13,2,574363
 Wonder Bookstore,store,HUBLIFE,4,14,7,2320920
-Wonder Bookstore,online,HUBLIFE,4,15,4,663842
-Wonder Bookstore,online,JKT-TSM,4,15,5,697616
-Wonder Bookstore,online,PIM,4,16,16,3106929
+Wonder Bookstore,online,HUBLIFE,4,15,5,929691
+Wonder Bookstore,online,JKT-TSM,4,15,7,1023234
+Wonder Bookstore,online,PIM,4,16,17,3317877
 Wonder Bookstore,online,JKT-TSM,4,18,3,608272
 Wonder Bookstore,online,BALI-TSM,4,20,2,210874
 Wonder Bookstore,store,JKT-TSM,4,21,6,1563640
@@ -1719,7 +1719,7 @@ Wonder Bookstore,online,HUBLIFE,3,22,1,150017
 Wonder Bookstore,online,ASHTA,4,1,1,176019
 Wonder Bookstore,online,ONLINE,4,3,1,128731
 Wonder Bookstore,online,BALI-TSM,4,8,4,645267
-Wonder Bookstore,online,ONLINE,4,12,12,2714318
+Wonder Bookstore,online,ONLINE,4,12,13,2799042
 Wonder Bookstore,store,HUBLIFE,4,16,6,504000
 Wonder Bookstore,store,BALI-TSM,4,20,8,1712120
 Wonder Bookstore,online,BALI-BERAWA,4,21,2,474245
@@ -1799,16 +1799,16 @@ Wonder Bookstore,store,JKT-TSM,4,9,6,1108000
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,9,22,3655420
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,10,15,2883560
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,11,22,3166280
-Wonder Bookstore,online,HUBLIFE,4,12,1,24558
+Wonder Bookstore,online,HUBLIFE,4,12,2,188172
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,12,31,3599140
-Wonder Bookstore,store,HUBLIFE,4,12,1,367100
+Wonder Bookstore,store,HUBLIFE,4,12,2,593900
 Wonder Bookstore,store,BALI-TSM,4,12,8,2081340
-Sinar Starbooks,online,ONLINE,4,12,7,1716396
+Sinar Starbooks,online,ONLINE,4,12,8,1878561
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,13,11,2087100
 Wonder Bookstore,online,BALI-TSM,4,14,2,544025
 Wonder Bookstore,store,PAMERAN JKT-TSM,4,15,1,423600
 Wonder Bookstore,store,HUBLIFE,4,15,8,11990200
-Wonder Bookstore,online,BALI-TSM,4,16,3,1644809
+Wonder Bookstore,online,BALI-TSM,4,16,4,1854308
 Wonder Bookstore,online,ASHTA,4,19,3,592749
 Wonder Bookstore,store,HUBLIFE,4,20,6,1623040
 Kikkerland,online,ONLINE,5,0,1,205010
@@ -1888,7 +1888,7 @@ Kikkerland,online,ONLINE,0,17,1,68210
 Wonder Bookstore,store,PAMERAN JKT-TSM,1,15,1,316800
 Wonder Bookstore,online,BALI-BERAWA,1,16,5,675585
 Wonder Bookstore,store,BALI-BERAWA,1,19,1,80000
-Wonder Bookstore,store,JKT-TSM,2,10,2,183900
+Wonder Bookstore,store,JKT-TSM,2,10,3,4385820
 Wonder Bookstore,online,BALI-TSM,3,0,3,711498
 Sinar Starbooks,online,ONLINE,3,0,1,400370
 Sinar Starbooks,online,ONLINE,3,2,2,1114980
@@ -1975,3 +1975,4 @@ Wonder Bookstore,online,HUBLIFE,4,0,1,811800
 Wonder Bookstore,online,HUBLIFE,4,1,1,223184
 Wonder Bookstore,online,PIM,4,3,1,173274
 Kikkerland,online,ONLINE,4,8,1,150860
+Kikkerland,online,ONLINE,4,12,1,72010
