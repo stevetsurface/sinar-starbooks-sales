@@ -4,13 +4,13 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9781368119894,Percy Jackson and the Olympians Disney+ Tie-in Boxed Set: Books 1 - 3,"Riordan, Rick",Disney Hyperion,BX,2026-11-10,,US$ 32.99,5,,Buka,Penerbit,2026-11-06
 9781368118972,"Percy Jackson and the Olympians, Book Three: The Titan's Curse Disney+ Tie in Edition","Riordan, Rick",Disney Hyperion,TR,2026-11-10,,US$ 10.99,5,,Buka,Penerbit,2026-11-06
 9781368118989,Percy Jackson and the Olympians: The Titan's Curse: The Graphic Novel,"Riordan, Rick",Disney Hyperion,TR,2026-11-10,,US$ 14.99,5,,Buka,Penerbit,2026-11-06
-9798217435210,Radical Surrender,"Lembke, Anna Md",Dutton,TR,2026-11-10,,US$ 23,5,,Buka,Penerbit,2026-11-06
-9781035425396,Radical Surrender,Dr Anna Lembke,Headline Press,TPB,2026-11-10,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781035425389,Radical Surrender,Dr Anna Lembke,Headline Press,HB,2026-11-10,,£ 22,5,,Buka,Penerbit,2026-11-06
-9781035426058,Split Second,Janet Evanovich,Headline Review,HB,2026-11-10,,£ 25,5,,Buka,Penerbit,2026-11-06
+9781035425396,Radical Surrender,Dr Anna Lembke,Headline Press,TPB,2026-11-10,,£ 16.99,5,,Buka,Penerbit,2026-11-06
+9798217435210,Radical Surrender,"Lembke, Anna Md",Dutton,TR,2026-11-10,,US$ 23,5,,Buka,Penerbit,2026-11-06
 9781035426065,Split Second,Janet Evanovich,Headline Review,TPB,2026-11-10,,£ 16.99,5,,Buka,Penerbit,2026-11-06
-9781529423860,The Intangibles,Nick Paumgarten,riverrun,HB,2026-11-10,,£ 25,5,,Buka,Penerbit,2026-11-06
+9781035426058,Split Second,Janet Evanovich,Headline Review,HB,2026-11-10,,£ 25,5,,Buka,Penerbit,2026-11-06
 9781529423853,The Intangibles,Nick Paumgarten,riverrun,TPB,2026-11-10,,£ 16.99,5,,Buka,Penerbit,2026-11-06
+9781529423860,The Intangibles,Nick Paumgarten,riverrun,HB,2026-11-10,,£ 25,5,,Buka,Penerbit,2026-11-06
 9798217380176,The Law of the Sublime,"Greene, Robert",Viking,TR,2026-11-10,,US$ 26,5,,Buka,Penerbit,2026-11-06
 9781035412617,Three Nightingales,Gemma Tizzard,Headline Review,TPB,2026-11-10,,£ 15.99,5,,Buka,Penerbit,2026-11-06
 9781472149022,What Your Dog is Thinking,Sabrina Cohen-Hatton And Danny Wells,Robinson,PB,2026-11-10,,£ 12.99,5,,Buka,Penerbit,2026-11-06
@@ -67,10 +67,10 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9798217197262,North and South,"Gaskell, Elizabeth",Modern Library,TR,2026-11-17,,US$ 19,5,,Buka,Penerbit,2026-11-06
 9781408736432,Prudence Marsh is Not a Nobody Anymore,Emily Krempholtz,Sphere,PB,2026-11-17,,£ 10.99,5,,Buka,Penerbit,2026-11-06
 9798217245130,Serena Williams: A Who HQ Illustrated Biography,"Smith, Sherri L.",Penguin Workshop,HC,2026-11-17,,US$ 8.99,5,,Buka,Penerbit,2026-11-06
-9780349448039,Soul Sworn,Kate Dylan,Piatkus,HB,2026-11-17,,£ 22,5,,Buka,Penerbit,2026-11-06
 9780349448046,Soul Sworn,Kate Dylan,Piatkus,TPB,2026-11-17,,£ 16.99,5,,Buka,Penerbit,2026-11-06
-9780356518411,Untitled Alpha & Omega 7,Patricia Briggs,Orbit,TPB,2026-11-17,,£ 16.99,5,,Buka,Penerbit,2026-11-06
+9780349448039,Soul Sworn,Kate Dylan,Piatkus,HB,2026-11-17,,£ 22,5,,Buka,Penerbit,2026-11-06
 9780356518404,Untitled Alpha & Omega 7,Patricia Briggs,Orbit,HB,2026-11-17,,£ 22,5,,Buka,Penerbit,2026-11-06
+9780356518411,Untitled Alpha & Omega 7,Patricia Briggs,Orbit,TPB,2026-11-17,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781408723579,A Castle for Christmas,Isla Gordon,Sphere,PB,2026-11-19,,£ 9.99,5,,Buka,Penerbit,2026-11-06
 9781805011521,"A Massage Therapist's Guide to Pain, Touch, and Perception",Ruth A. Duncan,Handspring Publishing,TPB,2026-11-19,,£ 35,5,,Buka,Penerbit,2026-11-06
 9781805011576,An Anthology of Queer South Asian Voices,Shahamat Uddin,Jessica Kingsley Publishers,TPB,2026-11-19,,£ 19.99,5,,Buka,Penerbit,2026-11-06
@@ -81,8 +81,8 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9781399832083,Ayurvedic Massage,Kris Quinones. Foreword By Kate O'Donnell.,Singing Dragon,TPB,2026-11-19,,£ 40,5,,Buka,Penerbit,2026-11-06
 9781399838528,Balance,Jessica Dark,Jessica Kingsley Publishers,TPB,2026-11-19,,£ 14.99,5,,Buka,Penerbit,2026-11-06
 9781529454376,Bible Bingo,,Greenfinch,,2026-11-19,,£ 20,5,,Buka,Penerbit,2026-11-06
-9781399819992,Big Math,Steven Strogatz And Alex Townsend,John Murray,TPB,2026-11-19,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781399819985,Big Math,Steven Strogatz And Alex Townsend,John Murray,HB,2026-11-19,,£ 22,5,,Buka,Penerbit,2026-11-06
+9781399819992,Big Math,Steven Strogatz And Alex Townsend,John Murray,TPB,2026-11-19,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781408723159,Burning Season,Martin Griffin,Sphere,HB,2026-11-19,,£ 22,5,,Buka,Penerbit,2026-11-06
 9781408723166,Burning Season,Martin Griffin,Sphere,TPB,2026-11-19,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781399643276,Children Of Dune,Frank Herbert,Gollancz,HB,2026-11-19,,£ 16.99,5,,Buka,Penerbit,2026-11-06
@@ -134,12 +134,12 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9781473213388,Wounds of Albion,Michael Moorcock,Gollancz,HB,2026-11-19,,£ 25,5,,Buka,Penerbit,2026-11-06
 9780736447942,Disney Hexed: The Deluxe Junior Novelization,Rh Disney,RH/Disney,DG,2026-11-24,,US$ 12.99,5,,Buka,Penerbit,2026-11-06
 9781368119214,Percy Jackson and the Olympians: The Titan's Curse Deluxe Collector's Edition,"Riordan, Rick",Disney Hyperion,HC,2026-11-24,,US$ 34.99,5,,Buka,Penerbit,2026-11-06
-9781399702133,Spirit Lands,Maiya Ibrahim,Hodderscape,HB,2026-11-24,,£ 22,5,,Buka,Penerbit,2026-11-06
 9781399702140,Spirit Lands,Maiya Ibrahim,Hodderscape,TPB,2026-11-24,,£ 15.99,5,,Buka,Penerbit,2026-11-06
+9781399702133,Spirit Lands,Maiya Ibrahim,Hodderscape,HB,2026-11-24,,£ 22,5,,Buka,Penerbit,2026-11-06
 9781035439126,The Fall of the Crowned King,Amber V. Nicole,Headline Eternal,HB,2026-11-24,,£ 20,5,,Buka,Penerbit,2026-11-06
 9781035439133,The Fall of the Crowned King,Amber V. Nicole,Headline Eternal,TPB,2026-11-24,,£ 16.99,5,,Buka,Penerbit,2026-11-06
-9781399618588,Borgata: Autumn of Empire,Louis Ferrante,W&N,HB,2026-11-26,,£ 25,5,,Buka,Penerbit,2026-11-06
 9781399618595,Borgata: Autumn of Empire,Louis Ferrante,W&N,TPB,2026-11-26,,£ 16.99,5,,Buka,Penerbit,2026-11-06
+9781399618588,Borgata: Autumn of Empire,Louis Ferrante,W&N,HB,2026-11-26,,£ 25,5,,Buka,Penerbit,2026-11-06
 9781445190259,Classics in Graphics: Shakespeare's Othello,Steve Barlow And Steve Skidmore,Franklin Watts,PB,2026-11-26,,£ 11.99,5,,Buka,Penerbit,2026-11-06
 9781445190228,Classics in Graphics: Shakespeare's Twelfth Night,Steve Barlow And Steve Skidmore,Franklin Watts,PB,2026-11-26,,£ 11.99,5,,Buka,Penerbit,2026-11-06
 9781445192468,Cute Pets! And How to Care For Them: Guinea Pigs,Ruth Percival,Franklin Watts,PB,2026-11-26,,£ 8.99,5,,Buka,Penerbit,2026-11-06
@@ -181,8 +181,8 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9781529418224,Blood Will Tell,Christian Unge,MacLehose Press,PB,2026-12-03,,£ 10.99,5,,Buka,Penerbit,2026-11-06
 9781399626101,Cold Redemption,Nalini Singh,Gollancz,HB,2026-12-03,,£ 22,5,,Buka,Penerbit,2026-11-06
 9781399626118,Cold Redemption,Nalini Singh,Gollancz,TPB,2026-12-03,,£ 16.99,5,,Buka,Penerbit,2026-11-06
-9781399740241,Domain of Darkness,Marisa Linton,Hodderscape,TPB,2026-12-03,,£ 15.99,5,,Buka,Penerbit,2026-11-06
 9781399740234,Domain of Darkness,Marisa Linton,Hodderscape,HB,2026-12-03,,£ 22,5,,Buka,Penerbit,2026-11-06
+9781399740241,Domain of Darkness,Marisa Linton,Hodderscape,TPB,2026-12-03,,£ 15.99,5,,Buka,Penerbit,2026-11-06
 9780600640363,GOOD FOOD Good Health: High Protein,Good Food,Hamlyn,PB,2026-12-03,,£ 16.99,5,,Buka,Penerbit,2026-11-06
 9781408783672,How to Beat OCD,Laura Stevenson-Young,Robinson,PB,2026-12-03,,£ 10.99,5,,Buka,Penerbit,2026-11-06
 9781529453461,IKIRU ('To Live'),Ken Mogi,Quercus,HB,2026-12-03,,£ 16.99,5,,Buka,Penerbit,2026-11-06
@@ -226,8 +226,8 @@ isbn,title,author,publisher,format,on_sale,price,list_price,min_qty,requested,st
 9781445176178,Reading Champion: Poppy's New Sister,Lynne Benton,Franklin Watts,HB,2026-12-10,,£ 9.99,5,,Buka,Penerbit,2026-11-06
 9781445176239,Reading Champion: Ted in a Bed,Sheryl Webster,Franklin Watts,HB,2026-12-10,,£ 9.99,5,,Buka,Penerbit,2026-11-06
 9781445154398,Reading Champion: Zara and the Snowman,Sheryl Webster,Franklin Watts,HB,2026-12-10,,£ 9.99,5,,Buka,Penerbit,2026-11-06
-9781399640930,Warrior of the Shards,Sarah Hawley,Gollancz,HB,2026-12-10,,£ 22,5,,Buka,Penerbit,2026-11-06
 9781399640947,Warrior of the Shards,Sarah Hawley,Gollancz,TPB,2026-12-10,,£ 16.99,5,,Buka,Penerbit,2026-11-06
+9781399640930,Warrior of the Shards,Sarah Hawley,Gollancz,HB,2026-12-10,,£ 22,5,,Buka,Penerbit,2026-11-06
 9798900740966,Blue Lock 37,"Kaneshiro, Muneyuki",Kodansha Comics,TR,2026-12-15,,US$ 12.99,5,,Buka,Penerbit,2026-11-06
 9798217246717,I Love My Dog with The Very Hungry Caterpillar,"Carle, Eric",World of Eric Carle,HC,2026-12-15,,US$ 9.99,5,,Buka,Penerbit,2026-11-06
 9780600640561,"Small Portions, High Nutrition",Angela Dowden,Hamlyn,PB,2026-12-17,,£ 18.99,5,,Buka,Penerbit,2026-11-06
