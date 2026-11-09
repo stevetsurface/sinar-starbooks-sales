@@ -1,12 +1,4 @@
 date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled_orders,canceled_value
-2026-08-10,Kikkerland,Tokopedia,1,206800,10340,0,0,196460,1,206800
-2026-08-10,Sinar Starbooks,Blibli,2,286740,0,0,0,286740,2,317020
-2026-08-10,Sinar Starbooks,Shopee,3,921000,0,179595,0,737655,7,3534000
-2026-08-10,Sinar Starbooks,Tokopedia,9,3712000,0,0,0,3712000,4,1957000
-2026-08-10,Wonder Bookstore,In-store POS,77,17745005,678735,0,0,17066270,0,0
-2026-08-10,Wonder Bookstore,Shopee,127,34800000,1693988,6434875,0,26512387,36,8164400
-2026-08-10,Wonder Bookstore,TikTok Shop,2,470600,23530,0,0,447070,0,0
-2026-08-10,Wonder Bookstore,Tokopedia,19,4258800,212940,0,0,4045860,3,694400
 2026-08-11,Sinar Starbooks,Blibli,1,128520,0,0,0,128520,0,0
 2026-08-11,Sinar Starbooks,Shopee,11,5105000,0,991025,0,4100225,0,0
 2026-08-11,Sinar Starbooks,Tokopedia,3,773000,0,0,0,773000,0,0
@@ -585,7 +577,7 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-10-30,Sinar Starbooks,Shopee,7,1949000,0,380055,0,1560195,2,668000
 2026-10-30,Sinar Starbooks,Tokopedia,1,218000,0,0,0,218000,0,0
 2026-10-30,Wonder Bookstore,In-store POS,164,29824602,449342,0,0,29375260,0,0
-2026-10-30,Wonder Bookstore,Shopee,78,19112200,0,3669121,0,15345579,18,3484400
+2026-10-30,Wonder Bookstore,Shopee,77,18750400,0,3598570,0,15055580,19,3846200
 2026-10-30,Wonder Bookstore,TikTok Shop,1,222800,0,0,0,222800,1,128800
 2026-10-30,Wonder Bookstore,Tokopedia,7,1644200,32489,0,0,1611711,3,729400
 2026-10-31,Kikkerland,Tokopedia,1,82800,0,0,0,82800,0,0
@@ -602,7 +594,7 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-11-01,Sinar Starbooks,Shopee,10,4663000,0,904315,0,3746185,1,247000
 2026-11-01,Sinar Starbooks,Tokopedia,1,363000,0,0,0,363000,0,0
 2026-11-01,Wonder Bookstore,In-store POS,154,32892203,420323,0,0,32471880,0,0
-2026-11-01,Wonder Bookstore,Shopee,91,23523600,0,4570178,0,18839672,19,3983000
+2026-11-01,Wonder Bookstore,Shopee,89,22690800,0,4407782,0,18171768,21,4815800
 2026-11-01,Wonder Bookstore,TikTok Shop,1,125800,0,0,0,125800,0,0
 2026-11-01,Wonder Bookstore,Tokopedia,14,2760200,0,0,0,2760200,2,424600
 2026-11-02,Kikkerland,TikTok Shop,0,0,0,0,0,0,1,365800
@@ -648,12 +640,20 @@ date,brand,channel,orders,gross,discounts,marketplace_fees,shipping,net,canceled
 2026-11-06,Wonder Bookstore,Tokopedia,19,4529800,10000,0,0,4519800,4,1104198
 2026-11-07,Kikkerland,Tokopedia,1,335800,16790,0,0,319010,0,0
 2026-11-07,Sinar Starbooks,Blibli,1,176800,17680,0,0,159120,1,0
-2026-11-07,Sinar Starbooks,Shopee,87,48995000,0,9988980,0,38897270,8,3847000
+2026-11-07,Sinar Starbooks,Shopee,81,46278000,0,9450390,0,36726360,14,6564000
 2026-11-07,Sinar Starbooks,Tokopedia,14,5805000,0,0,0,5805000,3,982000
 2026-11-07,Wonder Bookstore,In-store POS,219,52661103,957673,0,0,51703430,0,0
-2026-11-07,Wonder Bookstore,Shopee,65,18027200,0,3522247,0,14423703,20,4721600
-2026-11-07,Wonder Bookstore,TikTok Shop,1,171800,0,0,0,171800,0,0
+2026-11-07,Wonder Bookstore,Shopee,59,16939400,0,3310126,0,13555524,26,5809400
+2026-11-07,Wonder Bookstore,TikTok Shop,0,0,0,0,0,0,1,171800
 2026-11-07,Wonder Bookstore,Tokopedia,8,1847400,0,0,0,1847400,0,0
-2026-11-08,Sinar Starbooks,Shopee,6,2613000,0,547875,0,2057625,0,0
-2026-11-08,Wonder Bookstore,Shopee,7,1163200,0,226824,0,927626,1,328800
-2026-11-08,Wonder Bookstore,TikTok Shop,1,290400,4840,0,0,285560,0,0
+2026-11-08,Sinar Starbooks,Shopee,24,11264000,0,2316045,0,8917955,2,1088000
+2026-11-08,Sinar Starbooks,Tokopedia,3,1032000,0,0,0,1032000,0,0
+2026-11-08,Wonder Bookstore,In-store POS,186,48525202,929402,0,0,47595800,0,0
+2026-11-08,Wonder Bookstore,Shopee,73,19603000,0,3755675,0,15756075,6,1705800
+2026-11-08,Wonder Bookstore,TikTok Shop,4,947800,26120,0,0,921680,0,0
+2026-11-08,Wonder Bookstore,Tokopedia,8,3988398,20000,0,0,3968398,2,303600
+2026-11-09,Sinar Starbooks,Blibli,1,195800,19580,0,0,176220,0,0
+2026-11-09,Sinar Starbooks,Shopee,2,441000,0,86070,0,352430,0,0
+2026-11-09,Wonder Bookstore,In-store POS,2,2,2,0,0,0,0,0
+2026-11-09,Wonder Bookstore,Shopee,20,4974200,0,969969,0,3979231,2,525600
+2026-11-09,Wonder Bookstore,Tokopedia,3,536600,10000,0,0,526600,0,0
