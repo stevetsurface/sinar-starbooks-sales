@@ -1,22 +1,21 @@
 brand,channel,status,orders,value,reordered_orders,reordered_value
 Kikkerland,TikTok Shop,CANCELED,12,2913600,0,0
-Kikkerland,TikTok Shop,RETURNED,5,2467000,0,0
-Kikkerland,Tokopedia,CANCELED,23,5662800,2,866000
+Kikkerland,TikTok Shop,RETURNED,4,1998200,0,0
+Kikkerland,Tokopedia,CANCELED,18,4181800,2,866000
 Sinar Starbooks,Blibli,CANCELED,32,3519520,7,1339200
 Sinar Starbooks,Lazada,CANCELED,12,2653590,5,1107700
-Sinar Starbooks,Shopee,CANCELED,373,196090000,171,112097000
+Sinar Starbooks,Shopee,CANCELED,375,196903000,173,113330000
 Sinar Starbooks,Shopee,RETURNED,17,23050000,6,16237000
 Sinar Starbooks,TikTok Shop,CANCELED,15,3805000,8,2052000
 Sinar Starbooks,TikTok Shop,RETURNED,12,2618000,3,501000
-Sinar Starbooks,Tokopedia,CANCELED,46,15855000,3,714000
+Sinar Starbooks,Tokopedia,CANCELED,45,15521000,3,714000
 Sinar Starbooks,Tokopedia,RETURNED,4,1372000,0,0
 Wonder Bookstore,In-store POS,CANCELED,7,1693500,1,339600
 Wonder Bookstore,In-store POS,COMPLETED,2,183000,0,0
 Wonder Bookstore,Internal / B2B,CANCELED,1,6660000,0,0
-Wonder Bookstore,Shopee,CANCELED,1778,457648000,583,162587000
-Wonder Bookstore,Shopee,REQUEST_CANCEL,1,296800,0,0
-Wonder Bookstore,Shopee,RETURNED,113,37617400,31,11605200
-Wonder Bookstore,TikTok Shop,CANCELED,44,10691000,7,2246400
-Wonder Bookstore,TikTok Shop,RETURNED,7,6665600,4,1881200
-Wonder Bookstore,Tokopedia,CANCELED,212,55533998,26,6360800
+Wonder Bookstore,Shopee,CANCELED,1775,456357200,583,162222400
+Wonder Bookstore,Shopee,RETURNED,113,37746400,31,11605200
+Wonder Bookstore,TikTok Shop,CANCELED,43,10594200,7,2246400
+Wonder Bookstore,TikTok Shop,RETURNED,8,6817400,4,1881200
+Wonder Bookstore,Tokopedia,CANCELED,215,56208398,26,6247800
 Wonder Bookstore,Tokopedia,RETURNED,13,3730600,4,638200
