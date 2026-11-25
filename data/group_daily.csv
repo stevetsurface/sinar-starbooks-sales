@@ -1,55 +1,4 @@
 date,brand,channel,location,group,revenue
-2026-08-26,Sinar Starbooks,Blibli,ONLINE,Buku umum,254800
-2026-08-26,Sinar Starbooks,Shopee,ONLINE,Buku umum,2659000
-2026-08-26,Sinar Starbooks,Shopee,ONLINE,Komik & manga,6675000
-2026-08-26,Sinar Starbooks,Tokopedia,ONLINE,Komik & manga,712000
-2026-08-26,Wonder Bookstore,In-store POS,ASHTA,Alat tulis & gift,2151600
-2026-08-26,Wonder Bookstore,In-store POS,ASHTA,Buku anak,191520
-2026-08-26,Wonder Bookstore,In-store POS,ASHTA,Buku umum,4308720
-2026-08-26,Wonder Bookstore,In-store POS,BALI-BERAWA,Alat tulis & gift,174000
-2026-08-26,Wonder Bookstore,In-store POS,BALI-BERAWA,Buku umum,2834000
-2026-08-26,Wonder Bookstore,In-store POS,BALI-BERAWA,Kafe,209000
-2026-08-26,Wonder Bookstore,In-store POS,BALI-TSM,Alat tulis & gift,218000
-2026-08-26,Wonder Bookstore,In-store POS,BALI-TSM,Buku anak,655400
-2026-08-26,Wonder Bookstore,In-store POS,BALI-TSM,Buku umum,705820
-2026-08-26,Wonder Bookstore,In-store POS,HUBLIFE,Alat tulis & gift,101000
-2026-08-26,Wonder Bookstore,In-store POS,HUBLIFE,Buku anak,41220
-2026-08-26,Wonder Bookstore,In-store POS,HUBLIFE,Buku umum,86220
-2026-08-26,Wonder Bookstore,In-store POS,JKT-TSM,Alat tulis & gift,476720
-2026-08-26,Wonder Bookstore,In-store POS,JKT-TSM,Buku anak,504360
-2026-08-26,Wonder Bookstore,In-store POS,JKT-TSM,Buku umum,836620
-2026-08-26,Wonder Bookstore,In-store POS,PAMERAN ASHTA,Alat tulis & gift,6779080
-2026-08-26,Wonder Bookstore,In-store POS,PAMERAN ASHTA,Buku anak,598680
-2026-08-26,Wonder Bookstore,In-store POS,PAMERAN ASHTA,Buku umum,3209380
-2026-08-26,Wonder Bookstore,In-store POS,PAMERAN ASHTA,Komik & manga,253620
-2026-08-26,Wonder Bookstore,In-store POS,PIM,Alat tulis & gift,2441800
-2026-08-26,Wonder Bookstore,In-store POS,PIM,Buku anak,804200
-2026-08-26,Wonder Bookstore,In-store POS,PIM,Buku umum,3919700
-2026-08-26,Wonder Bookstore,Shopee,ASHTA,Buku umum,3514810
-2026-08-26,Wonder Bookstore,Shopee,BALI-BERAWA,Buku anak,150860
-2026-08-26,Wonder Bookstore,Shopee,BALI-BERAWA,Buku umum,2585900
-2026-08-26,Wonder Bookstore,Shopee,BALI-TSM,Buku anak,559930
-2026-08-26,Wonder Bookstore,Shopee,BALI-TSM,Buku umum,3629570
-2026-08-26,Wonder Bookstore,Shopee,HUBLIFE,Buku anak,139460
-2026-08-26,Wonder Bookstore,Shopee,HUBLIFE,Buku umum,1466610
-2026-08-26,Wonder Bookstore,Shopee,JKT-TSM,Buku umum,762090
-2026-08-26,Wonder Bookstore,Shopee,ONLINE,Buku umum,7016320
-2026-08-26,Wonder Bookstore,Shopee,PIM,Buku anak,627950
-2026-08-26,Wonder Bookstore,Shopee,PIM,Buku umum,4660620
-2026-08-26,Wonder Bookstore,Shopee,PIM,Komik & manga,347510
-2026-08-26,Wonder Bookstore,TikTok Shop,ASHTA,Buku umum,279764
-2026-08-26,Wonder Bookstore,TikTok Shop,BALI-BERAWA,Buku anak,182210
-2026-08-26,Wonder Bookstore,TikTok Shop,BALI-BERAWA,Buku umum,204860
-2026-08-26,Wonder Bookstore,TikTok Shop,ONLINE,Buku anak,125210
-2026-08-26,Wonder Bookstore,TikTok Shop,ONLINE,Buku umum,198306
-2026-08-26,Wonder Bookstore,TikTok Shop,PIM,Buku umum,249660
-2026-08-26,Wonder Bookstore,Tokopedia,ASHTA,Alat tulis & gift,195510
-2026-08-26,Wonder Bookstore,Tokopedia,ASHTA,Buku umum,570380
-2026-08-26,Wonder Bookstore,Tokopedia,BALI-BERAWA,Buku umum,329270
-2026-08-26,Wonder Bookstore,Tokopedia,JKT-TSM,Buku umum,164800
-2026-08-26,Wonder Bookstore,Tokopedia,ONLINE,Buku umum,1146030
-2026-08-26,Wonder Bookstore,Tokopedia,PIM,Buku anak,359260
-2026-08-26,Wonder Bookstore,Tokopedia,PIM,Buku umum,1721470
 2026-08-27,Sinar Starbooks,Blibli,ONLINE,Buku umum,85800
 2026-08-27,Sinar Starbooks,Shopee,ONLINE,Komik & manga,2788000
 2026-08-27,Sinar Starbooks,Tokopedia,ONLINE,Buku umum,607000
@@ -4124,7 +4073,7 @@ date,brand,channel,location,group,revenue
 2026-11-17,Wonder Bookstore,Tokopedia,JKT-TSM,Buku umum,455620
 2026-11-17,Wonder Bookstore,Tokopedia,ONLINE,Buku anak,169670
 2026-11-17,Wonder Bookstore,Tokopedia,PIM,Buku umum,331360
-2026-11-18,Kikkerland,TikTok Shop,ONLINE,Buku umum,767670
+2026-11-18,Kikkerland,TikTok Shop,ONLINE,Buku umum,91960
 2026-11-18,Sinar Starbooks,Blibli,ONLINE,Buku umum,289440
 2026-11-18,Sinar Starbooks,Shopee,ONLINE,Buku umum,6458000
 2026-11-18,Sinar Starbooks,Shopee,ONLINE,Komik & manga,9744000
@@ -4385,9 +4334,9 @@ date,brand,channel,location,group,revenue
 2026-11-23,Wonder Bookstore,In-store POS,PIM,Buku umum,1513520
 2026-11-23,Wonder Bookstore,Shopee,ASHTA,Alat tulis & gift,95000
 2026-11-23,Wonder Bookstore,Shopee,ASHTA,Buku anak,308600
-2026-11-23,Wonder Bookstore,Shopee,ASHTA,Buku umum,4169200
+2026-11-23,Wonder Bookstore,Shopee,ASHTA,Buku umum,3817400
 2026-11-23,Wonder Bookstore,Shopee,ASHTA,Komik & manga,131800
-2026-11-23,Wonder Bookstore,Shopee,BALI-BERAWA,Alat tulis & gift,274000
+2026-11-23,Wonder Bookstore,Shopee,BALI-BERAWA,Alat tulis & gift,179000
 2026-11-23,Wonder Bookstore,Shopee,BALI-BERAWA,Buku anak,983000
 2026-11-23,Wonder Bookstore,Shopee,BALI-BERAWA,Buku umum,1258000
 2026-11-23,Wonder Bookstore,Shopee,BALI-BERAWA,Komik & manga,181800
@@ -4398,8 +4347,8 @@ date,brand,channel,location,group,revenue
 2026-11-23,Wonder Bookstore,Shopee,ONLINE,Buku anak,176800
 2026-11-23,Wonder Bookstore,Shopee,ONLINE,Buku umum,5375800
 2026-11-23,Wonder Bookstore,Shopee,PIM,Alat tulis & gift,244000
-2026-11-23,Wonder Bookstore,Shopee,PIM,Buku anak,1332000
-2026-11-23,Wonder Bookstore,Shopee,PIM,Buku umum,3635400
+2026-11-23,Wonder Bookstore,Shopee,PIM,Buku anak,1054400
+2026-11-23,Wonder Bookstore,Shopee,PIM,Buku umum,3410600
 2026-11-23,Wonder Bookstore,TikTok Shop,ASHTA,Buku umum,186800
 2026-11-23,Wonder Bookstore,Tokopedia,ASHTA,Alat tulis & gift,157510
 2026-11-23,Wonder Bookstore,Tokopedia,ASHTA,Buku umum,1015430
@@ -4412,33 +4361,90 @@ date,brand,channel,location,group,revenue
 2026-11-23,Wonder Bookstore,Tokopedia,ONLINE,Buku umum,592230
 2026-11-23,Wonder Bookstore,Tokopedia,PIM,Alat tulis & gift,170050
 2026-11-23,Wonder Bookstore,Tokopedia,PIM,Buku umum,312260
-2026-11-24,Sinar Starbooks,Shopee,ONLINE,Buku umum,2610000
-2026-11-24,Sinar Starbooks,Shopee,ONLINE,Komik & manga,392000
-2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Alat tulis & gift,55000
+2026-11-24,Sinar Starbooks,Lazada,ONLINE,Buku umum,296354
+2026-11-24,Sinar Starbooks,Shopee,ONLINE,Buku umum,1016000
+2026-11-24,Sinar Starbooks,Shopee,ONLINE,Komik & manga,2223000
+2026-11-24,Wonder Bookstore,In-store POS,ASHTA,Alat tulis & gift,1657070
+2026-11-24,Wonder Bookstore,In-store POS,ASHTA,Buku anak,106920
+2026-11-24,Wonder Bookstore,In-store POS,ASHTA,Buku umum,2063260
+2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Alat tulis & gift,271000
 2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Buku anak,500400
-2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Buku umum,68800
-2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Kafe,169000
-2026-11-24,Wonder Bookstore,In-store POS,BALI-TSM,Alat tulis & gift,264000
-2026-11-24,Wonder Bookstore,In-store POS,BALI-TSM,Buku umum,242800
-2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Alat tulis & gift,201000
-2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku anak,1118600
-2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku umum,987400
+2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Buku umum,654020
+2026-11-24,Wonder Bookstore,In-store POS,BALI-BERAWA,Kafe,226000
+2026-11-24,Wonder Bookstore,In-store POS,BALI-TSM,Alat tulis & gift,510350
+2026-11-24,Wonder Bookstore,In-store POS,BALI-TSM,Buku anak,353600
+2026-11-24,Wonder Bookstore,In-store POS,BALI-TSM,Buku umum,1588800
+2026-11-24,Wonder Bookstore,In-store POS,HUBLIFE,Alat tulis & gift,29460
+2026-11-24,Wonder Bookstore,In-store POS,HUBLIFE,Buku anak,177120
+2026-11-24,Wonder Bookstore,In-store POS,HUBLIFE,Buku umum,428440
+2026-11-24,Wonder Bookstore,In-store POS,JKT-TSM,Alat tulis & gift,7000
+2026-11-24,Wonder Bookstore,In-store POS,JKT-TSM,Buku umum,1053040
+2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Alat tulis & gift,403000
+2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku anak,1345200
+2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku umum,2428400
 2026-11-24,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Komik & manga,770400
-2026-11-24,Wonder Bookstore,In-store POS,PIM,Alat tulis & gift,58000
-2026-11-24,Wonder Bookstore,In-store POS,PIM,Buku anak,719640
-2026-11-24,Wonder Bookstore,In-store POS,PIM,Buku umum,600600
-2026-11-24,Wonder Bookstore,Shopee,ASHTA,Alat tulis & gift,139000
-2026-11-24,Wonder Bookstore,Shopee,ASHTA,Buku umum,1664400
+2026-11-24,Wonder Bookstore,In-store POS,PIM,Alat tulis & gift,1479450
+2026-11-24,Wonder Bookstore,In-store POS,PIM,Buku anak,885440
+2026-11-24,Wonder Bookstore,In-store POS,PIM,Buku umum,3005340
+2026-11-24,Wonder Bookstore,Shopee,ASHTA,Alat tulis & gift,278000
+2026-11-24,Wonder Bookstore,Shopee,ASHTA,Buku umum,3436400
 2026-11-24,Wonder Bookstore,Shopee,ASHTA,Komik & manga,106800
 2026-11-24,Wonder Bookstore,Shopee,BALI-BERAWA,Alat tulis & gift,275800
-2026-11-24,Wonder Bookstore,Shopee,BALI-BERAWA,Buku umum,978200
-2026-11-24,Wonder Bookstore,Shopee,BALI-TSM,Buku umum,351800
+2026-11-24,Wonder Bookstore,Shopee,BALI-BERAWA,Buku umum,1598600
+2026-11-24,Wonder Bookstore,Shopee,BALI-TSM,Buku umum,936200
 2026-11-24,Wonder Bookstore,Shopee,HUBLIFE,Buku anak,95800
-2026-11-24,Wonder Bookstore,Shopee,JKT-TSM,Buku umum,383600
-2026-11-24,Wonder Bookstore,Shopee,ONLINE,Buku anak,265600
-2026-11-24,Wonder Bookstore,Shopee,ONLINE,Buku umum,3246400
-2026-11-24,Wonder Bookstore,Shopee,PIM,Buku anak,438400
-2026-11-24,Wonder Bookstore,Shopee,PIM,Buku umum,2121400
-2026-11-24,Wonder Bookstore,Tokopedia,BALI-BERAWA,Buku umum,205960
+2026-11-24,Wonder Bookstore,Shopee,HUBLIFE,Buku umum,2356400
+2026-11-24,Wonder Bookstore,Shopee,JKT-TSM,Buku umum,1228400
+2026-11-24,Wonder Bookstore,Shopee,ONLINE,Alat tulis & gift,230800
+2026-11-24,Wonder Bookstore,Shopee,ONLINE,Buku anak,965800
+2026-11-24,Wonder Bookstore,Shopee,ONLINE,Buku umum,8572200
+2026-11-24,Wonder Bookstore,Shopee,PIM,Buku anak,1836600
+2026-11-24,Wonder Bookstore,Shopee,PIM,Buku umum,4830900
+2026-11-24,Wonder Bookstore,Shopee,PIM,Komik & manga,181800
+2026-11-24,Wonder Bookstore,Tokopedia,ASHTA,Buku umum,213560
+2026-11-24,Wonder Bookstore,Tokopedia,BALI-BERAWA,Buku umum,278920
 2026-11-24,Wonder Bookstore,Tokopedia,BALI-TSM,Alat tulis & gift,176510
-2026-11-24,Wonder Bookstore,Tokopedia,PIM,Buku umum,275800
+2026-11-24,Wonder Bookstore,Tokopedia,HUBLIFE,Buku anak,172710
+2026-11-24,Wonder Bookstore,Tokopedia,ONLINE,Buku umum,954940
+2026-11-24,Wonder Bookstore,Tokopedia,PIM,Buku anak,172710
+2026-11-24,Wonder Bookstore,Tokopedia,PIM,Buku umum,470360
+2026-11-25,Kikkerland,Tokopedia,ONLINE,Buku umum,125210
+2026-11-25,Sinar Starbooks,Blibli,ONLINE,Buku umum,709200
+2026-11-25,Sinar Starbooks,Blibli,ONLINE,Komik & manga,229800
+2026-11-25,Sinar Starbooks,Lazada,ONLINE,Buku umum,150020
+2026-11-25,Sinar Starbooks,Shopee,ONLINE,Buku umum,1929000
+2026-11-25,Sinar Starbooks,Shopee,ONLINE,Komik & manga,5987000
+2026-11-25,Wonder Bookstore,In-store POS,BALI-BERAWA,Alat tulis & gift,204000
+2026-11-25,Wonder Bookstore,In-store POS,BALI-BERAWA,Kafe,321500
+2026-11-25,Wonder Bookstore,In-store POS,BALI-TSM,Alat tulis & gift,55000
+2026-11-25,Wonder Bookstore,In-store POS,HUBLIFE,Alat tulis & gift,405000
+2026-11-25,Wonder Bookstore,In-store POS,JKT-TSM,Buku anak,188800
+2026-11-25,Wonder Bookstore,In-store POS,JKT-TSM,Buku umum,573200
+2026-11-25,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Alat tulis & gift,17500
+2026-11-25,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku anak,188800
+2026-11-25,Wonder Bookstore,In-store POS,PAMERAN JKT-TSM,Buku umum,1386540
+2026-11-25,Wonder Bookstore,In-store POS,PIM,Alat tulis & gift,179000
+2026-11-25,Wonder Bookstore,In-store POS,PIM,Buku anak,125800
+2026-11-25,Wonder Bookstore,Shopee,ASHTA,Alat tulis & gift,344850
+2026-11-25,Wonder Bookstore,Shopee,ASHTA,Buku anak,98610
+2026-11-25,Wonder Bookstore,Shopee,ASHTA,Buku umum,4856590
+2026-11-25,Wonder Bookstore,Shopee,BALI-BERAWA,Alat tulis & gift,157510
+2026-11-25,Wonder Bookstore,Shopee,BALI-BERAWA,Buku anak,417240
+2026-11-25,Wonder Bookstore,Shopee,BALI-BERAWA,Buku umum,925300
+2026-11-25,Wonder Bookstore,Shopee,BALI-TSM,Buku anak,616360
+2026-11-25,Wonder Bookstore,Shopee,BALI-TSM,Buku umum,473290
+2026-11-25,Wonder Bookstore,Shopee,HUBLIFE,Buku umum,2070240
+2026-11-25,Wonder Bookstore,Shopee,JKT-TSM,Buku anak,72010
+2026-11-25,Wonder Bookstore,Shopee,JKT-TSM,Buku umum,2818650
+2026-11-25,Wonder Bookstore,Shopee,ONLINE,Alat tulis & gift,369550
+2026-11-25,Wonder Bookstore,Shopee,ONLINE,Buku anak,1065710
+2026-11-25,Wonder Bookstore,Shopee,ONLINE,Buku umum,6448810
+2026-11-25,Wonder Bookstore,Shopee,ONLINE,Komik & manga,172710
+2026-11-25,Wonder Bookstore,Shopee,PIM,Buku anak,2606610
+2026-11-25,Wonder Bookstore,Shopee,PIM,Buku umum,5146340
+2026-11-25,Wonder Bookstore,Shopee,PIM,Komik & manga,577030
+2026-11-25,Wonder Bookstore,Tokopedia,ASHTA,Buku anak,245670
+2026-11-25,Wonder Bookstore,Tokopedia,ASHTA,Buku umum,284620
+2026-11-25,Wonder Bookstore,Tokopedia,BALI-TSM,Buku umum,268660
+2026-11-25,Wonder Bookstore,Tokopedia,ONLINE,Buku umum,482980
+2026-11-25,Wonder Bookstore,Tokopedia,PIM,Buku umum,369360
